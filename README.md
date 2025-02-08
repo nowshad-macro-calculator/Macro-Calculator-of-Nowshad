@@ -69,7 +69,7 @@
         <label for="bread">Bread (slices):</label>
         <input type="number" id="bread" value="0">
         
-        <label for="oil">Oil (spoons):</label>
+        <label for="oil">Oil (tablespoons):</label>
         <input type="number" id="oil" value="0">
         
         <button onclick="calculateMacros()">Calculate Macros</button>
@@ -106,11 +106,22 @@
             let protein_shake = document.getElementById('protein_shake').value * 25; // 25g protein per scoop
             let rice = document.getElementById('rice').value * 4; // 4g protein per cup
             let bread = document.getElementById('bread').value * 3; // 3g protein per slice
-            let oil = document.getElementById('oil').value * 0; // 0g protein per spoon
+            let oil = document.getElementById('oil').value * 0; // 0g protein per tablespoon
+            
+            // Fat calculations
+            let fatFromChickenThigh = document.getElementById('chicken_thigh').value * 0.08; // 8g fat per 100g
+            let fatFromBeef = document.getElementById('beef').value * 0.15; // 15g fat per 100g
+            let fatFromFish = document.getElementById('fish').value * 0.05; // 5g fat per 100g
+            let fatFromShrimp = document.getElementById('shrimp').value * 0.02; // 2g fat per 100g
+            let fatFromOil = document.getElementById('oil').value * 14; // 14g fat per tablespoon
+            
+            // Carb calculations
+            let carbsFromRice = document.getElementById('rice').value * 45; // 45g carbs per cup
+            let carbsFromBread = document.getElementById('bread').value * 15; // 15g carbs per slice
             
             let totalProtein = chicken_breast + chicken_thigh + chicken_wings + other_chicken + salmon + beef + fish + shrimp + egg + protein_shake + rice + bread + oil;
-            let totalFat = (chicken_thigh * 0.08) + (beef * 0.15) + (fish * 0.05) + (shrimp * 0.02) + (oil * 14); // Fat values per gram
-            let totalCarbs = (rice * 45) + (bread * 15); // Carbs values per cup or slice
+            let totalFat = fatFromChickenThigh + fatFromBeef + fatFromFish + fatFromShrimp + fatFromOil;
+            let totalCarbs = carbsFromRice + carbsFromBread;
             let proteinBalance = requiredProtein - totalProtein;
             
             document.getElementById('totalProtein').innerText = totalProtein.toFixed(2);
