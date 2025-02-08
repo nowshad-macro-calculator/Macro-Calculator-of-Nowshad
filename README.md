@@ -1,14 +1,63 @@
-Special Thanks to Sohel Taj sir for inpiring all of us.
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nowshad's Macro Calculator</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .container { max-width: 500px; margin: auto; }
-        input, button { margin: 10px 0; padding: 10px; width: 100%; }
-        .disclaimer { font-size: 12px; color: #666; margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        h3 {
+            color: #4CAF50;
+        }
+        .disclaimer {
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .required-protein {
+            color: #e74c3c;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -16,18 +65,20 @@ Special Thanks to Sohel Taj sir for inpiring all of us.
         <h2>Nowshad's Macro Calculator (Inspired by ST's Nutrition Plan)</h2>
         
         <label for="name">Name:</label>
-        <input type="text" id="name">
+        <input type="text" id="name" placeholder="Enter your name">
         
         <label for="age">Age:</label>
-        <input type="number" id="age">
+        <input type="number" id="age" placeholder="Enter your age">
         
         <label for="height">Height (cm):</label>
-        <input type="number" id="height">
+        <input type="number" id="height" placeholder="Enter your height">
         
         <label for="weight">Weight (kg):</label>
-        <input type="number" id="weight">
+        <input type="number" id="weight" placeholder="Enter your weight" oninput="calculateRecommendedProtein()">
         
         <h3>BMI: <span id="bmi">0</span></h3>
+        
+        <h3>Recommended Protein Intake (Minimum): <span class="required-protein" id="recommended_protein">0</span> g</h3>
         
         <h3 style="color: red;">Required Protein: <span id="required_protein_display">0</span> g</h3>
         <label for="required_protein">Enter Required Protein (grams):</label>
@@ -111,6 +162,14 @@ Special Thanks to Sohel Taj sir for inpiring all of us.
     <script>
         function updateRequiredProtein() {
             document.getElementById('required_protein_display').innerText = document.getElementById('required_protein').value;
+        }
+
+        function calculateRecommendedProtein() {
+            let weight = document.getElementById('weight').value;
+            let recommendedProtein = weight * 2; // 2g protein per kg of body weight
+            document.getElementById('recommended_protein').innerText = recommendedProtein.toFixed(2);
+            document.getElementById('required_protein').value = recommendedProtein.toFixed(2);
+            updateRequiredProtein();
         }
 
         function calculateMacros() {
