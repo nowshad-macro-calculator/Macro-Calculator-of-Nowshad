@@ -62,6 +62,7 @@ Nowshad's Macro Calculator
             color: red;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -193,6 +194,9 @@ Nowshad's Macro Calculator
             <h3>Target Calories per Day: <span id="targetCalories">0</span> kcal</h3>
         </div>
 
+        <!-- Save Report Button -->
+        <button onclick="saveReport()">Save Report as PDF</button>
+
         <!-- Disclaimer Section -->
         <div class="disclaimer">
             <p><strong>Disclaimer:</strong> The values provided by this calculator are estimates based on available reliable sources. For accurate and personalized dietary advice, please consult a certified nutritionist or healthcare professional before using this information as a reference.</p>
@@ -298,10 +302,78 @@ Nowshad's Macro Calculator
             // BMR calculation using Mifflin-St Jeor formula
             let bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5; // For men
             let tdee = bmr * activityLevel;
-            let targetCalories = goal === "deficit" ? tdee - 500 : tdee; // 500 kcal deficit for weight loss
+            let targetCalories = goal === "deficit" ? tdee - 1100 : tdee; // 1100 kcal deficit for weight loss
 
             document.getElementById('tdee').innerText = tdee.toFixed(2);
             document.getElementById('targetCalories').innerText = targetCalories.toFixed(2);
+        }
+
+        function saveReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Report Generation Date and Time
+            const date = new Date().toLocaleString();
+            doc.setFontSize(12);
+            doc.text(`Report Generated on: ${date}`, 10, 10);
+
+            // User Details
+            doc.setFontSize(14);
+            doc.text("User Details", 10, 20);
+            doc.setFontSize(12);
+            doc.text(`Name: ${document.getElementById('name').value}`, 10, 30);
+            doc.text(`Age: ${document.getElementById('age').value}`, 10, 40);
+            doc.text(`Height: ${document.getElementById('height').value} cm`, 10, 50);
+            doc.text(`Weight: ${document.getElementById('weight').value} kg`, 10, 60);
+            doc.text(`BMI: ${document.getElementById('bmi').innerText}`, 10, 70);
+
+            // Protein Intake
+            doc.setFontSize(14);
+            doc.text("Protein Intake", 10, 80);
+            doc.setFontSize(12);
+            doc.text(`Recommended Protein Intake: ${document.getElementById('recommended_protein').innerText} g`, 10, 90);
+            doc.text(`Required Protein: ${document.getElementById('required_protein_display').innerText} g`, 10, 100);
+            doc.text(`Total Protein Intake: ${document.getElementById('totalProtein').innerText} g`, 10, 110);
+            doc.text(`Protein Balance: ${document.getElementById('proteinBalance').innerText}`, 10, 120);
+
+            // Fat and Carbohydrate Intake
+            doc.setFontSize(14);
+            doc.text("Fat and Carbohydrate Intake", 10, 130);
+            doc.setFontSize(12);
+            doc.text(`Total Fat Intake: ${document.getElementById('totalFat').innerText} g`, 10, 140);
+            doc.text(`Total Carbohydrate Intake: ${document.getElementById('totalCarbs').innerText} g`, 10, 150);
+
+            // Calorie Intake
+            doc.setFontSize(14);
+            doc.text("Calorie Intake", 10, 160);
+            doc.setFontSize(12);
+            doc.text(`Total Calorie Intake: ${document.getElementById('totalCalories').innerText} kcal`, 10, 170);
+
+            // TDEE and Target Calories
+            doc.setFontSize(14);
+            doc.text("TDEE and Target Calories", 10, 180);
+            doc.setFontSize(12);
+            doc.text(`TDEE: ${document.getElementById('tdee').innerText} kcal`, 10, 190);
+            doc.text(`Target Calories per Day: ${document.getElementById('targetCalories').innerText} kcal`, 10, 200);
+
+            // Recommended Macro Breakdown
+            doc.setFontSize(14);
+            doc.text("Recommended Macro Breakdown", 10, 210);
+            doc.setFontSize(12);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const protein = weight * 2; // 2g per kg of body weight
+            const fat = (protein * 9) / 4; // Fat is 25% of total calories
+            const carbs = (protein * 9) / 4; // Carbs are 25% of total calories
+            doc.text(`Protein: ${protein.toFixed(2)} g`, 10, 220);
+            doc.text(`Fat: ${fat.toFixed(2)} g`, 10, 230);
+            doc.text(`Carbohydrates: ${carbs.toFixed(2)} g`, 10, 240);
+
+            // Disclaimer
+            doc.setFontSize(10);
+            doc.text("Disclaimer: The values provided by this calculator are estimates based on available reliable sources. For accurate and personalized dietary advice, please consult a certified nutritionist or healthcare professional before using this information as a reference.", 10, 250, { maxWidth: 180 });
+
+            // Save the PDF
+            doc.save("Macro_Calculator_Report.pdf");
         }
     </script>
 </body>
