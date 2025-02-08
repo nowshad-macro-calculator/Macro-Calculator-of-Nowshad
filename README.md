@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Special Thanks to Sohel Taj sir for inpiring all of us.
 <html lang="en">
 <head>
     <meta charset="UTF-8">
