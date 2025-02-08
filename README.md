@@ -1,4 +1,4 @@
-
+Nowshad's Macro Calculator
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -27,7 +27,7 @@
             font-weight: bold;
             color: #555;
         }
-        input, button {
+        input, button, select {
             margin: 10px 0;
             padding: 10px;
             width: 100%;
@@ -58,6 +58,9 @@
             color: #e74c3c;
             font-weight: bold;
         }
+        .highlight-red {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -78,7 +81,7 @@
         
         <h3>BMI: <span id="bmi">0</span></h3>
         
-        <h3>Recommended Protein Intake (Minimum): <span class="required-protein" id="recommended_protein">0</span> g</h3>
+        <h3>Recommended Protein Intake: <span class="required-protein" id="recommended_protein">0</span> g</h3>
         
         <h3 style="color: red;">Required Protein: <span id="required_protein_display">0</span> g</h3>
         <label for="required_protein">Enter Required Protein (grams):</label>
@@ -145,6 +148,19 @@
         <label for="vegetables">Vegetables (cups):</label>
         <input type="number" id="vegetables" value="0">
         
+        <!-- New Food Items -->
+        <label for="milk_tea">Milk Tea (cups):</label>
+        <input type="number" id="milk_tea" value="0">
+        
+        <label for="chocolate">Cube of Chocolate (count):</label>
+        <input type="number" id="chocolate" value="0">
+        
+        <label for="cake">Slice of Cake (count):</label>
+        <input type="number" id="cake" value="0">
+        
+        <label for="carbonated_beverage">Carbonated Beverage (cans):</label>
+        <input type="number" id="carbonated_beverage" value="0">
+        
         <button onclick="calculateMacros()">Calculate Macros</button>
         
         <h3>Total Protein Intake: <span id="totalProtein">0</span> g</h3>
@@ -152,6 +168,30 @@
         <h3>Total Carbohydrate Intake: <span id="totalCarbs">0</span> g</h3>
         <h3>Protein Balance: <span id="proteinBalance">0</span> g</h3>
         <h3>Total Calorie Intake (Estimated): <span id="totalCalories">0</span> kcal</h3>
+
+        <!-- TDEE and Target Calories -->
+        <div>
+            <h3>TDEE and Target Calories</h3>
+            <label for="activity_level">Select Activity Level:</label>
+            <select id="activity_level">
+                <option value="1.2">Sedentary (little or no exercise)</option>
+                <option value="1.375">Lightly Active (light exercise/sports 1-3 days/week)</option>
+                <option value="1.55">Moderately Active (moderate exercise/sports 3-5 days/week)</option>
+                <option value="1.725">Very Active (hard exercise/sports 6-7 days/week)</option>
+                <option value="1.9">Extra Active (very hard exercise/sports & physical job)</option>
+            </select>
+            
+            <label for="goal">Select Goal:</label>
+            <select id="goal">
+                <option value="deficit">Deficit</option>
+                <option value="maintenance">Maintenance</option>
+            </select>
+            
+            <button onclick="calculateTDEE()">Calculate TDEE and Target Calories</button>
+            
+            <h3>TDEE (Total Daily Energy Expenditure): <span id="tdee">0</span> kcal</h3>
+            <h3>Target Calories per Day: <span id="targetCalories">0</span> kcal</h3>
+        </div>
 
         <!-- Disclaimer Section -->
         <div class="disclaimer">
@@ -168,8 +208,6 @@
             let weight = document.getElementById('weight').value;
             let recommendedProtein = weight * 2; // 2g protein per kg of body weight
             document.getElementById('recommended_protein').innerText = recommendedProtein.toFixed(2);
-            document.getElementById('required_protein').value = recommendedProtein.toFixed(2);
-            updateRequiredProtein();
         }
 
         function calculateMacros() {
@@ -200,6 +238,10 @@
             let oil = document.getElementById('oil').value * 0; // 0g protein per tablespoon
             let salad = document.getElementById('salad').value * 0.5; // 0.5g protein per cup
             let vegetables = document.getElementById('vegetables').value * 2; // 2g protein per cup
+            let milk_tea = document.getElementById('milk_tea').value * 0; // 0g protein per cup
+            let chocolate = document.getElementById('chocolate').value * 1; // 1g protein per cube
+            let cake = document.getElementById('cake').value * 3; // 3g protein per slice
+            let carbonated_beverage = document.getElementById('carbonated_beverage').value * 0; // 0g protein per can
             
             // Fat calculations
             let fatFromChickenThigh = document.getElementById('chicken_thigh').value * 0.08; // 8g fat per 100g
@@ -213,17 +255,25 @@
             let fatFromShrimp = document.getElementById('shrimp').value * 0.02; // 2g fat per 100g
             let fatFromDriedFish = document.getElementById('dried_fish').value * 0.05; // 5g fat per 100g
             let fatFromOil = document.getElementById('oil').value * 14; // 14g fat per tablespoon
+            let fatFromMilkTea = document.getElementById('milk_tea').value * 0; // 0g fat per cup
+            let fatFromChocolate = document.getElementById('chocolate').value * 5; // 5g fat per cube
+            let fatFromCake = document.getElementById('cake').value * 10; // 10g fat per slice
+            let fatFromCarbonatedBeverage = document.getElementById('carbonated_beverage').value * 0; // 0g fat per can
             
             // Carb calculations
             let carbsFromRice = document.getElementById('rice').value * 45; // 45g carbs per cup
             let carbsFromBread = document.getElementById('bread').value * 15; // 15g carbs per slice
             let carbsFromSalad = document.getElementById('salad').value * 2; // 2g carbs per cup
             let carbsFromVegetables = document.getElementById('vegetables').value * 5; // 5g carbs per cup
+            let carbsFromMilkTea = document.getElementById('milk_tea').value * 10; // 10g carbs per cup
+            let carbsFromChocolate = document.getElementById('chocolate').value * 15; // 15g carbs per cube
+            let carbsFromCake = document.getElementById('cake').value * 30; // 30g carbs per slice
+            let carbsFromCarbonatedBeverage = document.getElementById('carbonated_beverage').value * 40; // 40g carbs per can
             
             // Total macros
-            let totalProtein = chicken_breast + chicken_thigh + chicken_wings + chicken_drumsticks + mutton + duck + pigeon + quail + beef + fish + shrimp + dried_fish + egg + protein_shake + rice + bread + oil + salad + vegetables;
-            let totalFat = fatFromChickenThigh + fatFromChickenDrumsticks + fatFromMutton + fatFromDuck + fatFromPigeon + fatFromQuail + fatFromBeef + fatFromFish + fatFromShrimp + fatFromDriedFish + fatFromOil;
-            let totalCarbs = carbsFromRice + carbsFromBread + carbsFromSalad + carbsFromVegetables;
+            let totalProtein = chicken_breast + chicken_thigh + chicken_wings + chicken_drumsticks + mutton + duck + pigeon + quail + beef + fish + shrimp + dried_fish + egg + protein_shake + rice + bread + oil + salad + vegetables + milk_tea + chocolate + cake + carbonated_beverage;
+            let totalFat = fatFromChickenThigh + fatFromChickenDrumsticks + fatFromMutton + fatFromDuck + fatFromPigeon + fatFromQuail + fatFromBeef + fatFromFish + fatFromShrimp + fatFromDriedFish + fatFromOil + fatFromMilkTea + fatFromChocolate + fatFromCake + fatFromCarbonatedBeverage;
+            let totalCarbs = carbsFromRice + carbsFromBread + carbsFromSalad + carbsFromVegetables + carbsFromMilkTea + carbsFromChocolate + carbsFromCake + carbsFromCarbonatedBeverage;
             let proteinBalance = requiredProtein - totalProtein;
             
             // Calorie calculation
@@ -233,8 +283,25 @@
             document.getElementById('totalProtein').innerText = totalProtein.toFixed(2);
             document.getElementById('totalFat').innerText = totalFat.toFixed(2);
             document.getElementById('totalCarbs').innerText = totalCarbs.toFixed(2);
-            document.getElementById('proteinBalance').innerText = proteinBalance.toFixed(2) + " g" + (proteinBalance > 0 ? " more needed" : " exceeded");
+            document.getElementById('proteinBalance').innerText = proteinBalance.toFixed(2) + " g";
+            document.getElementById('proteinBalance').className = proteinBalance > 0 ? "highlight-red" : "";
             document.getElementById('totalCalories').innerText = totalCalories.toFixed(2);
+        }
+
+        function calculateTDEE() {
+            let weight = parseFloat(document.getElementById('weight').value);
+            let height = parseFloat(document.getElementById('height').value);
+            let age = parseFloat(document.getElementById('age').value);
+            let activityLevel = parseFloat(document.getElementById('activity_level').value);
+            let goal = document.getElementById('goal').value;
+
+            // BMR calculation using Mifflin-St Jeor formula
+            let bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5; // For men
+            let tdee = bmr * activityLevel;
+            let targetCalories = goal === "deficit" ? tdee - 500 : tdee; // 500 kcal deficit for weight loss
+
+            document.getElementById('tdee').innerText = tdee.toFixed(2);
+            document.getElementById('targetCalories').innerText = targetCalories.toFixed(2);
         }
     </script>
 </body>
