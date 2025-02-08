@@ -1,4 +1,5 @@
 Nowshad's Macro Calculator
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -356,21 +357,9 @@ Nowshad's Macro Calculator
             doc.text(`TDEE: ${document.getElementById('tdee').innerText} kcal`, 10, 190);
             doc.text(`Target Calories per Day: ${document.getElementById('targetCalories').innerText} kcal`, 10, 200);
 
-            // Recommended Macro Breakdown
-            doc.setFontSize(14);
-            doc.text("Recommended Macro Breakdown", 10, 210);
-            doc.setFontSize(12);
-            const weight = parseFloat(document.getElementById('weight').value);
-            const protein = weight * 2; // 2g per kg of body weight
-            const fat = (protein * 9) / 4; // Fat is 25% of total calories
-            const carbs = (protein * 9) / 4; // Carbs are 25% of total calories
-            doc.text(`Protein: ${protein.toFixed(2)} g`, 10, 220);
-            doc.text(`Fat: ${fat.toFixed(2)} g`, 10, 230);
-            doc.text(`Carbohydrates: ${carbs.toFixed(2)} g`, 10, 240);
-
             // Disclaimer
             doc.setFontSize(10);
-            doc.text("Disclaimer: The values provided by this calculator are estimates based on available reliable sources. For accurate and personalized dietary advice, please consult a certified nutritionist or healthcare professional before using this information as a reference.", 10, 250, { maxWidth: 180 });
+            doc.text("Disclaimer: The values provided by this calculator are estimates based on available reliable sources. For accurate and personalized dietary advice, please consult a certified nutritionist or healthcare professional before using this information as a reference.", 10, 210, { maxWidth: 180 });
 
             // Save the PDF
             doc.save("Macro_Calculator_Report.pdf");
