@@ -76,7 +76,7 @@ Nowshad's Macro calculator
 </head>
 <body>
     <div class="container">
-        <h2>Nowshad's Macro Calculator (Inspired by ST's Nutrition Plan)</h2>
+        <h2>Nowshad's Macro Calculator </h2>
         
         <label for="name">Name:</label>
         <input type="text" id="name" placeholder="Enter your name">
