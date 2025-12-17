@@ -288,7 +288,11 @@
 
         <div class="divider"></div>
 
-        <button class="btn" onclick="savePDF()">Save PDF Report</button>
+       <div class="row cols2">
+  <button class="btn" onclick="savePDF()">Save PDF Report</button>
+  <button class="btn danger" onclick="resetEverything()">Reset Everything</button>
+</div>
+
       </div>
 
       <div class="card">
@@ -1578,6 +1582,81 @@ async function savePDF(){
   renderEntries();
   refreshAll();
 })();
+  function resetEverything(){
+  if(!confirm(
+    "This will completely reset ALL data on this device:\n\n" +
+    "• Profile & targets\n" +
+    "• Food logs (all days)\n" +
+    "• Lifestyle data (all days)\n\n" +
+    "This cannot be undone. Continue?"
+  )) return;
+
+  // Clear all stored data
+  localStorage.removeItem(LS_PROFILE);
+  localStorage.removeItem(LS_LOG);
+  localStorage.removeItem(LS_LIFE);
+
+  // Clear dirty flags (so auto-calculation works again)
+  ["p_targetCalories","p_targetFats","p_targetCarbs"].forEach(id=>{
+    if($(id)) $(id).dataset.dirty = "";
+  });
+
+  // Reset profile UI fields
+  $("p_name").value="";
+  $("p_age").value="";
+  $("p_sex").value="male";
+
+  $("p_height_unit").value="ftin";
+  $("p_weight_unit").value="kg";
+
+  $("p_height_cm").value="";
+  $("p_height_ft").value="";
+  $("p_height_in").value="";
+  $("p_weight_kg").value="";
+  $("p_weight_lbs").value="";
+
+  $("p_goal").value="loss";
+  $("p_activity").value="1.2";
+  $("p_dayStartHour").value="4";
+  $("p_macroPreset").value="higherProtein";
+  $("p_protMult").value="2.2";
+
+  $("p_targetCalories").value="";
+  $("p_targetProtein").value="";
+  $("p_targetFats").value="";
+  $("p_targetCarbs").value="";
+
+  // Reset food inputs
+  if($("entryQty")) $("entryQty").value="";
+  if($("mealType")) $("mealType").value="Lunch";
+
+  // Reset lifestyle inputs
+  if($("workoutType")) $("workoutType").value="none";
+  if($("workoutMins")) $("workoutMins").value=0;
+  if($("sleepHours")) $("sleepHours").value="";
+  if($("waterLiters")) $("waterLiters").value="";
+
+  // Hide saved messages
+  if($("profileSavedNote")) $("profileSavedNote").style.display="none";
+  if($("profileSaveHint")) $("profileSaveHint").style.display="none";
+  if($("lifeSavedNote")) $("lifeSavedNote").style.display="none";
+
+  // Reset UI state
+  toggleHeightUI(false);
+  toggleWeightUI(false);
+
+  // Reset dates
+  const today = new Date().toISOString().slice(0,10);
+  $("logDate").value = today;
+  $("lifeDate").value = today;
+
+  // Re-render everything cleanly
+  renderEntries();
+  refreshAll();
+
+  alert("All data has been reset ✔️\nYou can now enter a new user from Profile.");
+}
+
 </script>
 
 </body>
