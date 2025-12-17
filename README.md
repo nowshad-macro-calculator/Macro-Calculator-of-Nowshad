@@ -821,11 +821,15 @@ function getProfileDraft(){
 
   // Target Calories = TDEE adjusted by goal (unless user override)
   let targetCaloriesAuto = 0;
-  if(basicsOk){
-    const goal=$("p_goal").value;
-    const adj = (goal==="gain"? +400 : (goal==="loss"? -500 : 0));
-    targetCaloriesAuto = Math.max(1200, Math.round(tdee + adj));
-  }
+if (basicsOk) {
+  const goal = $("p_goal").value;
+  const adj =
+    goal === "gain" ? 400 :
+    goal === "loss" ? -500 : 0;
+
+  targetCaloriesAuto = Math.round(tdee + adj);
+}
+
   const targetCalories = (isDirty("p_targetCalories") && n($("p_targetCalories").value)>0)
     ? Math.max(1200, Math.round(n($("p_targetCalories").value)))
     : targetCaloriesAuto;
