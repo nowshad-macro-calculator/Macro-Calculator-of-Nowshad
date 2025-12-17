@@ -141,7 +141,6 @@
       font-size:12px;
     }
 
-    /* Entries table */
     .tableWrap{
       border:1px solid rgba(255,255,255,.16);
       border-radius:16px;
@@ -174,7 +173,7 @@
     <div class="topbar">
       <div class="brand">
         <h1>Nowshad's Macro Calculator</h1>
-        <span>Profile → Food Log (multiple entries/day) → Dashboard + PDF</span>
+        <span>Profile → Food Log (add multiple entries) → Dashboard + PDF</span>
       </div>
       <div class="tabs">
         <button class="tabbtn active" data-page="dashboard">Dashboard</button>
@@ -187,7 +186,7 @@
     <section id="page-dashboard" class="grid cols2" style="margin-top:14px;">
       <div class="card">
         <h2>Today’s Dashboard</h2>
-        <div class="sub">Log foods multiple times/day. Totals roll up automatically.</div>
+        <div class="sub">Add the same food multiple times (lunch + dinner + snacks). Totals update automatically.</div>
 
         <div class="divider"></div>
 
@@ -233,7 +232,7 @@
         </div>
 
         <div style="margin-top:10px" class="sub">
-          Recommended BMI range: <b>18.5–24.9</b>. Your BMI marker is shown below (color-coded).
+          Recommended BMI range: <b>18.5–24.9</b>. Your BMI marker is shown below.
         </div>
 
         <div style="margin-top:10px">
@@ -256,7 +255,7 @@
 
       <div class="card">
         <h2>Macro Chart</h2>
-        <div class="sub">Fixed-height chart (won’t “run away” while scrolling). Colors are distinct and NOT blue.</div>
+        <div class="sub">Fixed-height chart (stable on scroll). Colors are distinct and NOT blue.</div>
         <div class="chartBox">
           <canvas id="macroChart"></canvas>
         </div>
@@ -267,7 +266,7 @@
     <section id="page-profile" class="grid cols2 hide" style="margin-top:14px;">
       <div class="card">
         <h2>Profile</h2>
-        <div class="sub">Default Height unit is Feet/Inches (mobile friendly). Save once.</div>
+        <div class="sub">Feet/Inches is default. Save once; food logs work daily.</div>
 
         <div class="divider"></div>
 
@@ -304,8 +303,7 @@
             <label>Height (cm)</label>
             <input type="number" min="0" step="0.1" id="p_height_cm" placeholder="e.g., 175">
           </div>
-          <div class="hide"></div>
-          <div class="hide"></div>
+          <div class="hide"></div><div class="hide"></div>
         </div>
 
         <div class="row cols3" style="margin-top:10px" id="height_ftin_row">
@@ -428,9 +426,7 @@
           <div class="kpi"><div class="cap">TDEE</div><div class="big" id="p_tdeeLine">—</div><div class="cap" id="p_targetLine">Target: —</div></div>
         </div>
         <div class="divider"></div>
-        <div class="sub">
-          Tip: Save profile once. Food log entries can be added multiple times per day.
-        </div>
+        <div class="sub">Profile changes won’t lag anymore — dashboard refresh is throttled.</div>
       </div>
     </section>
 
@@ -438,7 +434,7 @@
     <section id="page-food" class="grid cols2 hide" style="margin-top:14px;">
       <div class="card">
         <h2>Food Log (Multiple entries/day)</h2>
-        <div class="sub">Pick a food → qty → meal type → Add Entry. Repeat as many times as you want.</div>
+        <div class="sub">Choose Category → Food → Unit → Qty → Add Entry (repeat anytime).</div>
 
         <div class="divider"></div>
 
@@ -467,16 +463,20 @@
         <h3>Add Food Entry</h3>
         <div class="row cols2" style="margin-top:10px">
           <div>
+            <label>Category</label>
+            <select id="entryCategory"></select>
+          </div>
+          <div>
             <label>Food item</label>
             <select id="entryFood"></select>
           </div>
           <div>
-            <label>Quantity</label>
-            <input type="number" min="0" step="1" id="entryQty" placeholder="Enter quantity (g / tbsp / pcs / plate)">
-          </div>
-          <div>
             <label>Unit</label>
             <select id="entryUnit"></select>
+          </div>
+          <div>
+            <label>Quantity</label>
+            <input type="number" min="0" step="1" id="entryQty" placeholder="Enter qty (g / tbsp / pcs / plate)">
           </div>
           <div>
             <label>&nbsp;</label>
@@ -498,12 +498,13 @@
         <div class="divider"></div>
 
         <h3>Daily Entries</h3>
-        <div class="sub">You can edit quantity inline or delete any row.</div>
+        <div class="sub">Edit quantity inline or delete any row.</div>
         <div class="tableWrap" style="margin-top:10px">
           <table>
             <thead>
               <tr>
                 <th>Meal</th>
+                <th>Category</th>
                 <th>Food</th>
                 <th>Qty</th>
                 <th>Unit</th>
@@ -531,26 +532,16 @@
           <div class="kpi"><div class="cap">Fat</div><div class="big" id="liveF">0 g</div></div>
           <div class="kpi"><div class="cap">Calories</div><div class="big" id="liveK">0 kcal</div></div>
         </div>
-
-        <div class="divider"></div>
-
-        <div class="sub">
-          Key “reliable” items: Butter 1 tbsp (14g) ~102 kcal, Olive oil 1 tbsp ~119 kcal, Soybean oil 1 tbsp ~120 kcal, Ghee 1 tbsp ~126 kcal, Peanut butter 1 tbsp ~100 kcal (label-based).
-        </div>
       </div>
     </section>
   </div>
 
 <script>
-/* =========================
-   Storage keys
-========================= */
-const LS_PROFILE = "nowshad_macro_profile_v4";
-const LS_LOG = "nowshad_macro_dailylog_v4";
+/* ===== Storage ===== */
+const LS_PROFILE = "nowshad_macro_profile_v5";
+const LS_LOG = "nowshad_macro_dailylog_v5";
 
-/* =========================
-   Helpers
-========================= */
+/* ===== Helpers ===== */
 const $ = (id)=>document.getElementById(id);
 const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 const n = (v)=>isFinite(parseFloat(v)) ? parseFloat(v) : 0;
@@ -559,14 +550,14 @@ const round2 = (x)=>Math.round(x*100)/100;
 function sum(a,b){ return {P:a.P+b.P, C:a.C+b.C, F:a.F+b.F, K:a.K+b.K}; }
 function zero(){ return {P:0,C:0,F:0,K:0}; }
 
-/* =========================
-   Tabs
-========================= */
+/* ===== Tabs ===== */
 document.querySelectorAll(".tabbtn").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     showPage(btn.dataset.page);
+    // refresh when landing (lightweight)
+    scheduleRefresh();
   });
 });
 function showPage(name){
@@ -575,19 +566,17 @@ function showPage(name){
   });
 }
 
-/* =========================
-   Food DB (keeps your earlier style)
-========================= */
+/* ===== Food DB ===== */
 const FOOD = {
-  // unit: g, pcs, tbsp, plate, scoop, slice, cup, ml, serv
+  // Chicken (g)
   "Chicken Breast": { unitOptions:["g"], perUnit:{g:{P:31/100, C:0, F:3.6/100, K:165/100}} },
   "Chicken Thigh": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:8/100, K:209/100}} },
   "Chicken Wings": { unitOptions:["g"], perUnit:{g:{P:30/100, C:0, F:13/100, K:290/100}} },
   "Chicken Drumsticks": { unitOptions:["g"], perUnit:{g:{P:28/100, C:0, F:10/100, K:215/100}} },
 
+  // Other protein sources
   "Egg": { unitOptions:["pcs"], perUnit:{pcs:{P:6, C:0.6, F:5, K:72}} },
   "Protein Shake": { unitOptions:["scoop"], perUnit:{scoop:{P:25, C:3, F:2, K:120}} },
-
   "Mutton": { unitOptions:["g"], perUnit:{g:{P:25/100, C:0, F:20/100, K:294/100}} },
   "Duck": { unitOptions:["g"], perUnit:{g:{P:23/100, C:0, F:28/100, K:337/100}} },
   "Pigeon": { unitOptions:["g"], perUnit:{g:{P:25/100, C:0, F:15/100, K:250/100}} },
@@ -597,22 +586,23 @@ const FOOD = {
   "Shrimp": { unitOptions:["g"], perUnit:{g:{P:24/100, C:0, F:2/100, K:99/100}} },
   "Dried Fish / Bombay Duck": { unitOptions:["g"], perUnit:{g:{P:60/100, C:0, F:5/100, K:300/100}} },
 
+  // Carbs
   "Rice (cooked)": { unitOptions:["g","plate"], perUnit:{
       g:{P:2.7/100, C:28/100, F:0.3/100, K:130/100},
-      plate:{P:8, C:90, F:1, K:420} // approx
+      plate:{P:8, C:90, F:1, K:420}
   }},
   "Bread": { unitOptions:["slice"], perUnit:{slice:{P:3, C:15, F:1, K:80}} },
   "Roti": { unitOptions:["pcs"], perUnit:{pcs:{P:3.5, C:18, F:3, K:120}} },
   "Paratha": { unitOptions:["pcs"], perUnit:{pcs:{P:6, C:30, F:12, K:260}} },
   "Oats (dry)": { unitOptions:["g"], perUnit:{g:{P:16.9/100, C:66.3/100, F:6.9/100, K:389/100}} },
-
   "Milk Tea": { unitOptions:["cup"], perUnit:{cup:{P:2, C:10, F:3, K:80}} },
   "Carbonated Beverage": { unitOptions:["ml"], perUnit:{ml:{P:0, C:10.6/100, F:0, K:42/100}} },
 
+  // Vegetables
   "Salad": { unitOptions:["cup"], perUnit:{cup:{P:0.5, C:2, F:0.1, K:15}} },
   "Vegetables": { unitOptions:["cup"], perUnit:{cup:{P:2, C:5, F:0.2, K:35}} },
 
-  // Fats (reliable-ish)
+  // Fats
   "Butter": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0.12, C:0.01, F:11.5, K:102}} },
   "Olive Oil": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:13.5, K:119}} },
   "Soybean Oil": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:13.6, K:120}} },
@@ -624,10 +614,10 @@ const FOOD = {
 
   "Dates (Deglet Noor style)": { unitOptions:["g","pcs"], perUnit:{
       g:{P:2.2/100, C:75/100, F:0.3/100, K:282/100},
-      pcs:{P:0.18, C:6.0, F:0.02, K:23} // ~ 8g date
+      pcs:{P:0.18, C:6.0, F:0.02, K:23}
   }},
-  "Dates (Ajwa small)": { unitOptions:["pcs"], perUnit:{pcs:{P:0.20, C:6.7, F:0.03, K:26}} }, // ~9g/date scaled
-  "Dates (Medjool large)": { unitOptions:["pcs"], perUnit:{pcs:{P:0.43, C:18, F:0.05, K:66}} }, // large date approx
+  "Dates (Ajwa small)": { unitOptions:["pcs"], perUnit:{pcs:{P:0.20, C:6.7, F:0.03, K:26}} },
+  "Dates (Medjool large)": { unitOptions:["pcs"], perUnit:{pcs:{P:0.43, C:18, F:0.05, K:66}} },
 
   "Almonds": { unitOptions:["g"], perUnit:{g:{P:21.2/100, C:21.6/100, F:49.9/100, K:579/100}} },
   "Peanuts": { unitOptions:["g"], perUnit:{g:{P:25.8/100, C:16.1/100, F:49.2/100, K:567/100}} },
@@ -641,7 +631,7 @@ const FOOD = {
   "Mango (1 cup slices)": { unitOptions:["cup"], perUnit:{cup:{P:1.4, C:25, F:0.6, K:99}} },
   "Grapes (1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:1.1, C:27.3, F:0.2, K:104}} },
 
-  // Meals (plate)
+  // Meals
   "Kacchi Biryani": { unitOptions:["plate"], perUnit:{plate:{P:26, C:90, F:39, K:800}} },
   "Biryani (general)": { unitOptions:["plate"], perUnit:{plate:{P:20, C:85, F:15, K:600}} },
   "Khichuri": { unitOptions:["plate"], perUnit:{plate:{P:14, C:70, F:12, K:450}} },
@@ -654,19 +644,18 @@ const FOOD = {
   "Double Whopper": { unitOptions:["pcs"], perUnit:{pcs:{P:46, C:46, F:52, K:838}} },
 };
 
-const FOOD_ORDER = [
-  { group:"Chicken", items:["Chicken Breast","Chicken Thigh","Chicken Wings","Chicken Drumsticks"] },
-  { group:"Other protein sources", items:["Egg","Protein Shake","Mutton","Duck","Pigeon","Quail","Beef","Fish","Shrimp","Dried Fish / Bombay Duck"] },
-  { group:"Carbs", items:["Rice (cooked)","Bread","Roti","Paratha","Oats (dry)","Milk Tea","Carbonated Beverage"] },
-  { group:"Vegetables & Salad", items:["Salad","Vegetables"] },
-  { group:"Fats", items:["Butter","Olive Oil","Soybean Oil","Ghee"] },
-  { group:"Snacks & Fruits", items:["Peanut Butter","Yogurt / Curd","Dates (Deglet Noor style)","Dates (Ajwa small)","Dates (Medjool large)","Almonds","Peanuts","Cashews","Walnuts","Pistachios","Banana","Apple","Orange","Mango (1 cup slices)","Grapes (1 cup)"] },
-  { group:"Meals", items:["Kacchi Biryani","Biryani (general)","Khichuri","Fried Rice","Shawarma (wrap)","Chicken Broast","Beef Steak Meal","Fried Chicken Meal (KFC style)","Whopper","Double Whopper"] },
-];
+// Category lists (short dropdowns)
+const CATEGORY_ITEMS = {
+  "Chicken": ["Chicken Breast","Chicken Thigh","Chicken Wings","Chicken Drumsticks"],
+  "Protein": ["Egg","Protein Shake","Mutton","Duck","Pigeon","Quail","Beef","Fish","Shrimp","Dried Fish / Bombay Duck"],
+  "Carbs": ["Rice (cooked)","Bread","Roti","Paratha","Oats (dry)","Milk Tea","Carbonated Beverage"],
+  "Vegetables": ["Salad","Vegetables"],
+  "Fats": ["Butter","Olive Oil","Soybean Oil","Ghee"],
+  "Snacks & Fruits": ["Peanut Butter","Yogurt / Curd","Dates (Deglet Noor style)","Dates (Ajwa small)","Dates (Medjool large)","Almonds","Peanuts","Cashews","Walnuts","Pistachios","Banana","Apple","Orange","Mango (1 cup slices)","Grapes (1 cup)"],
+  "Meals": ["Kacchi Biryani","Biryani (general)","Khichuri","Fried Rice","Shawarma (wrap)","Chicken Broast","Beef Steak Meal","Fried Chicken Meal (KFC style)","Whopper","Double Whopper"],
+};
 
-/* =========================
-   Chart (no blue)
-========================= */
+/* ===== Chart (no blue) ===== */
 let macroChart=null;
 function initChart(){
   const ctx=$("macroChart").getContext("2d");
@@ -688,9 +677,14 @@ function initChart(){
 }
 initChart();
 
-/* =========================
-   Profile calc
-========================= */
+/* ===== Debounced refresh (fixes “hang”) ===== */
+let refreshTimer=null;
+function scheduleRefresh(){
+  if(refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer=setTimeout(()=>{ refreshAll(); }, 180);
+}
+
+/* ===== Profile calc ===== */
 function getProfileDraft(){
   const sex=$("p_sex").value;
   const age=n($("p_age").value);
@@ -718,13 +712,14 @@ function getProfileDraft(){
 
   const pMin=wkg? wkg*1.5 : 0;
   const pMax=wkg? wkg*2.0 : 0;
+
+  // Protein target reference > minimum (e.g., 161–214 => ~200)
   let pTargetAuto=0;
   if(pMin>0){
-    const ref=pMin+(pMax-pMin)*0.45;
+    const ref=pMin+(pMax-pMin)*0.45; // near middle, above min
     pTargetAuto=Math.round(ref/5)*5;
   }
 
-  // preset split
   const preset=$("p_macroPreset").value;
   let fatPct=.30, carbPct=.40;
   if(preset==="higherCarb"){ fatPct=.25; carbPct=.50; }
@@ -759,27 +754,34 @@ function getProfileDraft(){
   };
 }
 
-function updateProfilePreview(){
+function updateProfilePreviewOnly(){
   const p=getProfileDraft();
   $("p_bmiLine").textContent = p.bmi? round2(p.bmi) : "—";
   $("p_bmrLine").textContent = p.bmr? Math.round(p.bmr)+" kcal" : "—";
   $("p_tdeeLine").textContent = p.tdee? Math.round(p.tdee)+" kcal" : "—";
   $("p_targetLine").textContent = "Target: " + (p.targetCalories?Math.round(p.targetCalories)+" kcal":"—");
 
+  // auto-fill if empty (won't trigger input loops)
   if(!n($("p_targetCalories").value) && p.targetCalories) $("p_targetCalories").value=Math.round(p.targetCalories);
   if(!n($("p_targetProtein").value) && p.targetProtein) $("p_targetProtein").value=p.targetProtein;
   if(!n($("p_targetCarbs").value) && p.targetCarbs) $("p_targetCarbs").value=p.targetCarbs;
   if(!n($("p_targetFats").value) && p.targetFats) $("p_targetFats").value=p.targetFats;
 
-  refreshAll();
+  // debounce dashboard refresh (prevents lag/hang)
+  scheduleRefresh();
 }
 
 function saveProfile(){
-  const p=getProfileDraft();
-  localStorage.setItem(LS_PROFILE, JSON.stringify(p));
-  $("profileSaveHint").style.display="block";
-  $("profileSavedNote").style.display="block";
-  refreshAll();
+  try{
+    const p=getProfileDraft();
+    localStorage.setItem(LS_PROFILE, JSON.stringify(p));
+    $("profileSaveHint").style.display="block";
+    $("profileSavedNote").style.display="block";
+    // immediate lightweight refresh
+    scheduleRefresh();
+  }catch(e){
+    alert("Could not save profile. Your browser storage may be restricted.");
+  }
 }
 
 function loadProfile(){
@@ -823,30 +825,28 @@ function toggleHeightUI(){
   const u=$("p_height_unit").value;
   $("height_cm_row").classList.toggle("hide", u!=="cm");
   $("height_ftin_row").classList.toggle("hide", u!=="ftin");
-  updateProfilePreview();
+  updateProfilePreviewOnly();
 }
 function toggleWeightUI(){
   const u=$("p_weight_unit").value;
   $("weight_kg_row").classList.toggle("hide", u!=="kg");
   $("weight_lbs_row").classList.toggle("hide", u!=="lbs");
-  updateProfilePreview();
+  updateProfilePreviewOnly();
 }
 $("p_height_unit").addEventListener("change", toggleHeightUI);
 $("p_weight_unit").addEventListener("change", toggleWeightUI);
 
-/* Profile listeners */
+/* Profile listeners (now light + debounced) */
 [
  "p_name","p_age","p_height_cm","p_height_ft","p_height_in","p_weight_kg","p_weight_lbs",
  "p_goal","p_activity","p_dayStartHour","p_sex","p_macroPreset",
  "p_targetCalories","p_targetProtein","p_targetCarbs","p_targetFats"
 ].forEach(id=>{
-  $(id).addEventListener("input", updateProfilePreview);
-  $(id).addEventListener("change", updateProfilePreview);
+  $(id).addEventListener("input", updateProfilePreviewOnly);
+  $(id).addEventListener("change", updateProfilePreviewOnly);
 });
 
-/* =========================
-   Day key
-========================= */
+/* ===== Day key ===== */
 function getDefaultLogDate(profile){
   const now=new Date();
   const dayStart=profile?.dayStartHour ?? 4;
@@ -855,9 +855,7 @@ function getDefaultLogDate(profile){
   return adjusted.toISOString().slice(0,10);
 }
 
-/* =========================
-   Entries model
-========================= */
+/* ===== Logs ===== */
 function loadAllLogs(){
   try{ return JSON.parse(localStorage.getItem(LS_LOG) || "{}"); }catch(e){ return {}; }
 }
@@ -872,38 +870,32 @@ function setDayLog(dateKey, dayLog){
   saveAllLogs(all);
 }
 
-/* =========================
-   Entry compute
-========================= */
+/* ===== Entry compute ===== */
 function computeFood(foodName, qty, unit){
   const item=FOOD[foodName];
   if(!item) return zero();
   const map=item.perUnit[unit];
   if(!map) return zero();
-  // map is per 1 unit, but for g/ml we stored per 1g or per 1ml already
-  return {
-    P: map.P*qty,
-    C: map.C*qty,
-    F: map.F*qty,
-    K: map.K*qty
-  };
+  return { P: map.P*qty, C: map.C*qty, F: map.F*qty, K: map.K*qty };
 }
 
-/* =========================
-   Food entry UI
-========================= */
-function buildFoodSelect(){
+/* ===== Food UI (Category → Food → Unit) ===== */
+function buildCategorySelect(){
+  const sel=$("entryCategory");
+  sel.innerHTML="";
+  Object.keys(CATEGORY_ITEMS).forEach(cat=>{
+    const opt=document.createElement("option");
+    opt.value=cat; opt.textContent=cat;
+    sel.appendChild(opt);
+  });
+}
+function buildFoodSelectForCategory(category){
   const sel=$("entryFood");
   sel.innerHTML="";
-  FOOD_ORDER.forEach(group=>{
-    const og=document.createElement("optgroup");
-    og.label=group.group;
-    group.items.forEach(name=>{
-      const opt=document.createElement("option");
-      opt.value=name; opt.textContent=name;
-      og.appendChild(opt);
-    });
-    sel.appendChild(og);
+  (CATEGORY_ITEMS[category]||[]).forEach(name=>{
+    const opt=document.createElement("option");
+    opt.value=name; opt.textContent=name;
+    sel.appendChild(opt);
   });
 }
 function buildUnitSelect(foodName){
@@ -911,8 +903,7 @@ function buildUnitSelect(foodName){
   uSel.innerHTML="";
   (FOOD[foodName]?.unitOptions || ["g"]).forEach(u=>{
     const opt=document.createElement("option");
-    opt.value=u;
-    opt.textContent = (u==="pcs"?"pcs":u);
+    opt.value=u; opt.textContent=u;
     uSel.appendChild(opt);
   });
 }
@@ -926,29 +917,44 @@ function updateEntryPreview(){
   $("entryPrevF").textContent=round1(t.F);
   $("entryPrevK").textContent=Math.round(t.K);
 }
+
+$("entryCategory")?.addEventListener("change", ()=>{
+  buildFoodSelectForCategory($("entryCategory").value);
+  buildUnitSelect($("entryFood").value);
+  updateEntryPreview();
+});
+$("entryFood")?.addEventListener("change", ()=>{
+  buildUnitSelect($("entryFood").value);
+  updateEntryPreview();
+});
+$("entryUnit")?.addEventListener("change", updateEntryPreview);
+$("entryQty")?.addEventListener("input", updateEntryPreview);
+
+/* ===== Add entry ===== */
 function addEntry(){
   const profile=loadProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
   const day=getDayLog(dateKey);
 
+  const category=$("entryCategory").value;
   const food=$("entryFood").value;
   const unit=$("entryUnit").value;
   const qty=n($("entryQty").value);
   if(!food || qty<=0){ alert("Select a food and enter a quantity > 0."); return; }
 
   day.entries.push({
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random(),
+    id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random()),
     meal: $("mealType").value,
-    food, unit, qty
+    category, food, unit, qty
   });
   setDayLog(dateKey, day);
 
   $("entryQty").value="";
   renderEntries();
-  refreshAll();
+  scheduleRefresh();
 }
 
-/* Render entries table */
+/* ===== Entries table ===== */
 function renderEntries(){
   const profile=loadProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
@@ -957,11 +963,12 @@ function renderEntries(){
   const tb=$("entriesTbody");
   tb.innerHTML="";
 
-  day.entries.forEach((e, idx)=>{
+  day.entries.forEach(e=>{
     const t=computeFood(e.food, n(e.qty), e.unit);
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td>${e.meal}</td>
+      <td>${e.category || ""}</td>
       <td>${e.food}</td>
       <td><input class="miniInput" type="number" min="0" step="1" value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
       <td>${e.unit}</td>
@@ -974,16 +981,19 @@ function renderEntries(){
     tb.appendChild(tr);
   });
 
-  // Inline edit qty
   tb.querySelectorAll('input[data-field="qty"]').forEach(inp=>{
     inp.addEventListener("input", ()=>{
       const id=inp.dataset.id;
       const day2=getDayLog(dateKey);
       const row=day2.entries.find(x=>x.id===id);
-      if(row){ row.qty = n(inp.value); setDayLog(dateKey, day2); renderEntries(); refreshAll(); }
+      if(row){
+        row.qty = n(inp.value);
+        setDayLog(dateKey, day2);
+        renderEntries();
+        scheduleRefresh();
+      }
     });
   });
-  // Delete
   tb.querySelectorAll('button[data-action="del"]').forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const id=btn.dataset.id;
@@ -991,16 +1001,15 @@ function renderEntries(){
       day2.entries = day2.entries.filter(x=>x.id!==id);
       setDayLog(dateKey, day2);
       renderEntries();
-      refreshAll();
+      scheduleRefresh();
     });
   });
 }
 
-/* Save/Reset buttons you requested */
+/* ===== Save/Reset ===== */
 function saveDay(){
   const profile=loadProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
-  // data is already in storage as you add/edit/delete
   alert("Saved for the Day ✔️ ("+dateKey+")");
 }
 function resetFoodLogs(){
@@ -1009,27 +1018,20 @@ function resetFoodLogs(){
   if(!confirm("Reset all food entries for "+dateKey+"?")) return;
   setDayLog(dateKey, { entries: [] });
   renderEntries();
-  refreshAll();
+  scheduleRefresh();
 }
 
-/* =========================
-   Totals from entries
-========================= */
+/* ===== Totals ===== */
 function computeTotalsFromEntries(){
   const profile=loadProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
   const day=getDayLog(dateKey);
-
   let total=zero();
-  day.entries.forEach(e=>{
-    total = sum(total, computeFood(e.food, n(e.qty), e.unit));
-  });
+  day.entries.forEach(e=> total = sum(total, computeFood(e.food, n(e.qty), e.unit)));
   return total;
 }
 
-/* =========================
-   Dashboard refresh
-========================= */
+/* ===== Dashboard ===== */
 function updateBMIBar(bmi){
   const fill=$("bmiFill");
   const pin=$("bmiPin");
@@ -1043,22 +1045,18 @@ function updateBMIBar(bmi){
 function refreshAll(){
   const profile=loadProfile() || getProfileDraft();
 
-  // Ensure date
   if(!$("logDate").value) $("logDate").value = getDefaultLogDate(profile);
 
-  // Render entries
-  renderEntries();
-
-  // Totals
+  // totals
   const total=computeTotalsFromEntries();
 
-  // Live totals
+  // live totals
   $("liveP").textContent = round1(total.P) + " g";
   $("liveC").textContent = round1(total.C) + " g";
   $("liveF").textContent = round1(total.F) + " g";
   $("liveK").textContent = Math.round(total.K) + " kcal";
 
-  // Dashboard KPIs
+  // dashboard
   $("dashCalories").textContent = Math.round(total.K) + " kcal";
   $("dashProtein").textContent = round1(total.P) + " g";
   $("dashCarbs").textContent = round1(total.C);
@@ -1117,22 +1115,19 @@ function refreshAll(){
     }
   }
 
-  // Metrics
   $("dashBMI").textContent = profile.bmi ? round2(profile.bmi) : "—";
   $("dashBMR").textContent = profile.bmr ? Math.round(profile.bmr) : "—";
   $("dashTDEE").textContent = profile.tdee ? Math.round(profile.tdee) : "—";
   updateBMIBar(profile.bmi);
 
-  // Chart
+  // chart
   if(macroChart){
     macroChart.data.datasets[0].data = [round1(total.P), round1(total.C), round1(total.F)];
     macroChart.update();
   }
 }
 
-/* =========================
-   PDF (uses totals from entries)
-========================= */
+/* ===== PDF ===== */
 async function savePDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:"pt", format:"a4" });
@@ -1167,59 +1162,42 @@ async function savePDF(){
   doc.text(`Calories: ${Math.round(total.K)} kcal   |   Protein: ${round1(total.P)} g   |   Carbs: ${round1(total.C)} g   |   Fat: ${round1(total.F)} g`, 40, y);
   y+=18;
 
-  // Chart image
   doc.setFont("helvetica","bold"); doc.text("Macro Chart", 40, y); y+=10;
   const canvas = $("macroChart");
   const imgData = canvas.toDataURL("image/png", 1.0);
   doc.addImage(imgData, "PNG", 40, y, pageW-80, 220);
-  y+=235;
-
-  doc.setFontSize(9);
-  doc.text("Disclaimer: Nutrition values are estimates. For personalized advice consult a qualified nutritionist/doctor.", 40, y);
 
   doc.save("Nowshad_Macro_Report.pdf");
 }
 
-/* =========================
-   Boot + entry selector init
-========================= */
-function bootEntrySelector(){
-  buildFoodSelect();
-  const first = $("entryFood").value;
-  buildUnitSelect(first);
-  $("entryFood").addEventListener("change", ()=>{
-    buildUnitSelect($("entryFood").value);
-    updateEntryPreview();
-  });
-  $("entryUnit").addEventListener("change", updateEntryPreview);
-  $("entryQty").addEventListener("input", updateEntryPreview);
-  updateEntryPreview();
-}
-
-/* =========================
-   Init
-========================= */
+/* ===== Init ===== */
 (function init(){
+  // default profile display
   loadProfile();
 
-  // Force default height unit ft/in on first load (if profile doesn't exist)
+  // enforce default height = ft/in if no profile
   if(!localStorage.getItem(LS_PROFILE)){
     $("p_height_unit").value="ftin";
-    toggleHeightUI();
-  }else{
-    toggleHeightUI();
-    toggleWeightUI();
   }
+  toggleHeightUI();
+  toggleWeightUI();
 
-  updateProfilePreview();
+  updateProfilePreviewOnly();
 
-  // Default log date
+  // date default
   const p = loadProfile() || getProfileDraft();
   $("logDate").value = getDefaultLogDate(p);
+  $("logDate").addEventListener("change", ()=>{ renderEntries(); scheduleRefresh(); });
 
-  $("logDate").addEventListener("change", ()=>{ renderEntries(); refreshAll(); });
+  // build category dropdowns
+  buildCategorySelect();
+  $("entryCategory").value="Chicken";
+  buildFoodSelectForCategory("Chicken");
+  buildUnitSelect($("entryFood").value);
+  updateEntryPreview();
 
-  bootEntrySelector();
+  // render initial
+  renderEntries();
   refreshAll();
 })();
 </script>
