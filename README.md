@@ -1,4 +1,4 @@
-
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -92,8 +92,6 @@
     .btn:hover{background:rgba(255,255,255,.18)}
     .btn.danger{background:rgba(255,107,107,.18)}
     .btn.danger:hover{background:rgba(255,107,107,.26)}
-    .btn.secondary{background:rgba(27,99,255,.18)}
-    .btn.secondary:hover{background:rgba(27,99,255,.28)}
     .pill{
       display:inline-flex; align-items:center; gap:8px;
       border:1px solid var(--stroke); border-radius:999px;
@@ -137,7 +135,6 @@
       border:1px solid rgba(61,220,151,.28);
       color:#dffaf0;
       font-size:12px;
-      white-space:pre-line;
     }
     .tableWrap{
       border:1px solid rgba(255,255,255,.16);
@@ -163,6 +160,12 @@
       background:rgba(255,255,255,.10); color:var(--text); cursor:pointer; font-weight:800; font-size:12px;
     }
     .actionBtn:hover{background:rgba(255,255,255,.14)}
+    .btnRow{display:flex; gap:10px; flex-wrap:wrap}
+    .btnRow .btn{flex:1; min-width:160px}
+    .profilesGrid{display:grid; gap:10px}
+    @media(min-width:720px){ .profilesGrid{grid-template-columns: 1fr 1fr} }
+    .smallBtnRow{display:flex; gap:10px; flex-wrap:wrap}
+    .smallBtnRow .btn{min-width:160px}
   </style>
 </head>
 
@@ -181,11 +184,11 @@
       </div>
     </div>
 
-    <!-- DASHBOARD (2 columns) -->
+    <!-- DASHBOARD -->
     <section id="page-dashboard" class="grid cols2" style="margin-top:14px;">
       <div class="card">
         <h2>Today’s Dashboard</h2>
-        <div class="sub">Targets are based on your Profile. Protein target is always weight × multiplier. Carbs target is calories left after protein + fats.</div>
+        <div class="sub">Targets are based on the active Profile. Protein target is always weight × multiplier. Carbs target is calories left after protein + fats.</div>
 
         <div class="divider"></div>
 
@@ -221,7 +224,7 @@
           <div class="kpi">
             <div class="cap">Net vs Target (calories)</div>
             <div class="big" id="dashCalBalance">—</div>
-            <div class="cap" id="dashCalBalanceMsg">Set profile targets first.</div>
+            <div class="cap" id="dashCalBalanceMsg">Use Profile → Calculate Targets.</div>
           </div>
         </div>
 
@@ -291,53 +294,48 @@
 
         <div class="divider"></div>
 
-        <div class="row cols3">
+        <div class="btnRow">
           <button class="btn" onclick="savePDF()">Save PDF Report</button>
-          <button class="btn secondary" onclick="resetToday()">Reset Only Today</button>
+          <button class="btn" onclick="resetOnlyToday()">Reset Only Today</button>
           <button class="btn danger" onclick="resetEverything()">Reset Everything</button>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Macro Chart</h2>
-        <div class="sub">Stable chart on scroll. Colors are distinct and NOT blue.</div>
-        <div class="chartBox">
-          <canvas id="macroChart"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- DASHBOARD (FULL-WIDTH Profiles) -->
-    <section id="page-dashboard-profiles" class="grid" style="margin-top:14px;">
-      <div class="card">
-        <h2>Profiles</h2>
-        <div class="sub">Switch users on the same device. Each profile has its own Profile, Food Logs, and Lifestyle data.</div>
-
-        <div class="divider"></div>
-
-        <div class="row cols3">
-          <div>
-            <label>Active profile</label>
-            <select id="profileSelect"></select>
-          </div>
-          <div>
-            <label>New profile name</label>
-            <input id="newProfileName" placeholder="e.g. Nowshad / Yeasmin / Aymaan" />
-          </div>
-          <div style="display:flex; gap:10px; align-items:end;">
-            <button class="btn" onclick="createProfile()">Create Profile</button>
-            <button class="btn danger" onclick="deleteActiveProfile()">Delete Profile</button>
+      <!-- RIGHT column: chart + profiles panel under it -->
+      <div class="grid" style="gap:14px">
+        <div class="card">
+          <h2>Macro Chart</h2>
+          <div class="sub">Stable chart on scroll. Colors are distinct and NOT blue.</div>
+          <div class="chartBox">
+            <canvas id="macroChart"></canvas>
           </div>
         </div>
 
-        <div class="divider"></div>
+        <div class="card">
+          <h2>Profiles</h2>
+          <div class="sub">Switch users on the same device. Each profile has its own Profile + Food logs + Lifestyle.</div>
+          <div class="divider"></div>
 
-        <div class="note">
-Reset Only Today:
-• Clears today’s Food Log + Lifestyle only (for the active profile)
+          <div class="profilesGrid">
+            <div>
+              <label>Active profile</label>
+              <select id="activeProfileSelect"></select>
+            </div>
+            <div>
+              <label>New profile name</label>
+              <input id="newProfileName" placeholder="e.g., Nowshad / Yeasmin / Aymaan" />
+            </div>
+          </div>
 
-Reset Everything:
-• Deletes ALL profiles + ALL saved data on this device (cannot be undone)
+          <div class="divider"></div>
+
+          <div class="smallBtnRow">
+            <button class="btn" id="btnCreateProfile">Create Profile</button>
+            <button class="btn" id="btnResetTodayProfile">Reset Only Today</button>
+            <button class="btn danger" id="btnDeleteProfile">Delete Profile</button>
+          </div>
+
+          <div class="note" id="profileSwitchNote" style="display:none;"></div>
         </div>
       </div>
     </section>
@@ -493,10 +491,18 @@ Reset Everything:
 
         <div class="divider"></div>
 
-        <button class="btn" onclick="saveProfile()">Save Profile</button>
+        <div class="btnRow">
+          <button class="btn" onclick="calculateTargetsOnly()">Calculate Targets</button>
+          <button class="btn" onclick="saveProfile()">Save Profile</button>
+          <button class="btn danger" onclick="resetProfileOnly()">Reset Profile</button>
+        </div>
 
         <div class="note" id="profileSaveHint" style="display:none;">
           Saved ✔️ Go to Food Log and add entries (lunch, dinner, snacks, etc.).
+        </div>
+
+        <div class="note" id="profileCalcHint" style="display:none;">
+          Targets calculated ✔️ (Not saved yet). If you want to keep them, click “Save Profile”.
         </div>
       </div>
 
@@ -574,7 +580,7 @@ Reset Everything:
 
         <div class="row cols2">
           <button class="btn" onclick="saveDay()">Save for the Day</button>
-          <button class="btn danger" onclick="resetFoodLogs()">Reset Food Logs (Selected Day)</button>
+          <button class="btn danger" onclick="resetFoodLogs()">Reset Food Logs (this date)</button>
         </div>
 
         <div class="divider"></div>
@@ -708,7 +714,7 @@ Reset Everything:
 
         <div class="row cols2">
           <button class="btn" onclick="saveLifestyle()">Save Lifestyle</button>
-          <button class="btn danger" onclick="resetLifestyle()">Reset Lifestyle (Selected Day)</button>
+          <button class="btn danger" onclick="resetLifestyle()">Reset Lifestyle (this date)</button>
         </div>
 
         <div class="note" id="lifeSavedNote" style="display:none;">
@@ -737,14 +743,67 @@ Reset Everything:
   </div>
 
 <script>
-/* ===== Base Storage Keys (namespaced by profile via keyFor()) ===== */
-const LS_PROFILE = "nowshad_macro_profile_v9";
-const LS_LOG = "nowshad_macro_dailylog_v9";
-const LS_LIFE = "nowshad_macro_lifestyle_v9";
+/* =========================================================
+   MULTI-PROFILE STORAGE (FIX)
+========================================================= */
+const LS_PROFILE_INDEX = "nowshad_profiles_index_v1";
 
-/* ===== Multi-profile meta keys ===== */
-const LS_ACTIVE_PROFILE = "nowshad_active_profile_v1";
-const LS_PROFILE_LIST   = "nowshad_profile_list_v1";
+function uid(){
+  return (crypto?.randomUUID ? crypto.randomUUID() : ("p_"+Date.now()+"_"+Math.random()));
+}
+
+// Per-profile keys
+function PROFILE_KEY(pid){ return "nowshad_macro_profile_v9__" + pid; }
+function LOG_KEY(pid){     return "nowshad_macro_dailylog_v9__" + pid; }
+function LIFE_KEY(pid){    return "nowshad_macro_lifestyle_v9__" + pid; }
+
+function loadIndex(){
+  try{
+    const raw = localStorage.getItem(LS_PROFILE_INDEX);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function saveIndex(idx){
+  localStorage.setItem(LS_PROFILE_INDEX, JSON.stringify(idx));
+}
+
+function ensureIndex(){
+  let idx = loadIndex();
+  if(idx && idx.activeId && Array.isArray(idx.profiles) && idx.profiles.length) return idx;
+
+  // create default
+  const id = uid();
+  idx = {
+    activeId: id,
+    profiles: [{ id, name: "Default" }]
+  };
+  saveIndex(idx);
+  return idx;
+}
+
+function getActiveProfileId(){
+  const idx = ensureIndex();
+  return idx.activeId;
+}
+
+function setActiveProfileId(id){
+  const idx = ensureIndex();
+  if(!idx.profiles.some(p=>p.id===id)) return;
+  idx.activeId = id;
+  saveIndex(idx);
+}
+
+/* ===== Storage accessors (active profile) ===== */
+function activeProfileStorage(){
+  const pid = getActiveProfileId();
+  return {
+    pid,
+    LS_PROFILE: PROFILE_KEY(pid),
+    LS_LOG: LOG_KEY(pid),
+    LS_LIFE: LIFE_KEY(pid)
+  };
+}
 
 /* ===== Helpers ===== */
 const $ = (id)=>document.getElementById(id);
@@ -754,128 +813,6 @@ const round1 = (x)=>Math.round(x*10)/10;
 const round2 = (x)=>Math.round(x*100)/100;
 function sum(a,b){ return {P:a.P+b.P, C:a.C+b.C, F:a.F+b.F, K:a.K+b.K}; }
 function zero(){ return {P:0,C:0,F:0,K:0}; }
-
-/* ===== Profile namespace ===== */
-function getActiveProfileId(){
-  return localStorage.getItem(LS_ACTIVE_PROFILE) || "default";
-}
-function setActiveProfileId(id){
-  localStorage.setItem(LS_ACTIVE_PROFILE, id);
-}
-function getProfileList(){
-  try{
-    const arr = JSON.parse(localStorage.getItem(LS_PROFILE_LIST) || "[]");
-    return Array.isArray(arr) && arr.length ? arr : [{id:"default", name:"Default"}];
-  }catch(e){
-    return [{id:"default", name:"Default"}];
-  }
-}
-function saveProfileList(list){
-  localStorage.setItem(LS_PROFILE_LIST, JSON.stringify(list));
-}
-function keyFor(baseKey){
-  return `${baseKey}__${getActiveProfileId()}`;
-}
-function ensureProfileSystem(){
-  let list = getProfileList();
-  if(!list.find(x=>x.id==="default")){
-    list.unshift({id:"default", name:"Default"});
-  }
-  saveProfileList(list);
-
-  const active = getActiveProfileId();
-  if(!list.find(x=>x.id===active)){
-    setActiveProfileId("default");
-  }
-}
-function rebuildProfileSelect(){
-  const sel = $("profileSelect");
-  if(!sel) return;
-
-  const list = getProfileList();
-  const active = getActiveProfileId();
-
-  sel.innerHTML = "";
-  list.forEach(p=>{
-    const opt = document.createElement("option");
-    opt.value = p.id;
-    opt.textContent = p.name;
-    sel.appendChild(opt);
-  });
-  sel.value = active;
-
-  sel.onchange = ()=>{
-    setActiveProfileId(sel.value);
-
-    // reload all for this profile
-    loadProfile();
-    toggleHeightUI(false);
-    toggleWeightUI(false);
-    updateProfilePreviewOnly();
-
-    const p = loadProfile() || getProfileDraft();
-    $("logDate").value = getDefaultLogDate(p);
-    $("lifeDate").value = getDefaultLogDate(p);
-
-    updateLifestyleUI();
-    renderEntries();
-    refreshAll();
-  };
-}
-function createProfile(){
-  const name = ($("newProfileName")?.value || "").trim();
-  if(!name){ alert("Enter a profile name."); return; }
-
-  let list = getProfileList();
-  const id = "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
-
-  list.push({id, name});
-  saveProfileList(list);
-  setActiveProfileId(id);
-
-  if($("newProfileName")) $("newProfileName").value = "";
-
-  rebuildProfileSelect();
-
-  // Start new profile clean
-  resetEverything(true);
-}
-function deleteActiveProfile(){
-  const active = getActiveProfileId();
-  if(active === "default"){
-    alert("Default profile cannot be deleted. Use Reset Everything if needed.");
-    return;
-  }
-  const list = getProfileList();
-  const current = list.find(x=>x.id===active);
-  if(!confirm(`Delete profile "${current?.name || "this profile"}" and ALL its data?`)) return;
-
-  // remove that profile’s data
-  localStorage.removeItem(`${LS_PROFILE}__${active}`);
-  localStorage.removeItem(`${LS_LOG}__${active}`);
-  localStorage.removeItem(`${LS_LIFE}__${active}`);
-
-  // remove from list and switch to default
-  const newList = list.filter(x=>x.id!==active);
-  saveProfileList(newList);
-  setActiveProfileId("default");
-
-  rebuildProfileSelect();
-
-  // Load default profile UI
-  loadProfile();
-  toggleHeightUI(false);
-  toggleWeightUI(false);
-  updateProfilePreviewOnly();
-
-  const p = loadProfile() || getProfileDraft();
-  $("logDate").value = getDefaultLogDate(p);
-  $("lifeDate").value = getDefaultLogDate(p);
-
-  updateLifestyleUI();
-  renderEntries();
-  refreshAll();
-}
 
 /* ===== Tabs ===== */
 document.querySelectorAll(".tabbtn").forEach(btn=>{
@@ -890,8 +827,6 @@ function showPage(name){
   ["dashboard","profile","food","lifestyle"].forEach(p=>{
     $("page-"+p).classList.toggle("hide", p!==name);
   });
-  // extra dashboard-only section
-  $("page-dashboard-profiles").classList.toggle("hide", name!=="dashboard");
 }
 
 /* ===== Chart (no blue) ===== */
@@ -919,7 +854,7 @@ let macroChart=null;
 let refreshTimer=null;
 function scheduleRefresh(){
   if(refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer=setTimeout(()=>{ refreshAll(); }, 160);
+  refreshTimer=setTimeout(()=>{ refreshAll(); }, 140);
 }
 
 /* ===== Unit-safe readers + auto-convert on switch ===== */
@@ -958,7 +893,7 @@ function convertHeight(from,to){
   }
 }
 
-/* ===== Targets dirty flags (saved) ===== */
+/* ===== Targets dirty flags ===== */
 function setDirty(id, val=true){ $(id).dataset.dirty = val ? "1" : ""; }
 function isDirty(id){ return $(id).dataset.dirty === "1"; }
 ["p_targetCalories","p_targetFats","p_targetCarbs"].forEach(id=>{
@@ -985,11 +920,9 @@ function getProfileDraft(){
   const tdee=bmr?bmr*activity:0;
   const basicsOk = (wkg>0 && hcm>0 && age>0 && tdee>0);
 
-  // Protein always from weight × multiplier
   const protMult = n($("p_protMult").value) || 2.2;
   const targetProtein = (wkg>0) ? Math.round((wkg * protMult)/5)*5 : 0;
 
-  // Target Calories = TDEE +/- goal
   let targetCaloriesAuto = 0;
   if (basicsOk) {
     const goal = $("p_goal").value;
@@ -1001,7 +934,6 @@ function getProfileDraft(){
     ? Math.max(1200, Math.round(n($("p_targetCalories").value)))
     : targetCaloriesAuto;
 
-  // Fats auto from preset unless overridden
   let fatPct = 0.30;
   const preset=$("p_macroPreset").value;
   if(preset==="higherCarb") fatPct = 0.25;
@@ -1015,7 +947,6 @@ function getProfileDraft(){
     ? Math.max(0, Math.round(n($("p_targetFats").value)))
     : fatsAuto;
 
-  // Carbs from remaining calories
   let carbsAuto = 0;
   if(targetCalories>0 && targetProtein>0){
     let remaining = targetCalories - (targetProtein*4) - (targetFats*9);
@@ -1097,11 +1028,22 @@ function updateProfilePreviewOnly(){
   scheduleRefresh();
 }
 
+/* ===== “Calculate targets” button (NO SAVE) ===== */
+function calculateTargetsOnly(){
+  $("profileCalcHint").style.display="block";
+  $("profileSaveHint").style.display="none";
+  updateProfilePreviewOnly();
+  refreshAll();
+}
+
+/* ===== Save / Load profile (ACTIVE PROFILE) ===== */
 function saveProfile(){
+  const { LS_PROFILE } = activeProfileStorage();
   try{
     const p=getProfileDraft();
-    localStorage.setItem(keyFor(LS_PROFILE), JSON.stringify(p));
+    localStorage.setItem(LS_PROFILE, JSON.stringify(p));
     $("profileSaveHint").style.display="block";
+    $("profileCalcHint").style.display="none";
     $("profileSavedNote").style.display="block";
     scheduleRefresh();
   }catch(e){
@@ -1110,7 +1052,8 @@ function saveProfile(){
 }
 
 function loadProfile(){
-  const raw=localStorage.getItem(keyFor(LS_PROFILE));
+  const { LS_PROFILE } = activeProfileStorage();
+  const raw=localStorage.getItem(LS_PROFILE);
   if(!raw) return null;
   try{
     const p=JSON.parse(raw);
@@ -1151,6 +1094,41 @@ function loadProfile(){
   }catch(e){ return null; }
 }
 
+/* ===== Reset profile only (ACTIVE PROFILE) ===== */
+function resetProfileOnly(){
+  if(!confirm("Reset ONLY profile fields for this active profile? (Food logs and Lifestyle remain.)")) return;
+  const { LS_PROFILE } = activeProfileStorage();
+  localStorage.removeItem(LS_PROFILE);
+
+  // clear UI
+  [
+    "p_name","p_age","p_height_cm","p_height_ft","p_height_in","p_weight_kg","p_weight_lbs",
+    "p_targetCalories","p_targetFats","p_targetCarbs"
+  ].forEach(id=>{ $(id).value=""; });
+
+  $("p_height_unit").value="ftin";
+  $("p_weight_unit").value="kg";
+  $("p_goal").value="loss";
+  $("p_activity").value="1.2";
+  $("p_dayStartHour").value="4";
+  $("p_sex").value="male";
+  $("p_macroPreset").value="higherProtein";
+  $("p_protMult").value="2.2";
+
+  setDirty("p_targetCalories", false);
+  setDirty("p_targetFats", false);
+  setDirty("p_targetCarbs", false);
+
+  $("profileSaveHint").style.display="none";
+  $("profileCalcHint").style.display="none";
+  $("profileSavedNote").style.display="none";
+
+  toggleHeightUI(false);
+  toggleWeightUI(false);
+  updateProfilePreviewOnly();
+  scheduleRefresh();
+}
+
 /* Profile listeners */
 [
  "p_name","p_age","p_height_cm","p_height_ft","p_height_in","p_weight_kg","p_weight_lbs",
@@ -1170,13 +1148,45 @@ function getDefaultLogDate(profile){
   return adjusted.toISOString().slice(0,10);
 }
 
-/* ===== Logs (profile-scoped) ===== */
-function loadAllLogs(){ try{ return JSON.parse(localStorage.getItem(keyFor(LS_LOG)) || "{}"); }catch(e){ return {}; } }
-function saveAllLogs(obj){ localStorage.setItem(keyFor(LS_LOG), JSON.stringify(obj)); }
-function getDayLog(dateKey){ const all=loadAllLogs(); return all[dateKey] || { entries: [] }; }
-function setDayLog(dateKey, dayLog){ const all=loadAllLogs(); all[dateKey]=dayLog; saveAllLogs(all); }
+/* ===== Logs (ACTIVE PROFILE) ===== */
+function loadAllLogs(){
+  const { LS_LOG } = activeProfileStorage();
+  try{ return JSON.parse(localStorage.getItem(LS_LOG) || "{}"); }catch(e){ return {}; }
+}
+function saveAllLogs(obj){
+  const { LS_LOG } = activeProfileStorage();
+  localStorage.setItem(LS_LOG, JSON.stringify(obj));
+}
+function getDayLog(dateKey){
+  const all=loadAllLogs(); return all[dateKey] || { entries: [] };
+}
+function setDayLog(dateKey, dayLog){
+  const all=loadAllLogs(); all[dateKey]=dayLog; saveAllLogs(all);
+}
 
-/* ===== Food DB ===== */
+/* ===== Lifestyle (ACTIVE PROFILE) ===== */
+function loadAllLifestyle(){
+  const { LS_LIFE } = activeProfileStorage();
+  try{ return JSON.parse(localStorage.getItem(LS_LIFE) || "{}"); }catch(e){ return {}; }
+}
+function saveAllLifestyle(obj){
+  const { LS_LIFE } = activeProfileStorage();
+  localStorage.setItem(LS_LIFE, JSON.stringify(obj));
+}
+function getLifestyle(dateKey){
+  const all=loadAllLifestyle();
+  return all[dateKey] || {
+    workoutType:"none", strengthSplit:"chest_triceps", workoutMins:0, burnKcal:0,
+    sleepHours:0, sleepGoal:8, waterLiters:0, waterGoal:3
+  };
+}
+function setLifestyle(dateKey, data){
+  const all=loadAllLifestyle();
+  all[dateKey]=data;
+  saveAllLifestyle(all);
+}
+
+/* ===== Food DB (unchanged, add Dessert category easily) ===== */
 const FOOD = {
   "Chicken Breast": { unitOptions:["g"], perUnit:{g:{P:31/100, C:0, F:3.6/100, K:165/100}} },
   "Chicken Thigh": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:8/100, K:209/100}} },
@@ -1245,6 +1255,15 @@ const FOOD = {
   "Fried Chicken Meal (KFC style)": { unitOptions:["plate"], perUnit:{plate:{P:35, C:45, F:30, K:700}} },
   "Whopper": { unitOptions:["pcs"], perUnit:{pcs:{P:30.4, C:51.1, F:38.4, K:678.8}} },
   "Double Whopper": { unitOptions:["pcs"], perUnit:{pcs:{P:46, C:46, F:52, K:838}} },
+
+  // Dessert add-ons you requested
+  "Cake Slice": { unitOptions:["slice"], perUnit:{slice:{P:4, C:45, F:12, K:300}} },
+  "Chocolate Cube": { unitOptions:["cube"], perUnit:{cube:{P:1, C:6, F:3, K:55}} },
+  "Ice Cream Scoop": { unitOptions:["scoop"], perUnit:{scoop:{P:2.5, C:16, F:7.5, K:140}} },
+  "Rice Pudding (Kheer)": { unitOptions:["bowl"], perUnit:{bowl:{P:6, C:34, F:7, K:220}} },
+  "Shemai (Semiya)": { unitOptions:["bowl"], perUnit:{bowl:{P:7, C:52, F:10, K:330}} },
+  "Jorda": { unitOptions:["plate"], perUnit:{plate:{P:6, C:70, F:12, K:420}} },
+  "Firni": { unitOptions:["bowl"], perUnit:{bowl:{P:6, C:36, F:8, K:240}} },
 };
 
 const CATEGORY_ITEMS = {
@@ -1255,6 +1274,7 @@ const CATEGORY_ITEMS = {
   "Fats": ["Butter","Olive Oil","Soybean Oil","Ghee"],
   "Snacks & Fruits": ["Peanut Butter","Yogurt / Curd","Dates (Deglet Noor style)","Dates (Ajwa small)","Dates (Medjool large)","Almonds","Peanuts","Cashews","Walnuts","Pistachios","Banana","Apple","Orange","Mango (1 cup slices)","Grapes (1 cup)"],
   "Meals": ["Kacchi Biryani","Biryani (general)","Khichuri","Fried Rice","Shawarma (wrap)","Chicken Broast","Beef Steak Meal","Fried Chicken Meal (KFC style)","Whopper","Double Whopper"],
+  "Dessert": ["Cake Slice","Chocolate Cube","Ice Cream Scoop","Rice Pudding (Kheer)","Shemai (Semiya)","Jorda","Firni"],
 };
 
 function computeFood(foodName, qty, unit){
@@ -1421,22 +1441,7 @@ function resetFoodLogs(){
   scheduleRefresh();
 }
 
-/* ===== Lifestyle (profile-scoped) ===== */
-function loadAllLifestyle(){ try{ return JSON.parse(localStorage.getItem(keyFor(LS_LIFE)) || "{}"); }catch(e){ return {}; } }
-function saveAllLifestyle(obj){ localStorage.setItem(keyFor(LS_LIFE), JSON.stringify(obj)); }
-function getLifestyle(dateKey){
-  const all=loadAllLifestyle();
-  return all[dateKey] || {
-    workoutType:"none", strengthSplit:"chest_triceps", workoutMins:0, burnKcal:0,
-    sleepHours:0, sleepGoal:8, waterLiters:0, waterGoal:3
-  };
-}
-function setLifestyle(dateKey, data){
-  const all=loadAllLifestyle();
-  all[dateKey]=data;
-  saveAllLifestyle(all);
-}
-
+/* ===== Lifestyle ===== */
 const BURN_PER_MIN = { none:0, walking:4.0, running:10.0, cycling:8.0, aerobic:7.0, cardio:7.5, hiit:12.0, strength:6.5 };
 function calcBurn(){
   const type=$("workoutType").value;
@@ -1508,119 +1513,6 @@ function resetLifestyle(){
   scheduleRefresh();
 }
 
-/* ===== Reset Only Today (active profile only) ===== */
-function resetToday(){
-  const profile = loadProfile() || getProfileDraft();
-  const dateKey = $("logDate").value || getDefaultLogDate(profile);
-  const lifeKey = $("lifeDate").value || dateKey;
-
-  if(!confirm(
-    `Reset ONLY today (${dateKey}) for the active profile?\n\n`+
-    `• Food entries for ${dateKey}\n`+
-    `• Lifestyle for ${lifeKey}\n\n`+
-    `Profile will NOT be deleted.`
-  )) return;
-
-  setDayLog(dateKey, { entries: [] });
-  setLifestyle(lifeKey, {
-    workoutType:"none", strengthSplit:"chest_triceps", workoutMins:0, burnKcal:0,
-    sleepHours:0, sleepGoal:8, waterLiters:0, waterGoal:3
-  });
-
-  renderEntries();
-  updateLifestyleUI();
-  refreshAll();
-  alert("Today has been reset ✔️");
-}
-
-/* ===== Reset Everything (ALL profiles + ALL data on device) ===== */
-function resetEverything(silent=false){
-  if(!silent){
-    if(!confirm(
-      "This will delete ALL profiles + ALL saved data on this device.\n\n" +
-      "• Profiles list\n" +
-      "• All Profile data\n" +
-      "• All Food logs (all days)\n" +
-      "• All Lifestyle (all days)\n\n" +
-      "This cannot be undone. Continue?"
-    )) return;
-  }
-
-  // Remove ALL app keys (including namespaced)
-  const toDelete = [];
-  for(let i=0;i<localStorage.length;i++){
-    const k = localStorage.key(i);
-    if(!k) continue;
-
-    const hits =
-      k === LS_PROFILE_LIST ||
-      k === LS_ACTIVE_PROFILE ||
-      k.startsWith(LS_PROFILE + "__") ||
-      k.startsWith(LS_LOG + "__") ||
-      k.startsWith(LS_LIFE + "__");
-
-    if(hits) toDelete.push(k);
-  }
-  toDelete.forEach(k=>localStorage.removeItem(k));
-
-  // Recreate system defaults
-  ensureProfileSystem();
-  setActiveProfileId("default");
-  rebuildProfileSelect();
-
-  // Clear dirty flags
-  ["p_targetCalories","p_targetFats","p_targetCarbs"].forEach(id=>{
-    if($(id)) $(id).dataset.dirty = "";
-  });
-
-  // Reset UI fields
-  $("p_name").value="";
-  $("p_age").value="";
-  $("p_sex").value="male";
-  $("p_height_unit").value="ftin";
-  $("p_weight_unit").value="kg";
-  $("p_height_cm").value="";
-  $("p_height_ft").value="";
-  $("p_height_in").value="";
-  $("p_weight_kg").value="";
-  $("p_weight_lbs").value="";
-  $("p_goal").value="loss";
-  $("p_activity").value="1.2";
-  $("p_dayStartHour").value="4";
-  $("p_macroPreset").value="higherProtein";
-  $("p_protMult").value="2.2";
-  $("p_targetCalories").value="";
-  $("p_targetProtein").value="";
-  $("p_targetFats").value="";
-  $("p_targetCarbs").value="";
-
-  if($("profileSavedNote")) $("profileSavedNote").style.display="none";
-  if($("profileSaveHint")) $("profileSaveHint").style.display="none";
-  if($("lifeSavedNote")) $("lifeSavedNote").style.display="none";
-
-  toggleHeightUI(false);
-  toggleWeightUI(false);
-  updateProfilePreviewOnly();
-
-  const p = getProfileDraft();
-  const d = getDefaultLogDate(p);
-  $("logDate").value = d;
-  $("lifeDate").value = d;
-
-  // rebuild food selects safely
-  buildCategorySelect();
-  $("entryCategory").value = Object.keys(CATEGORY_ITEMS)[0] || "Chicken";
-  buildFoodSelectForCategory($("entryCategory").value);
-  buildUnitSelect($("entryFood").value);
-  updateEntryPreview();
-
-  updateLifestyleUI();
-  renderEntries();
-  refreshAll();
-
-  if(!silent) alert("Everything has been reset ✔️");
-}
-
 /* ===== BMI bar ===== */
 function updateBMIBar(bmi){
   const fill=$("bmiFill");
@@ -1664,7 +1556,7 @@ function refreshAll(){
 
   if(!tCal){
     $("dashCalBalance").textContent="—";
-    $("dashCalBalanceMsg").textContent="Complete Profile to calculate targets.";
+    $("dashCalBalanceMsg").textContent="Profile not calculated yet. Go to Profile → Calculate Targets.";
     $("dashCalBalance").className="big";
   }else{
     const diff=Math.round(netK - tCal);
@@ -1684,7 +1576,7 @@ function refreshAll(){
   }
 
   function setMacroBalanceNumeric(diffG, valEl, msgEl, label){
-    if(!isFinite(diffG)){
+    if(!isFinite(diffG) || !label){
       valEl.textContent="—"; valEl.className="big";
       msgEl.textContent="—"; return;
     }
@@ -1724,6 +1616,40 @@ function refreshAll(){
   }
 }
 
+/* ===== Reset Only Today / Reset Everything ===== */
+function resetOnlyToday(){
+  const profile=loadProfile() || getProfileDraft();
+  const dateKeyFood = $("logDate").value || getDefaultLogDate(profile);
+  const dateKeyLife = $("lifeDate").value || getDefaultLogDate(profile);
+
+  if(!confirm(`Reset ONLY today for active profile?\n\nFood log date: ${dateKeyFood}\nLifestyle date: ${dateKeyLife}`)) return;
+
+  setDayLog(dateKeyFood, { entries: [] });
+  setLifestyle(dateKeyLife, {
+    workoutType:"none", strengthSplit:"chest_triceps", workoutMins:0, burnKcal:0,
+    sleepHours:0, sleepGoal:8, waterLiters:0, waterGoal:3
+  });
+
+  renderEntries();
+  updateLifestyleUI();
+  scheduleRefresh();
+}
+
+function resetEverything(){
+  if(!confirm("Reset EVERYTHING?\nThis will delete ALL profiles + all data on this device.")) return;
+
+  // remove all profile keys
+  const idx = ensureIndex();
+  idx.profiles.forEach(p=>{
+    localStorage.removeItem(PROFILE_KEY(p.id));
+    localStorage.removeItem(LOG_KEY(p.id));
+    localStorage.removeItem(LIFE_KEY(p.id));
+  });
+  localStorage.removeItem(LS_PROFILE_INDEX);
+
+  location.reload();
+}
+
 /* ===== PDF ===== */
 async function savePDF(){
   const { jsPDF } = window.jspdf;
@@ -1735,6 +1661,7 @@ async function savePDF(){
   const netK = Math.max(0, total.K - burn);
 
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   let y=46;
 
   doc.setFont("helvetica","bold"); doc.setFontSize(18);
@@ -1749,7 +1676,6 @@ async function savePDF(){
 
   doc.setFont("helvetica","normal"); doc.setFontSize(11);
   [
-    `Active Profile: ${getProfileList().find(x=>x.id===getActiveProfileId())?.name || "Default"}`,
     `Name: ${profile.name || "—"}   |   Age: ${profile.age || "—"}   |   Sex: ${profile.sex || "—"}`,
     `BMI: ${profile.bmi ? round2(profile.bmi) : "—"}   |   BMR: ${profile.bmr ? Math.round(profile.bmr) : "—"} kcal   |   TDEE: ${profile.tdee ? Math.round(profile.tdee) : "—"} kcal`,
     `Goal: ${profile.goal || "—"}   |   Target Calories: ${profile.targetCalories ? Math.round(profile.targetCalories) : "—"} kcal`,
@@ -1770,45 +1696,144 @@ async function savePDF(){
 
   doc.setFont("helvetica","bold"); doc.text("Macro Chart", 40, y); y+=10;
   const imgData = $("macroChart").toDataURL("image/png", 1.0);
-  doc.addImage(imgData, "PNG", 40, y, pageW-80, 220);
+
+  const chartH = 220;
+  if (y + chartH + 40 > pageH) { doc.addPage(); y = 50; }
+  doc.addImage(imgData, "PNG", 40, y, pageW-80, chartH);
 
   doc.save("Nowshad_Macro_Report.pdf");
 }
 
-/* ===== Init ===== */
+/* =========================================================
+   PROFILES UI (Create / Switch / Delete)
+========================================================= */
+function renderProfilesUI(){
+  const idx = ensureIndex();
+  const sel = $("activeProfileSelect");
+  sel.innerHTML = "";
+  idx.profiles.forEach(p=>{
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+  sel.value = idx.activeId;
+
+  // note
+  const activeName = idx.profiles.find(x=>x.id===idx.activeId)?.name || "Default";
+  const note = $("profileSwitchNote");
+  note.style.display = "block";
+  note.textContent = `Active profile: ${activeName}`;
+}
+
+function switchToProfile(pid){
+  setActiveProfileId(pid);
+
+  // reload active profile UI + day/lifestyle UI
+  loadProfile(); // loads into fields if exists
+  toggleHeightUI(false);
+  toggleWeightUI(false);
+  updateProfilePreviewOnly();
+
+  // set dates from active profile draft
+  const p = loadProfile() || getProfileDraft();
+  $("logDate").value = getDefaultLogDate(p);
+  $("lifeDate").value = getDefaultLogDate(p);
+
+  // refresh views
+  renderEntries();
+  updateLifestyleUI();
+  refreshAll();
+
+  renderProfilesUI();
+}
+
+function createProfile(){
+  const name = ($("newProfileName").value || "").trim();
+  if(!name){ alert("Enter a profile name first."); return; }
+
+  const idx = ensureIndex();
+  const id = uid();
+  idx.profiles.push({ id, name });
+  idx.activeId = id;
+  saveIndex(idx);
+
+  $("newProfileName").value = "";
+  renderProfilesUI();
+  switchToProfile(id);
+}
+
+function deleteActiveProfile(){
+  const idx = ensureIndex();
+  if(idx.profiles.length<=1){
+    alert("You cannot delete the last remaining profile.");
+    return;
+  }
+
+  const activeId = idx.activeId;
+  const activeName = idx.profiles.find(p=>p.id===activeId)?.name || "Active";
+
+  if(!confirm(`Delete profile "${activeName}"?\nThis will remove its Profile + Food logs + Lifestyle from this device.`)) return;
+
+  // delete storage
+  localStorage.removeItem(PROFILE_KEY(activeId));
+  localStorage.removeItem(LOG_KEY(activeId));
+  localStorage.removeItem(LIFE_KEY(activeId));
+
+  // remove from index
+  idx.profiles = idx.profiles.filter(p=>p.id!==activeId);
+  idx.activeId = idx.profiles[0].id;
+  saveIndex(idx);
+
+  renderProfilesUI();
+  switchToProfile(idx.activeId);
+}
+
+function resetOnlyTodayFromProfilePanel(){
+  resetOnlyToday();
+}
+
+/* =========================================================
+   INIT
+========================================================= */
 (function init(){
-  ensureProfileSystem();
-  rebuildProfileSelect();
+  // Ensure profile index exists
+  ensureIndex();
 
-  // Show dashboard profiles section by default (dashboard is active)
-  $("page-dashboard-profiles").classList.remove("hide");
+  // Profiles UI events
+  renderProfilesUI();
+  $("activeProfileSelect").addEventListener("change", (e)=>switchToProfile(e.target.value));
+  $("btnCreateProfile").addEventListener("click", createProfile);
+  $("btnDeleteProfile").addEventListener("click", deleteActiveProfile);
+  $("btnResetTodayProfile").addEventListener("click", resetOnlyTodayFromProfilePanel);
 
-  // Load profile if exists
+  // Load active profile if exists (fix for “profile not saving / switching”)
   loadProfile();
   toggleHeightUI(false);
   toggleWeightUI(false);
   updateProfilePreviewOnly();
 
-  // Default dates
+  // Default dates based on active profile
   const p = loadProfile() || getProfileDraft();
   $("logDate").value = getDefaultLogDate(p);
+  $("lifeDate").value = getDefaultLogDate(p);
+
   $("logDate").addEventListener("change", ()=>{ renderEntries(); scheduleRefresh(); });
+  $("lifeDate").addEventListener("change", ()=>{ updateLifestyleUI(); scheduleRefresh(); });
 
   // Food selects
   buildCategorySelect();
-  $("entryCategory").value = Object.keys(CATEGORY_ITEMS)[0] || "Chicken";
-  buildFoodSelectForCategory($("entryCategory").value);
+  $("entryCategory").value = "Chicken";
+  buildFoodSelectForCategory("Chicken");
   buildUnitSelect($("entryFood").value);
   updateEntryPreview();
 
   // Lifestyle
-  $("lifeDate").value = getDefaultLogDate(p);
-  $("lifeDate").addEventListener("change", ()=>{ updateLifestyleUI(); scheduleRefresh(); });
   updateLifestyleUI();
 
+  // initial render
   renderEntries();
   refreshAll();
-  showPage("dashboard");
 })();
 </script>
 
