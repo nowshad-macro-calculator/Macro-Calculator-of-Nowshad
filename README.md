@@ -289,25 +289,7 @@
         <div class="divider"></div>
 
        <div class="row cols2">
-       <div class="divider"></div>
 
-<h3>Profiles</h3>
-<div class="sub">Switch users on the same device. Each profile has its own Profile + Food logs + Lifestyle.</div>
-
-<div class="row cols3" style="margin-top:10px;">
-  <div>
-    <label>Active profile</label>
-    <select id="profileSelect"></select>
-  </div>
-  <div>
-    <label>New profile name</label>
-    <input id="newProfileName" placeholder="e.g., Nowshad / Aymaan / Guest">
-  </div>
-  <div style="display:flex; align-items:end; gap:10px;">
-    <button class="btn" onclick="createProfile()">Create</button>
-    <button class="btn danger" onclick="deleteActiveProfile()">Delete</button>
-  </div>
-</div>
 <div class="row cols3">
   <button class="btn" onclick="savePDF()">Save PDF Report</button>
   <button class="btn secondary" onclick="resetToday()">Reset Only Today</button>
@@ -326,6 +308,29 @@
           <canvas id="macroChart"></canvas>
         </div>
       </div>
+
+      <div class="divider"></div>
+
+<h3>Profiles</h3>
+<div class="sub">Switch users on the same device. Each profile has its own Profile + Food logs + Lifestyle.</div>
+
+<div class="row cols2" style="margin-top:10px;">
+  <div>
+    <label>Active profile</label>
+    <select id="profileSelect"></select>
+  </div>
+  <div>
+    <label>New profile name</label>
+    <input id="newProfileName" placeholder="e.g., Nowshad / Aymaan / Guest">
+  </div>
+</div>
+
+<div class="row cols3" style="margin-top:10px;">
+  <button class="btn" onclick="createProfile()">Create Profile</button>
+  <button class="btn secondary" onclick="resetToday()">Reset Only Today</button>
+  <button class="btn danger" onclick="deleteActiveProfile()">Delete Profile</button>
+</div>
+
     </section>
 
     <!-- PROFILE -->
