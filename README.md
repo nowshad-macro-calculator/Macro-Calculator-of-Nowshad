@@ -278,7 +278,7 @@
       </div>
     </section>
 
-    <!-- PROFILE (unchanged UI; same as before) -->
+    <!-- PROFILE -->
     <section id="page-profile" class="grid cols2 hide" style="margin-top:14px;">
       <div class="card">
         <h2>Profile</h2>
@@ -446,7 +446,7 @@
       </div>
     </section>
 
-    <!-- FOOD LOG (same as previous build) -->
+    <!-- FOOD LOG -->
     <section id="page-food" class="grid cols2 hide" style="margin-top:14px;">
       <div class="card">
         <h2>Food Log (Multiple entries/day)</h2>
@@ -677,9 +677,9 @@
 
 <script>
 /* ===== Storage ===== */
-const LS_PROFILE = "nowshad_macro_profile_v6";
-const LS_LOG = "nowshad_macro_dailylog_v6";
-const LS_LIFE = "nowshad_macro_lifestyle_v6";
+const LS_PROFILE = "nowshad_macro_profile_v7";
+const LS_LOG = "nowshad_macro_dailylog_v7";
+const LS_LIFE = "nowshad_macro_lifestyle_v7";
 
 /* ===== Helpers ===== */
 const $ = (id)=>document.getElementById(id);
@@ -689,6 +689,7 @@ const round1 = (x)=>Math.round(x*10)/10;
 const round2 = (x)=>Math.round(x*100)/100;
 function sum(a,b){ return {P:a.P+b.P, C:a.C+b.C, F:a.F+b.F, K:a.K+b.K}; }
 function zero(){ return {P:0,C:0,F:0,K:0}; }
+function hasProfileBasics(p){ return (p.wkg>0 && p.hm>0 && p.age>0); }
 
 /* ===== Tabs ===== */
 document.querySelectorAll(".tabbtn").forEach(btn=>{
@@ -705,7 +706,7 @@ function showPage(name){
   });
 }
 
-/* ===== Food DB (unchanged from previous version) ===== */
+/* ===== Food DB ===== */
 const FOOD = {
   "Chicken Breast": { unitOptions:["g"], perUnit:{g:{P:31/100, C:0, F:3.6/100, K:165/100}} },
   "Chicken Thigh": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:8/100, K:209/100}} },
@@ -814,54 +815,79 @@ function scheduleRefresh(){
   refreshTimer=setTimeout(()=>{ refreshAll(); }, 180);
 }
 
-/* ===== Profile calc ===== */
+/* ===== Unit-safe readers (FIX) ===== */
+function readWeightKg(){
+  const u = $("p_weight_unit").value; // kg/lbs
+  const kg = n($("p_weight_kg").value);
+  const lbs = n($("p_weight_lbs").value);
+  return (u==="lbs") ? lbs*0.45359237 : kg;
+}
+function readHeightCm(){
+  const u = $("p_height_unit").value; // ftin/cm
+  const cm = n($("p_height_cm").value);
+  const ft = n($("p_height_ft").value);
+  const inch = n($("p_height_in").value);
+  return (u==="cm") ? cm : (ft*30.48 + inch*2.54);
+}
+
+/* ===== Profile calc (FIXED targets) ===== */
 function getProfileDraft(){
   const sex=$("p_sex").value;
   const age=n($("p_age").value);
-  const wUnit=$("p_weight_unit").value;
-  const hUnit=$("p_height_unit").value;
 
-  let wkg = wUnit==="kg" ? n($("p_weight_kg").value) : n($("p_weight_lbs").value)*0.45359237;
-  let hm=0;
-  if(hUnit==="cm") hm=n($("p_height_cm").value)/100;
-  else hm=(n($("p_height_ft").value)*0.3048)+(n($("p_height_in").value)*0.0254);
-  const hcm=hm*100;
+  const wkg = readWeightKg();
+  const hcm = readHeightCm();
+  const hm = hcm/100;
 
   const bmi=(wkg>0&&hm>0)?(wkg/(hm*hm)):0;
+
   let bmr=0;
-  if(wkg>0&&hcm>0&&age>0){
-    bmr=(10*wkg)+(6.25*hcm)-(5*age)+(sex==="male"?5:-161);
+  if(wkg>0 && hcm>0 && age>0){
+    bmr = (10*wkg) + (6.25*hcm) - (5*age) + (sex==="male"?5:-161);
   }
+
   const activity=n($("p_activity").value);
   const tdee=bmr?bmr*activity:0;
 
-  const goal=$("p_goal").value;
-  let targetCalories=tdee;
-  if(goal==="loss") targetCalories=tdee-500;
-  if(goal==="gain") targetCalories=tdee+400;
+  const basicsOk = (wkg>0 && hcm>0 && age>0);
 
-  const pMin=wkg? wkg*1.5 : 0;
-  const pMax=wkg? wkg*2.0 : 0;
+  // Protein range
+  const pMin = wkg ? wkg*1.5 : 0;
+  const pMax = wkg ? wkg*2.0 : 0;
 
-  let pTargetAuto=0;
-  if(pMin>0){
-    const ref=pMin+(pMax-pMin)*0.45;
-    pTargetAuto=Math.round(ref/5)*5;
+  // Reference protein between min and max (e.g., 161–214 -> ~200)
+  let pTargetAuto = 0;
+  if(pMin>0 && pMax>0){
+    const ref = pMin + (pMax - pMin)*0.45;
+    pTargetAuto = Math.round(ref/5)*5;
   }
 
-  const preset=$("p_macroPreset").value;
-  let fatPct=.30, carbPct=.40;
-  if(preset==="higherCarb"){ fatPct=.25; carbPct=.50; }
-  if(preset==="higherProtein"){ fatPct=.25; carbPct=.35; }
-
   let pTarget = n($("p_targetProtein").value) || pTargetAuto;
-  let userTC=n($("p_targetCalories").value);
-  if(userTC>0) targetCalories=userTC;
 
-  const remaining=Math.max(0, targetCalories - pTarget*4);
-  const cfTotal=carbPct+fatPct;
-  const cTargetAuto=Math.round(((remaining*(carbPct/cfTotal))/4)/5)*5;
-  const fTargetAuto=Math.round((remaining*(fatPct/cfTotal))/9);
+  // Target calories only if valid
+  let targetCalories = 0;
+  if(basicsOk && tdee>0){
+    const goal=$("p_goal").value;
+    targetCalories = tdee + (goal==="gain"?400:(goal==="loss"?-500:0));
+    targetCalories = Math.max(1200, Math.round(targetCalories));
+  }
+
+  const userTC=n($("p_targetCalories").value);
+  if(userTC>0) targetCalories = Math.max(1200, Math.round(userTC));
+
+  // Carbs/fats allocation
+  let cTargetAuto=0, fTargetAuto=0;
+  if(targetCalories>0 && pTarget>0){
+    const preset=$("p_macroPreset").value;
+    let fatPct=.30, carbPct=.40;
+    if(preset==="higherCarb"){ fatPct=.25; carbPct=.50; }
+    if(preset==="higherProtein"){ fatPct=.25; carbPct=.35; }
+
+    const remaining=Math.max(0, targetCalories - pTarget*4);
+    const cfTotal=carbPct+fatPct;
+    cTargetAuto=Math.round(((remaining*(carbPct/cfTotal))/4)/5)*5;
+    fTargetAuto=Math.round((remaining*(fatPct/cfTotal))/9);
+  }
 
   const cTarget=n($("p_targetCarbs").value) || cTargetAuto;
   const fTarget=n($("p_targetFats").value) || fTargetAuto;
@@ -869,17 +895,22 @@ function getProfileDraft(){
   return {
     name:$("p_name").value||"",
     sex, age,
-    heightUnit:hUnit, weightUnit:wUnit,
+    heightUnit:$("p_height_unit").value,
+    weightUnit:$("p_weight_unit").value,
     height_cm:n($("p_height_cm").value),
     height_ft:n($("p_height_ft").value),
     height_in:n($("p_height_in").value),
     weight_kg:n($("p_weight_kg").value),
     weight_lbs:n($("p_weight_lbs").value),
     wkg, hm, bmi, bmr, tdee,
-    goal, activity,
+    goal:$("p_goal").value,
+    activity,
     dayStartHour:clamp(parseInt($("p_dayStartHour").value||"4",10),0,23),
-    targetCalories, targetProtein:pTarget, targetCarbs:cTarget, targetFats:fTarget,
-    macroPreset:preset
+    targetCalories,
+    targetProtein:pTarget,
+    targetCarbs:cTarget,
+    targetFats:fTarget,
+    macroPreset:$("p_macroPreset").value
   };
 }
 
@@ -890,10 +921,15 @@ function updateProfilePreviewOnly(){
   $("p_tdeeLine").textContent = p.tdee? Math.round(p.tdee)+" kcal" : "—";
   $("p_targetLine").textContent = "Target: " + (p.targetCalories?Math.round(p.targetCalories)+" kcal":"—");
 
-  if(!n($("p_targetCalories").value) && p.targetCalories) $("p_targetCalories").value=Math.round(p.targetCalories);
-  if(!n($("p_targetProtein").value) && p.targetProtein) $("p_targetProtein").value=p.targetProtein;
-  if(!n($("p_targetCarbs").value) && p.targetCarbs) $("p_targetCarbs").value=p.targetCarbs;
-  if(!n($("p_targetFats").value) && p.targetFats) $("p_targetFats").value=p.targetFats;
+  const basicsOk = (p.wkg>0 && p.age>0 && (p.hm>0));
+
+  // Auto-fill only when valid
+  if(basicsOk){
+    if (!n($("p_targetCalories").value) && p.targetCalories) $("p_targetCalories").value=Math.round(p.targetCalories);
+    if (!n($("p_targetProtein").value) && p.targetProtein) $("p_targetProtein").value=p.targetProtein;
+    if (!n($("p_targetCarbs").value) && p.targetCarbs) $("p_targetCarbs").value=p.targetCarbs;
+    if (!n($("p_targetFats").value) && p.targetFats) $("p_targetFats").value=p.targetFats;
+  }
 
   scheduleRefresh();
 }
@@ -942,6 +978,7 @@ function loadProfile(){
     $("profileSavedNote").style.display="block";
     toggleHeightUI();
     toggleWeightUI();
+    updateProfilePreviewOnly();
     return p;
   }catch(e){ return null; }
 }
@@ -1044,17 +1081,17 @@ function updateEntryPreview(){
   $("entryPrevK").textContent=Math.round(t.K);
 }
 
-$("entryCategory")?.addEventListener("change", ()=>{
+$("entryCategory").addEventListener("change", ()=>{
   buildFoodSelectForCategory($("entryCategory").value);
   buildUnitSelect($("entryFood").value);
   updateEntryPreview();
 });
-$("entryFood")?.addEventListener("change", ()=>{
+$("entryFood").addEventListener("change", ()=>{
   buildUnitSelect($("entryFood").value);
   updateEntryPreview();
 });
-$("entryUnit")?.addEventListener("change", updateEntryPreview);
-$("entryQty")?.addEventListener("input", updateEntryPreview);
+$("entryUnit").addEventListener("change", updateEntryPreview);
+$("entryQty").addEventListener("input", updateEntryPreview);
 
 /* ===== Add entry ===== */
 function addEntry(){
@@ -1130,6 +1167,13 @@ function renderEntries(){
       scheduleRefresh();
     });
   });
+
+  // also update live totals immediately
+  const total=computeTotalsFromEntries();
+  $("liveP").textContent = round1(total.P) + " g";
+  $("liveC").textContent = round1(total.C) + " g";
+  $("liveF").textContent = round1(total.F) + " g";
+  $("liveK").textContent = Math.round(total.K) + " kcal";
 }
 
 /* ===== Save/Reset foods ===== */
@@ -1157,7 +1201,7 @@ function computeTotalsFromEntries(){
   return total;
 }
 
-/* ===== Lifestyle (Sleep/Water/Workout) ===== */
+/* ===== Lifestyle ===== */
 function loadAllLifestyle(){
   try{ return JSON.parse(localStorage.getItem(LS_LIFE) || "{}"); }catch(e){ return {}; }
 }
@@ -1202,9 +1246,9 @@ function updateLifestyleUI(){
   $("strengthSplit").value=data.strengthSplit || "chest_triceps";
   $("workoutMins").value=data.workoutMins ?? 0;
   $("sleepHours").value=data.sleepHours ?? 0;
-  $("sleepGoal").value=String(data.sleepGoal ?? 8);
+  $("sleepGoal").value(String(data.sleepGoal ?? 8));
   $("waterLiters").value=data.waterLiters ?? 0;
-  $("waterGoal").value=String(data.waterGoal ?? 3);
+  $("waterGoal").value(String(data.waterGoal ?? 3));
 
   $("strengthSplitWrap").classList.toggle("hide", $("workoutType").value!=="strength");
   $("burnPreview").textContent = data.burnKcal ?? 0;
@@ -1284,12 +1328,6 @@ function refreshAll(){
   const life = getLifestyle($("lifeDate").value || getDefaultLogDate(profile));
   const burn = n(life.burnKcal);
 
-  // live totals (food tab)
-  $("liveP").textContent = round1(total.P) + " g";
-  $("liveC").textContent = round1(total.C) + " g";
-  $("liveF").textContent = round1(total.F) + " g";
-  $("liveK").textContent = Math.round(total.K) + " kcal";
-
   // dashboard: net calories
   const netK = Math.max(0, total.K - burn);
 
@@ -1303,7 +1341,7 @@ function refreshAll(){
   const tP=n(profile.targetProtein);
 
   $("dashCalTarget").textContent = tCal?Math.round(tCal):0;
-  $("dashProtTarget").textContent = tP?tP:0;
+  $("dashProtTarget").textContent = tP?Math.round(tP):0;
 
   // balance uses NET calories
   const calDiff=Math.round(netK - tCal);
@@ -1423,6 +1461,7 @@ async function savePDF(){
 
 /* ===== Init ===== */
 (function init(){
+  // Load saved profile if exists
   loadProfile();
   if(!localStorage.getItem(LS_PROFILE)){
     $("p_height_unit").value="ftin";
@@ -1431,8 +1470,8 @@ async function savePDF(){
   toggleWeightUI();
   updateProfilePreviewOnly();
 
+  // Default dates
   const p = loadProfile() || getProfileDraft();
-
   $("logDate").value = getDefaultLogDate(p);
   $("logDate").addEventListener("change", ()=>{ renderEntries(); scheduleRefresh(); });
 
@@ -1443,10 +1482,9 @@ async function savePDF(){
   buildUnitSelect($("entryFood").value);
   updateEntryPreview();
 
-  // Lifestyle date defaults (sync with log date)
+  // Lifestyle
   $("lifeDate").value = getDefaultLogDate(p);
   $("lifeDate").addEventListener("change", ()=>{ updateLifestyleUI(); scheduleRefresh(); });
-
   updateLifestyleUI();
 
   renderEntries();
@@ -1456,4 +1494,3 @@ async function savePDF(){
 
 </body>
 </html>
-
