@@ -451,7 +451,60 @@
 
         <div class="divider"></div>
 
-        <button class="btn" onclick="saveProfile()">Save Profile</button>
+       <div class="row cols2" style="margin-top:10px">
+  <button class="btn" onclick="saveProfile()">Save Profile</button>
+  <button class="btn danger" onclick="resetProfile()">Reset Profile Data</button>
+</div>
+
+function resetProfile(){
+  if(!confirm("Reset profile data on this device? This will remove saved user profile/targets so you can enter a new user.")) return;
+
+  // Remove saved profile
+  localStorage.removeItem(LS_PROFILE);
+
+  // Clear dirty flags (so auto-fill works again)
+  ["p_targetCalories","p_targetFats","p_targetCarbs"].forEach(id=>{
+    setDirty(id,false);
+  });
+
+  // Clear form fields
+  $("p_name").value="";
+  $("p_age").value="";
+  $("p_sex").value="male";
+
+  $("p_height_unit").value="ftin";
+  $("p_weight_unit").value="kg";
+
+  $("p_height_cm").value="";
+  $("p_height_ft").value="";
+  $("p_height_in").value="";
+  $("p_weight_kg").value="";
+  $("p_weight_lbs").value="";
+
+  $("p_goal").value="loss";
+  $("p_activity").value="1.2";
+  $("p_dayStartHour").value="4";
+  $("p_macroPreset").value="higherProtein";
+  $("p_protMult").value="2.2";
+
+  // Clear targets so they re-auto-calc from the new profile
+  $("p_targetCalories").value="";
+  $("p_targetProtein").value="";
+  $("p_targetFats").value="";
+  $("p_targetCarbs").value="";
+
+  // Hide saved notes
+  $("profileSaveHint").style.display="none";
+  $("profileSavedNote").style.display="none";
+
+  // Rebuild UI + refresh dashboard
+  toggleHeightUI(false);
+  toggleWeightUI(false);
+  updateProfilePreviewOnly();
+  scheduleRefresh();
+
+  alert("Profile data reset ✔️ Now enter the new user details and Save Profile.");
+}
 
         <div class="note" id="profileSaveHint" style="display:none;">
           Saved ✔️ Go to Food Log and add entries (lunch, dinner, snacks, etc.).
