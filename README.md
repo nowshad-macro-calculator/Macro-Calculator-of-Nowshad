@@ -815,26 +815,20 @@ function getProfileDraft(){
   const tdee=bmr?bmr*activity:0;
   const basicsOk = (wkg>0 && hcm>0 && age>0 && tdee>0);
 
-  // Protein target ALWAYS from weight × multiplier
   const protMult = n($("p_protMult").value) || 2.2;
   const targetProtein = (wkg>0) ? Math.round((wkg * protMult)/5)*5 : 0;
 
-  // Target Calories = TDEE adjusted by goal (unless user override)
   let targetCaloriesAuto = 0;
-if (basicsOk) {
-  const goal = $("p_goal").value;
-  const adj =
-    goal === "gain" ? 400 :
-    goal === "loss" ? -500 : 0;
-
-  targetCaloriesAuto = Math.round(tdee + adj);
-}
+  if (basicsOk) {
+    const goal = $("p_goal").value;
+    const adj = goal === "gain" ? 400 : goal === "loss" ? -500 : 0;
+    targetCaloriesAuto = Math.round(tdee + adj);
+  }
 
   const targetCalories = (isDirty("p_targetCalories") && n($("p_targetCalories").value)>0)
     ? Math.max(1200, Math.round(n($("p_targetCalories").value)))
     : targetCaloriesAuto;
 
-  // Fat target (auto by macro style unless user override)
   let fatPct = 0.30;
   const preset=$("p_macroPreset").value;
   if(preset==="higherCarb") fatPct = 0.25;
@@ -848,12 +842,10 @@ if (basicsOk) {
     ? Math.max(0, Math.round(n($("p_targetFats").value)))
     : fatsAuto;
 
-  // Carbs = remaining calories after Protein + Fats (unless user override)
   let carbsAuto = 0;
   if(targetCalories>0 && targetProtein>0){
     let remaining = targetCalories - (targetProtein*4) - (targetFats*9);
     if(remaining < 0){
-      // If P+F exceed calories, reduce fat to make it fit (carbs become 0)
       targetFats = Math.max(0, Math.floor((targetCalories - targetProtein*4)/9));
       remaining = Math.max(0, targetCalories - (targetProtein*4) - (targetFats*9));
     }
@@ -883,7 +875,6 @@ if (basicsOk) {
     targetProtein,
     targetFats,
     targetCarbs,
-    // persist override intent
     dirtyCalories:isDirty("p_targetCalories"),
     dirtyFats:isDirty("p_targetFats"),
     dirtyCarbs:isDirty("p_targetCarbs"),
@@ -923,10 +914,8 @@ function updateProfilePreviewOnly(){
   $("p_tdeeLine").textContent = p.tdee? Math.round(p.tdee)+" kcal" : "—";
   $("p_targetLine").textContent = "Target: " + (p.targetCalories?Math.round(p.targetCalories)+" kcal":"—");
 
-  // Always show protein auto
   $("p_targetProtein").value = p.targetProtein ? p.targetProtein : "";
 
-  // Auto-fill fields only if NOT dirty and blank/zero
   if(!isDirty("p_targetCalories") && (!n($("p_targetCalories").value)) && p.targetCalories) $("p_targetCalories").value = p.targetCalories;
   if(!isDirty("p_targetFats") && (!n($("p_targetFats").value)) && p.targetFats>=0) $("p_targetFats").value = p.targetFats;
   if(!isDirty("p_targetCarbs") && (!n($("p_targetCarbs").value)) && p.targetCarbs>=0) $("p_targetCarbs").value = p.targetCarbs;
@@ -972,12 +961,10 @@ function loadProfile(){
     $("p_macroPreset").value=p.macroPreset||"higherProtein";
     $("p_protMult").value=(p.protMult || 2.2).toString();
 
-    // Restore override intent flags (do NOT force dirty unless user actually overrode)
     setDirty("p_targetCalories", !!p.dirtyCalories);
     setDirty("p_targetFats", !!p.dirtyFats);
     setDirty("p_targetCarbs", !!p.dirtyCarbs);
 
-    // Restore fields (if they overrode). If not dirty, leave blank so auto fills from TDEE.
     $("p_targetCalories").value = p.dirtyCalories && p.targetCalories ? Math.round(p.targetCalories) : "";
     $("p_targetFats").value = p.dirtyFats && (p.targetFats>=0) ? Math.round(p.targetFats) : "";
     $("p_targetCarbs").value = p.dirtyCarbs && (p.targetCarbs>=0) ? Math.round(p.targetCarbs) : "";
@@ -1015,7 +1002,7 @@ function saveAllLogs(obj){ localStorage.setItem(LS_LOG, JSON.stringify(obj)); }
 function getDayLog(dateKey){ const all=loadAllLogs(); return all[dateKey] || { entries: [] }; }
 function setDayLog(dateKey, dayLog){ const all=loadAllLogs(); all[dateKey]=dayLog; saveAllLogs(all); }
 
-/* ===== Food DB (same as your last working set) ===== */
+/* ===== Food DB ===== */
 const FOOD = {
   "Chicken Breast": { unitOptions:["g"], perUnit:{g:{P:31/100, C:0, F:3.6/100, K:165/100}} },
   "Chicken Thigh": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:8/100, K:209/100}} },
@@ -1084,6 +1071,15 @@ const FOOD = {
   "Fried Chicken Meal (KFC style)": { unitOptions:["plate"], perUnit:{plate:{P:35, C:45, F:30, K:700}} },
   "Whopper": { unitOptions:["pcs"], perUnit:{pcs:{P:30.4, C:51.1, F:38.4, K:678.8}} },
   "Double Whopper": { unitOptions:["pcs"], perUnit:{pcs:{P:46, C:46, F:52, K:838}} },
+
+  /* ===== Dessert (NEW) ===== */
+  "Cake Slice": { unitOptions:["slice"], perUnit:{slice:{P:4, C:45, F:12, K:300}} },
+  "Chocolate Cube": { unitOptions:["cube"], perUnit:{cube:{P:1, C:6, F:3, K:55}} },
+  "Ice Cream Scoop": { unitOptions:["scoop"], perUnit:{scoop:{P:2.5, C:16, F:7.5, K:140}} },
+  "Rice Pudding (Kheer)": { unitOptions:["bowl"], perUnit:{bowl:{P:6, C:34, F:7, K:220}} },
+  "Shemai (Semiya)": { unitOptions:["bowl"], perUnit:{bowl:{P:7, C:52, F:10, K:330}} },
+  "Jorda": { unitOptions:["plate"], perUnit:{plate:{P:6, C:70, F:12, K:420}} },
+  "Firni": { unitOptions:["bowl"], perUnit:{bowl:{P:6, C:36, F:8, K:240}} },
 };
 
 const CATEGORY_ITEMS = {
@@ -1094,6 +1090,7 @@ const CATEGORY_ITEMS = {
   "Fats": ["Butter","Olive Oil","Soybean Oil","Ghee"],
   "Snacks & Fruits": ["Peanut Butter","Yogurt / Curd","Dates (Deglet Noor style)","Dates (Ajwa small)","Dates (Medjool large)","Almonds","Peanuts","Cashews","Walnuts","Pistachios","Banana","Apple","Orange","Mango (1 cup slices)","Grapes (1 cup)"],
   "Meals": ["Kacchi Biryani","Biryani (general)","Khichuri","Fried Rice","Shawarma (wrap)","Chicken Broast","Beef Steak Meal","Fried Chicken Meal (KFC style)","Whopper","Double Whopper"],
+  "Dessert": ["Cake Slice","Chocolate Cube","Ice Cream Scoop","Rice Pudding (Kheer)","Shemai (Semiya)","Jorda","Firni"]
 };
 
 /* ===== Entry compute ===== */
@@ -1389,7 +1386,6 @@ function refreshAll(){
   $("dashCarbTarget").textContent = tC?Math.round(tC):0;
   $("dashFatTarget").textContent  = tF?Math.round(tF):0;
 
-  // Net calories balance
   if(!tCal){
     $("dashCalBalance").textContent="—";
     $("dashCalBalanceMsg").textContent="Complete Profile to calculate targets.";
@@ -1411,7 +1407,6 @@ function refreshAll(){
     }
   }
 
-  // Macro balance helper
   function setMacroBalanceNumeric(diffG, valEl, msgEl, label){
     if(!isFinite(diffG)){
       valEl.textContent="—"; valEl.className="big";
@@ -1505,25 +1500,25 @@ async function savePDF(){
 
 /* ===== Init ===== */
 (function init(){
-  // Load profile if exists
-  loadProfile();
+  const p = loadProfile() || getProfileDraft();
+
   toggleHeightUI(false);
   toggleWeightUI(false);
   updateProfilePreviewOnly();
 
-  // Default dates
-  const p = loadProfile() || getProfileDraft();
   $("logDate").value = getDefaultLogDate(p);
   $("logDate").addEventListener("change", ()=>{ renderEntries(); scheduleRefresh(); });
 
-  // Food selects
   buildCategorySelect();
-  $("entryCategory").value="Chicken";
-  buildFoodSelectForCategory("Chicken");
+
+  // Do NOT force "Chicken" if it's not present for some reason; pick first category safely
+  const firstCat = Object.keys(CATEGORY_ITEMS)[0] || "Chicken";
+  $("entryCategory").value = CATEGORY_ITEMS["Chicken"] ? "Chicken" : firstCat;
+
+  buildFoodSelectForCategory($("entryCategory").value);
   buildUnitSelect($("entryFood").value);
   updateEntryPreview();
 
-  // Lifestyle
   $("lifeDate").value = getDefaultLogDate(p);
   $("lifeDate").addEventListener("change", ()=>{ updateLifestyleUI(); scheduleRefresh(); });
   updateLifestyleUI();
