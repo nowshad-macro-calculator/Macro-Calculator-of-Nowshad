@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -70,7 +70,6 @@
     @media (min-width: 640px){
       .row.cols2{grid-template-columns:1fr 1fr}
       .row.cols3{grid-template-columns:1fr 1fr 1fr}
-      .row.cols4{grid-template-columns:1fr 1fr 1fr 1fr}
     }
     label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
     input, select{
@@ -108,7 +107,6 @@
     .kpi .cap{font-size:12px; color:var(--muted)}
     .accentGood{color:var(--good)}
     .accentBad{color:var(--bad)}
-    .accentWarn{color:var(--warn)}
     .divider{height:1px; background:rgba(255,255,255,.14); margin:10px 0}
     .hide{display:none !important}
     .bmiBar{
@@ -184,7 +182,7 @@
     <section id="page-dashboard" class="grid cols2" style="margin-top:14px;">
       <div class="card">
         <h2>Today’s Dashboard</h2>
-        <div class="sub">Totals update automatically. Lifestyle affects “Net calories” (Calories eaten − Workout burned).</div>
+        <div class="sub">Targets are based on your Profile. Protein target is always weight × multiplier. Carbs target is calories left after protein + fats.</div>
 
         <div class="divider"></div>
 
@@ -295,7 +293,7 @@
 
       <div class="card">
         <h2>Macro Chart</h2>
-        <div class="sub">Fixed-height chart (stable on scroll). Colors are distinct and NOT blue.</div>
+        <div class="sub">Stable chart on scroll. Colors are distinct and NOT blue.</div>
         <div class="chartBox">
           <canvas id="macroChart"></canvas>
         </div>
@@ -306,7 +304,7 @@
     <section id="page-profile" class="grid cols2 hide" style="margin-top:14px;">
       <div class="card">
         <h2>Profile</h2>
-        <div class="sub">Feet/Inches is default. Targets recalc from weight; adjust protein multiplier and goal.</div>
+        <div class="sub">Feet/Inches is default. Target Calories is based on TDEE + goal. Target Carbs is calculated from remaining calories after Protein + Fats.</div>
 
         <div class="divider"></div>
 
@@ -338,15 +336,15 @@
           </div>
         </div>
 
-        <div class="row cols3 hide" style="margin-top:10px" id="height_cm_row">
+        <div class="row cols2 hide" style="margin-top:10px" id="height_cm_row">
           <div>
             <label>Height (cm)</label>
             <input type="number" min="0" step="0.1" id="p_height_cm" placeholder="e.g., 175">
           </div>
-          <div class="hide"></div><div class="hide"></div>
+          <div class="hide"></div>
         </div>
 
-        <div class="row cols3" style="margin-top:10px" id="height_ftin_row">
+        <div class="row cols2" style="margin-top:10px" id="height_ftin_row">
           <div>
             <label>Height (ft)</label>
             <input type="number" min="0" step="1" id="p_height_ft" placeholder="e.g., 5">
@@ -355,7 +353,6 @@
             <label>Height (in)</label>
             <input type="number" min="0" step="1" id="p_height_in" placeholder="e.g., 9">
           </div>
-          <div class="hide"></div>
         </div>
 
         <div class="row cols2" style="margin-top:10px">
@@ -417,10 +414,12 @@
 
         <div class="divider"></div>
 
-        <h3>Targets (auto-filled, editable except Protein)</h3>
+        <h3>Targets</h3>
+        <div class="sub">Protein target is always weight × multiplier. If you edit Target Calories/Fats/Carbs, your edit will be kept.</div>
+
         <div class="row cols3" style="margin-top:10px">
           <div>
-            <label>Target calories</label>
+            <label>Target calories (auto from TDEE, editable)</label>
             <input type="number" min="0" step="1" id="p_targetCalories" placeholder="Auto">
           </div>
           <div>
@@ -428,15 +427,15 @@
             <input type="number" id="p_targetProtein" readonly>
           </div>
           <div>
-            <label>Target carbs (g)</label>
-            <input type="number" min="0" step="1" id="p_targetCarbs" placeholder="Auto">
+            <label>Target fats (g) (auto, editable)</label>
+            <input type="number" min="0" step="1" id="p_targetFats" placeholder="Auto">
           </div>
         </div>
 
         <div class="row cols2" style="margin-top:10px">
           <div>
-            <label>Target fats (g)</label>
-            <input type="number" min="0" step="1" id="p_targetFats" placeholder="Auto">
+            <label>Target carbs (g) (calculated from remaining calories, editable)</label>
+            <input type="number" min="0" step="1" id="p_targetCarbs" placeholder="Auto">
           </div>
           <div>
             <label>Protein multiplier (g/kg) — default 2.2</label>
@@ -467,7 +466,7 @@
           <div class="kpi"><div class="cap">TDEE</div><div class="big" id="p_tdeeLine">—</div><div class="cap" id="p_targetLine">Target: —</div></div>
         </div>
         <div class="divider"></div>
-        <div class="sub">Targets recalc instantly when weight changes (protein always based on weight × multiplier).</div>
+        <div class="sub">TDEE = BMR × Activity Level. Target Calories = TDEE + goal adjustment.</div>
       </div>
     </section>
 
@@ -517,7 +516,7 @@
           </div>
           <div>
             <label>Quantity</label>
-            <input type="number" min="0" step="1" id="entryQty" placeholder="Enter qty (g / tbsp / pcs / plate)">
+            <input type="number" min="0" step="1" id="entryQty" placeholder="Enter qty">
           </div>
           <div>
             <label>&nbsp;</label>
@@ -677,7 +676,6 @@
 
       <div class="card">
         <h2>Today’s Lifestyle Summary</h2>
-        <div class="sub">Fast offline estimate. For more precision, upgrade to MET-based (weight-adjusted) calculation.</div>
         <div class="divider"></div>
 
         <div class="row cols2">
@@ -698,9 +696,9 @@
 
 <script>
 /* ===== Storage ===== */
-const LS_PROFILE = "nowshad_macro_profile_v8";
-const LS_LOG = "nowshad_macro_dailylog_v8";
-const LS_LIFE = "nowshad_macro_lifestyle_v8";
+const LS_PROFILE = "nowshad_macro_profile_v9";
+const LS_LOG = "nowshad_macro_dailylog_v9";
+const LS_LIFE = "nowshad_macro_lifestyle_v9";
 
 /* ===== Helpers ===== */
 const $ = (id)=>document.getElementById(id);
@@ -728,7 +726,7 @@ function showPage(name){
 
 /* ===== Chart (no blue) ===== */
 let macroChart=null;
-function initChart(){
+(function initChart(){
   const ctx=$("macroChart").getContext("2d");
   macroChart=new Chart(ctx,{
     type:"bar",
@@ -745,25 +743,24 @@ function initChart(){
       plugins:{ legend:{labels:{color:"rgba(238,243,255,.85)"}} }
     }
   });
-}
-initChart();
+})();
 
 /* ===== Debounced refresh ===== */
 let refreshTimer=null;
 function scheduleRefresh(){
   if(refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer=setTimeout(()=>{ refreshAll(); }, 180);
+  refreshTimer=setTimeout(()=>{ refreshAll(); }, 160);
 }
 
 /* ===== Unit-safe readers + auto-convert on switch ===== */
 function readWeightKg(){
-  const u = $("p_weight_unit").value; // kg/lbs
+  const u = $("p_weight_unit").value;
   const kg = n($("p_weight_kg").value);
   const lbs = n($("p_weight_lbs").value);
   return (u==="lbs") ? lbs*0.45359237 : kg;
 }
 function readHeightCm(){
-  const u = $("p_height_unit").value; // ftin/cm
+  const u = $("p_height_unit").value;
   const cm = n($("p_height_cm").value);
   const ft = n($("p_height_ft").value);
   const inch = n($("p_height_in").value);
@@ -791,7 +788,14 @@ function convertHeight(from,to){
   }
 }
 
-/* ===== Profile calc (protein ALWAYS based on weight × multiplier) ===== */
+/* ===== Targets dirty flags (saved) ===== */
+function setDirty(id, val=true){ $(id).dataset.dirty = val ? "1" : ""; }
+function isDirty(id){ return $(id).dataset.dirty === "1"; }
+["p_targetCalories","p_targetFats","p_targetCarbs"].forEach(id=>{
+  $(id).addEventListener("input", ()=>setDirty(id,true));
+});
+
+/* ===== Profile calc (CALORIES from TDEE; CARBS from remaining after P+F) ===== */
 function getProfileDraft(){
   const sex=$("p_sex").value;
   const age=n($("p_age").value);
@@ -809,49 +813,51 @@ function getProfileDraft(){
 
   const activity=n($("p_activity").value);
   const tdee=bmr?bmr*activity:0;
-
-  const basicsOk = (wkg>0 && hcm>0 && age>0);
+  const basicsOk = (wkg>0 && hcm>0 && age>0 && tdee>0);
 
   // Protein target ALWAYS from weight × multiplier
   const protMult = n($("p_protMult").value) || 2.2;
-  let pTargetAuto = 0;
-  if(wkg>0){
-    pTargetAuto = Math.round((wkg * protMult)/5)*5; // nearest 5g
-  }
+  const targetProtein = (wkg>0) ? Math.round((wkg * protMult)/5)*5 : 0;
 
-  // Target calories (editable)
-  let targetCalories = 0;
-  if(basicsOk && tdee>0){
+  // Target Calories = TDEE adjusted by goal (unless user override)
+  let targetCaloriesAuto = 0;
+  if(basicsOk){
     const goal=$("p_goal").value;
-    targetCalories = tdee + (goal==="gain"?400:(goal==="loss"?-500:0));
-    targetCalories = Math.max(1200, Math.round(targetCalories));
+    const adj = (goal==="gain"? +400 : (goal==="loss"? -500 : 0));
+    targetCaloriesAuto = Math.max(1200, Math.round(tdee + adj));
   }
-  const userTC=n($("p_targetCalories").value);
-  if(userTC>0) targetCalories = Math.max(1200, Math.round(userTC));
+  const targetCalories = (isDirty("p_targetCalories") && n($("p_targetCalories").value)>0)
+    ? Math.max(1200, Math.round(n($("p_targetCalories").value)))
+    : targetCaloriesAuto;
 
-  // Carbs/Fats targets (auto unless user edits)
-  let cTargetAuto=0, fTargetAuto=0;
-  if(targetCalories>0 && pTargetAuto>0){
-    const preset=$("p_macroPreset").value;
-    // Split remaining calories between carbs & fats (ratios by preset)
-    let carbPct=0.45, fatPct=0.30;            // balanced
-    if(preset==="higherCarb"){ carbPct=0.55; fatPct=0.25; }
-    if(preset==="higherProtein"){ carbPct=0.35; fatPct=0.25; }
+  // Fat target (auto by macro style unless user override)
+  let fatPct = 0.30;
+  const preset=$("p_macroPreset").value;
+  if(preset==="higherCarb") fatPct = 0.25;
+  if(preset==="higherProtein") fatPct = 0.25;
 
-    const remaining=Math.max(0, targetCalories - pTargetAuto*4);
-    const totalPct = carbPct + fatPct;
-    const carbCals = remaining * (carbPct/totalPct);
-    const fatCals  = remaining * (fatPct/totalPct);
-
-    cTargetAuto = Math.round((carbCals/4)/5)*5;
-    fTargetAuto = Math.round((fatCals/9));
+  let fatsAuto = 0;
+  if(targetCalories>0){
+    fatsAuto = Math.round((targetCalories * fatPct)/9);
   }
+  let targetFats = (isDirty("p_targetFats") && n($("p_targetFats").value)>0)
+    ? Math.max(0, Math.round(n($("p_targetFats").value)))
+    : fatsAuto;
 
-  // Let user override carbs/fats if they edited
-  const cUser = n($("p_targetCarbs").value);
-  const fUser = n($("p_targetFats").value);
-  const cTarget = cUser>0 ? cUser : cTargetAuto;
-  const fTarget = fUser>0 ? fUser : fTargetAuto;
+  // Carbs = remaining calories after Protein + Fats (unless user override)
+  let carbsAuto = 0;
+  if(targetCalories>0 && targetProtein>0){
+    let remaining = targetCalories - (targetProtein*4) - (targetFats*9);
+    if(remaining < 0){
+      // If P+F exceed calories, reduce fat to make it fit (carbs become 0)
+      targetFats = Math.max(0, Math.floor((targetCalories - targetProtein*4)/9));
+      remaining = Math.max(0, targetCalories - (targetProtein*4) - (targetFats*9));
+    }
+    carbsAuto = Math.max(0, Math.round(remaining/4));
+  }
+  const targetCarbs = (isDirty("p_targetCarbs") && n($("p_targetCarbs").value)>=0)
+    ? Math.max(0, Math.round(n($("p_targetCarbs").value)))
+    : carbsAuto;
 
   return {
     name:$("p_name").value||"",
@@ -870,18 +876,41 @@ function getProfileDraft(){
     macroPreset:$("p_macroPreset").value,
     protMult,
     targetCalories,
-    targetProtein:pTargetAuto,
-    targetCarbs:cTarget,
-    targetFats:fTarget,
+    targetProtein,
+    targetFats,
+    targetCarbs,
+    // persist override intent
+    dirtyCalories:isDirty("p_targetCalories"),
+    dirtyFats:isDirty("p_targetFats"),
+    dirtyCarbs:isDirty("p_targetCarbs"),
   };
 }
 
-/* Targets dirty lock: only affects calories/carbs/fats (protein stays auto) */
-["p_targetCalories","p_targetCarbs","p_targetFats"].forEach(id=>{
-  $(id).addEventListener("input", ()=>{ $(id).dataset.dirty = "1"; });
+/* ===== Profile UI updates ===== */
+function toggleHeightUI(doRecalc=true){
+  const u=$("p_height_unit").value;
+  $("height_cm_row").classList.toggle("hide", u!=="cm");
+  $("height_ftin_row").classList.toggle("hide", u!=="ftin");
+  if(doRecalc) updateProfilePreviewOnly();
+}
+function toggleWeightUI(doRecalc=true){
+  const u=$("p_weight_unit").value;
+  $("weight_kg_row").classList.toggle("hide", u!=="kg");
+  $("weight_lbs_row").classList.toggle("hide", u!=="lbs");
+  if(doRecalc) updateProfilePreviewOnly();
+}
+
+$("p_height_unit").addEventListener("change", ()=>{
+  const to = $("p_height_unit").value;
+  convertHeight(to==="cm" ? "ftin" : "cm", to);
+  toggleHeightUI(true);
+});
+$("p_weight_unit").addEventListener("change", ()=>{
+  const to = $("p_weight_unit").value;
+  convertWeight(to==="kg" ? "lbs" : "kg", to);
+  toggleWeightUI(true);
 });
 
-/* UI updates */
 function updateProfilePreviewOnly(){
   const p=getProfileDraft();
 
@@ -890,21 +919,13 @@ function updateProfilePreviewOnly(){
   $("p_tdeeLine").textContent = p.tdee? Math.round(p.tdee)+" kcal" : "—";
   $("p_targetLine").textContent = "Target: " + (p.targetCalories?Math.round(p.targetCalories)+" kcal":"—");
 
-  // ALWAYS show protein target auto
+  // Always show protein auto
   $("p_targetProtein").value = p.targetProtein ? p.targetProtein : "";
 
-  const basicsOk = (p.wkg>0 && p.age>0 && p.hm>0);
-
-  // Auto-fill calories/carbs/fats only if blank and not edited
-  if(basicsOk){
-    const tc = $("p_targetCalories");
-    const tcg = $("p_targetCarbs");
-    const tf = $("p_targetFats");
-
-    if (!tc.dataset.dirty && !n(tc.value) && p.targetCalories) tc.value = Math.round(p.targetCalories);
-    if (!tcg.dataset.dirty && !n(tcg.value) && p.targetCarbs) tcg.value = Math.round(p.targetCarbs);
-    if (!tf.dataset.dirty && !n(tf.value) && p.targetFats) tf.value = Math.round(p.targetFats);
-  }
+  // Auto-fill fields only if NOT dirty and blank/zero
+  if(!isDirty("p_targetCalories") && (!n($("p_targetCalories").value)) && p.targetCalories) $("p_targetCalories").value = p.targetCalories;
+  if(!isDirty("p_targetFats") && (!n($("p_targetFats").value)) && p.targetFats>=0) $("p_targetFats").value = p.targetFats;
+  if(!isDirty("p_targetCarbs") && (!n($("p_targetCarbs").value)) && p.targetCarbs>=0) $("p_targetCarbs").value = p.targetCarbs;
 
   scheduleRefresh();
 }
@@ -912,7 +933,6 @@ function updateProfilePreviewOnly(){
 function saveProfile(){
   try{
     const p=getProfileDraft();
-    // Save current targets (including user overrides for calories/carbs/fats)
     localStorage.setItem(LS_PROFILE, JSON.stringify(p));
     $("profileSaveHint").style.display="block";
     $("profileSavedNote").style.display="block";
@@ -927,6 +947,7 @@ function loadProfile(){
   if(!raw) return null;
   try{
     const p=JSON.parse(raw);
+
     $("p_name").value=p.name||"";
     $("p_age").value=p.age||"";
     $("p_sex").value=p.sex||"male";
@@ -945,15 +966,17 @@ function loadProfile(){
     $("p_activity").value=(p.activity||1.2).toString();
     $("p_dayStartHour").value=(p.dayStartHour ?? 4);
     $("p_macroPreset").value=p.macroPreset||"higherProtein";
-
     $("p_protMult").value=(p.protMult || 2.2).toString();
 
-    // restore editable targets
-    $("p_targetCalories").value=p.targetCalories?Math.round(p.targetCalories):"";
-    $("p_targetCarbs").value=p.targetCarbs?Math.round(p.targetCarbs):"";
-    $("p_targetFats").value=p.targetFats?Math.round(p.targetFats):"";
-    // clear dirty flags so recalc can fill if empty
-    ["p_targetCalories","p_targetCarbs","p_targetFats"].forEach(id=>$(id).dataset.dirty="1"); // keep user saved values
+    // Restore override intent flags (do NOT force dirty unless user actually overrode)
+    setDirty("p_targetCalories", !!p.dirtyCalories);
+    setDirty("p_targetFats", !!p.dirtyFats);
+    setDirty("p_targetCarbs", !!p.dirtyCarbs);
+
+    // Restore fields (if they overrode). If not dirty, leave blank so auto fills from TDEE.
+    $("p_targetCalories").value = p.dirtyCalories && p.targetCalories ? Math.round(p.targetCalories) : "";
+    $("p_targetFats").value = p.dirtyFats && (p.targetFats>=0) ? Math.round(p.targetFats) : "";
+    $("p_targetCarbs").value = p.dirtyCarbs && (p.targetCarbs>=0) ? Math.round(p.targetCarbs) : "";
 
     $("profileSavedNote").style.display="block";
     toggleHeightUI(false);
@@ -963,37 +986,11 @@ function loadProfile(){
   }catch(e){ return null; }
 }
 
-/* Height/Weight toggles */
-function toggleHeightUI(doRecalc=true){
-  const u=$("p_height_unit").value;
-  $("height_cm_row").classList.toggle("hide", u!=="cm");
-  $("height_ftin_row").classList.toggle("hide", u!=="ftin");
-  if(doRecalc) updateProfilePreviewOnly();
-}
-function toggleWeightUI(doRecalc=true){
-  const u=$("p_weight_unit").value;
-  $("weight_kg_row").classList.toggle("hide", u!=="kg");
-  $("weight_lbs_row").classList.toggle("hide", u!=="lbs");
-  if(doRecalc) updateProfilePreviewOnly();
-}
-
-/* convert values when switching units to prevent accidental 0 weight */
-$("p_height_unit").addEventListener("change", ()=>{
-  const to = $("p_height_unit").value;
-  convertHeight(to==="cm" ? "ftin" : "cm", to); // best effort
-  toggleHeightUI(true);
-});
-$("p_weight_unit").addEventListener("change", ()=>{
-  const to = $("p_weight_unit").value;
-  convertWeight(to==="kg" ? "lbs" : "kg", to); // best effort
-  toggleWeightUI(true);
-});
-
 /* Profile listeners */
 [
  "p_name","p_age","p_height_cm","p_height_ft","p_height_in","p_weight_kg","p_weight_lbs",
  "p_goal","p_activity","p_dayStartHour","p_sex","p_macroPreset","p_protMult",
- "p_targetCalories","p_targetCarbs","p_targetFats"
+ "p_targetCalories","p_targetFats","p_targetCarbs"
 ].forEach(id=>{
   $(id).addEventListener("input", updateProfilePreviewOnly);
   $(id).addEventListener("change", updateProfilePreviewOnly);
@@ -1009,29 +1006,18 @@ function getDefaultLogDate(profile){
 }
 
 /* ===== Logs ===== */
-function loadAllLogs(){
-  try{ return JSON.parse(localStorage.getItem(LS_LOG) || "{}"); }catch(e){ return {}; }
-}
+function loadAllLogs(){ try{ return JSON.parse(localStorage.getItem(LS_LOG) || "{}"); }catch(e){ return {}; } }
 function saveAllLogs(obj){ localStorage.setItem(LS_LOG, JSON.stringify(obj)); }
-function getDayLog(dateKey){
-  const all=loadAllLogs();
-  return all[dateKey] || { entries: [] };
-}
-function setDayLog(dateKey, dayLog){
-  const all=loadAllLogs();
-  all[dateKey]=dayLog;
-  saveAllLogs(all);
-}
+function getDayLog(dateKey){ const all=loadAllLogs(); return all[dateKey] || { entries: [] }; }
+function setDayLog(dateKey, dayLog){ const all=loadAllLogs(); all[dateKey]=dayLog; saveAllLogs(all); }
 
-/* ===== Food DB ===== */
+/* ===== Food DB (same as your last working set) ===== */
 const FOOD = {
-  // Chicken (g)
   "Chicken Breast": { unitOptions:["g"], perUnit:{g:{P:31/100, C:0, F:3.6/100, K:165/100}} },
   "Chicken Thigh": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:8/100, K:209/100}} },
   "Chicken Wings": { unitOptions:["g"], perUnit:{g:{P:30/100, C:0, F:13/100, K:290/100}} },
   "Chicken Drumsticks": { unitOptions:["g"], perUnit:{g:{P:28/100, C:0, F:10/100, K:215/100}} },
 
-  // Protein
   "Egg": { unitOptions:["pcs"], perUnit:{pcs:{P:6, C:0.6, F:5, K:72}} },
   "Protein Shake": { unitOptions:["scoop"], perUnit:{scoop:{P:25, C:3, F:2, K:120}} },
   "Mutton": { unitOptions:["g"], perUnit:{g:{P:25/100, C:0, F:20/100, K:294/100}} },
@@ -1043,7 +1029,6 @@ const FOOD = {
   "Shrimp": { unitOptions:["g"], perUnit:{g:{P:24/100, C:0, F:2/100, K:99/100}} },
   "Dried Fish / Bombay Duck": { unitOptions:["g"], perUnit:{g:{P:60/100, C:0, F:5/100, K:300/100}} },
 
-  // Carbs + common foods
   "Rice (cooked)": { unitOptions:["g","plate"], perUnit:{
       g:{P:2.7/100, C:28/100, F:0.3/100, K:130/100},
       plate:{P:8, C:90, F:1, K:420}
@@ -1055,17 +1040,14 @@ const FOOD = {
   "Milk Tea": { unitOptions:["cup"], perUnit:{cup:{P:2, C:10, F:3, K:80}} },
   "Carbonated Beverage": { unitOptions:["ml"], perUnit:{ml:{P:0, C:10.6/100, F:0, K:42/100}} },
 
-  // Vegetables
   "Salad": { unitOptions:["cup"], perUnit:{cup:{P:0.5, C:2, F:0.1, K:15}} },
   "Vegetables": { unitOptions:["cup"], perUnit:{cup:{P:2, C:5, F:0.2, K:35}} },
 
-  // Fats
   "Butter": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0.12, C:0.01, F:11.5, K:102}} },
   "Olive Oil": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:13.5, K:119}} },
   "Soybean Oil": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:13.6, K:120}} },
   "Ghee": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:14, K:126}} },
 
-  // Snacks & Fruits
   "Peanut Butter": { unitOptions:["tbsp"], perUnit:{tbsp:{P:3.5, C:4, F:8, K:100}} },
   "Yogurt / Curd": { unitOptions:["g"], perUnit:{g:{P:3.5/100, C:4.7/100, F:3.3/100, K:61/100}} },
 
@@ -1088,7 +1070,6 @@ const FOOD = {
   "Mango (1 cup slices)": { unitOptions:["cup"], perUnit:{cup:{P:1.4, C:25, F:0.6, K:99}} },
   "Grapes (1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:1.1, C:27.3, F:0.2, K:104}} },
 
-  // Meals
   "Kacchi Biryani": { unitOptions:["plate"], perUnit:{plate:{P:26, C:90, F:39, K:800}} },
   "Biryani (general)": { unitOptions:["plate"], perUnit:{plate:{P:20, C:85, F:15, K:600}} },
   "Khichuri": { unitOptions:["plate"], perUnit:{plate:{P:14, C:70, F:12, K:450}} },
@@ -1170,22 +1151,6 @@ $("entryFood").addEventListener("change", ()=>{
 $("entryUnit").addEventListener("change", updateEntryPreview);
 $("entryQty").addEventListener("input", updateEntryPreview);
 
-/* ===== Logs ===== */
-function loadAllLogs(){
-  try{ return JSON.parse(localStorage.getItem(LS_LOG) || "{}"); }catch(e){ return {}; }
-}
-function saveAllLogs(obj){ localStorage.setItem(LS_LOG, JSON.stringify(obj)); }
-function getDayLog(dateKey){
-  const all=loadAllLogs();
-  return all[dateKey] || { entries: [] };
-}
-function setDayLog(dateKey, dayLog){
-  const all=loadAllLogs();
-  all[dateKey]=dayLog;
-  saveAllLogs(all);
-}
-
-/* ===== Totals ===== */
 function computeTotalsFromEntries(){
   const profile=loadProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
@@ -1293,9 +1258,7 @@ function resetFoodLogs(){
 }
 
 /* ===== Lifestyle ===== */
-function loadAllLifestyle(){
-  try{ return JSON.parse(localStorage.getItem(LS_LIFE) || "{}"); }catch(e){ return {}; }
-}
+function loadAllLifestyle(){ try{ return JSON.parse(localStorage.getItem(LS_LIFE) || "{}"); }catch(e){ return {}; } }
 function saveAllLifestyle(obj){ localStorage.setItem(LS_LIFE, JSON.stringify(obj)); }
 function getLifestyle(dateKey){
   const all=loadAllLifestyle();
@@ -1381,7 +1344,7 @@ function resetLifestyle(){
   scheduleRefresh();
 }
 
-/* ===== Dashboard ===== */
+/* ===== BMI bar ===== */
 function updateBMIBar(bmi){
   const fill=$("bmiFill");
   const pin=$("bmiPin");
@@ -1392,10 +1355,7 @@ function updateBMIBar(bmi){
   pin.textContent="▲ You ("+round1(bmi)+")";
 }
 
-/* ===== Lifestyle for dashboard ===== */
-function loadAllLifestyleSafe(){ return loadAllLifestyle(); }
-
-/* ===== Refresh all ===== */
+/* ===== Dashboard refresh ===== */
 function refreshAll(){
   const profile=loadProfile() || getProfileDraft();
 
@@ -1403,12 +1363,10 @@ function refreshAll(){
   if(!$("lifeDate").value) $("lifeDate").value = getDefaultLogDate(profile);
 
   const total=computeTotalsFromEntries();
-
   const life = getLifestyle($("lifeDate").value || getDefaultLogDate(profile));
   const burn = n(life.burnKcal);
   const netK = Math.max(0, total.K - burn);
 
-  // dashboard totals
   $("dashCalories").textContent = Math.round(total.K) + " kcal";
   $("dashBurn").textContent = Math.round(burn) + " kcal";
   $("dashNet").textContent = Math.round(netK);
@@ -1427,19 +1385,19 @@ function refreshAll(){
   $("dashCarbTarget").textContent = tC?Math.round(tC):0;
   $("dashFatTarget").textContent  = tF?Math.round(tF):0;
 
-  // balances: calories use NET
+  // Net calories balance
   if(!tCal){
     $("dashCalBalance").textContent="—";
-    $("dashCalBalanceMsg").textContent="Set profile targets first.";
+    $("dashCalBalanceMsg").textContent="Complete Profile to calculate targets.";
     $("dashCalBalance").className="big";
   }else{
-    const calDiff=Math.round(netK - tCal);
-    if(calDiff>0){
-      $("dashCalBalance").textContent="+"+calDiff+" kcal";
+    const diff=Math.round(netK - tCal);
+    if(diff>0){
+      $("dashCalBalance").textContent="+"+diff+" kcal";
       $("dashCalBalance").className="big accentBad";
       $("dashCalBalanceMsg").textContent="Over target (net calories above target).";
-    }else if(calDiff<0){
-      $("dashCalBalance").textContent=calDiff+" kcal";
+    }else if(diff<0){
+      $("dashCalBalance").textContent=diff+" kcal";
       $("dashCalBalance").className="big accentGood";
       $("dashCalBalanceMsg").textContent="Under target (net calories below target).";
     }else{
@@ -1449,61 +1407,42 @@ function refreshAll(){
     }
   }
 
-  // Macro balances: compare eaten vs targets
-  function setMacroBalance(diff, valEl, msgEl, label){
-    if(diff>0){
-      valEl.textContent="+"+diff;
+  // Macro balance helper
+  function setMacroBalanceNumeric(diffG, valEl, msgEl, label){
+    if(!isFinite(diffG)){
+      valEl.textContent="—"; valEl.className="big";
+      msgEl.textContent="—"; return;
+    }
+    if(diffG>0){
+      valEl.textContent="+"+diffG+" g";
       valEl.className="big accentBad";
       msgEl.textContent="Over target " + label + ".";
-    }else if(diff<0){
-      valEl.textContent=diff;
+    }else if(diffG<0){
+      valEl.textContent=diffG+" g";
       valEl.className="big accentGood";
       msgEl.textContent="Under target " + label + ".";
     }else{
-      valEl.textContent="0";
+      valEl.textContent="0 g";
       valEl.className="big";
       msgEl.textContent="Exactly on target " + label + ".";
     }
   }
 
-  if(!tP){
-    $("dashProtBalance").textContent="—";
-    $("dashProtBalanceMsg").textContent="Complete Profile to calculate protein target.";
-    $("dashProtBalance").className="big";
-  }else{
-    setMacroBalance(Math.round(total.P - tP)+" g", $("dashProtBalance"), $("dashProtBalanceMsg"), "protein");
-  }
+  setMacroBalanceNumeric(Math.round(total.P - tP), $("dashProtBalance"), $("dashProtBalanceMsg"), "protein");
+  setMacroBalanceNumeric(Math.round(total.C - tC), $("dashCarbBalance"), $("dashCarbBalanceMsg"), "carbs");
+  setMacroBalanceNumeric(Math.round(total.F - tF), $("dashFatBalance"), $("dashFatBalanceMsg"), "fat");
 
-  if(!tC){
-    $("dashCarbBalance").textContent="—";
-    $("dashCarbBalanceMsg").textContent="Set carb target in Profile.";
-    $("dashCarbBalance").className="big";
-  }else{
-    setMacroBalance(Math.round(total.C - tC)+" g", $("dashCarbBalance"), $("dashCarbBalanceMsg"), "carbs");
-  }
-
-  if(!tF){
-    $("dashFatBalance").textContent="—";
-    $("dashFatBalanceMsg").textContent="Set fat target in Profile.";
-    $("dashFatBalance").className="big";
-  }else{
-    setMacroBalance(Math.round(total.F - tF)+" g", $("dashFatBalance"), $("dashFatBalanceMsg"), "fat");
-  }
-
-  // metrics
   $("dashBMI").textContent = profile.bmi ? round2(profile.bmi) : "—";
   $("dashBMR").textContent = profile.bmr ? Math.round(profile.bmr) : "—";
   $("dashTDEE").textContent = profile.tdee ? Math.round(profile.tdee) : "—";
   updateBMIBar(profile.bmi);
 
-  // lifestyle KPIs
   $("dashWater").textContent = (n(life.waterLiters) || 0) + " L";
   $("dashWaterGoal").textContent = (n(life.waterGoal) || 0);
   $("dashSleep").textContent = (n(life.sleepHours) || 0) + " h";
   $("dashSleepGoal").textContent = (n(life.sleepGoal) || 0);
   $("dashLifeMsg").textContent = (burn>0 ? `Workout logged: ${burn} kcal burned` : "No workout logged");
 
-  // chart
   if(macroChart){
     macroChart.data.datasets[0].data = [round1(total.P), round1(total.C), round1(total.F)];
     macroChart.update();
@@ -1516,7 +1455,6 @@ async function savePDF(){
   const doc = new jsPDF({ unit:"pt", format:"a4" });
   const profile = loadProfile() || getProfileDraft();
   const total = computeTotalsFromEntries();
-
   const life = getLifestyle($("lifeDate").value || getDefaultLogDate(profile));
   const burn = n(life.burnKcal);
   const netK = Math.max(0, total.K - burn);
@@ -1535,13 +1473,12 @@ async function savePDF(){
   doc.setDrawColor(220); doc.setLineWidth(1); doc.line(40,y,pageW-40,y); y+=12;
 
   doc.setFont("helvetica","normal"); doc.setFontSize(11);
-  const lines = [
+  [
     `Name: ${profile.name || "—"}   |   Age: ${profile.age || "—"}   |   Sex: ${profile.sex || "—"}`,
     `BMI: ${profile.bmi ? round2(profile.bmi) : "—"} (Recommended 18.5–24.9)   |   BMR: ${profile.bmr ? Math.round(profile.bmr) : "—"} kcal   |   TDEE: ${profile.tdee ? Math.round(profile.tdee) : "—"} kcal`,
     `Goal: ${profile.goal || "—"}   |   Target Calories: ${profile.targetCalories ? Math.round(profile.targetCalories) : "—"} kcal`,
     `Targets — Protein: ${profile.targetProtein || "—"} g   |   Carbs: ${profile.targetCarbs || "—"} g   |   Fats: ${profile.targetFats || "—"} g`,
-  ];
-  lines.forEach(t=>{ doc.text(t,40,y); y+=16; });
+  ].forEach(t=>{ doc.text(t,40,y); y+=16; });
 
   y+=6;
   doc.setFont("helvetica","bold"); doc.text("Lifestyle", 40, y); y+=14;
@@ -1556,25 +1493,15 @@ async function savePDF(){
   y+=18;
 
   doc.setFont("helvetica","bold"); doc.text("Macro Chart", 40, y); y+=10;
-  const canvas = $("macroChart");
-  const imgData = canvas.toDataURL("image/png", 1.0);
+  const imgData = $("macroChart").toDataURL("image/png", 1.0);
   doc.addImage(imgData, "PNG", 40, y, pageW-80, 220);
 
   doc.save("Nowshad_Macro_Report.pdf");
 }
 
-/* ===== Default date ===== */
-function getDefaultLogDate(profile){
-  const now=new Date();
-  const dayStart=profile?.dayStartHour ?? 4;
-  const adjusted=new Date(now);
-  if(now.getHours()<dayStart) adjusted.setDate(now.getDate()-1);
-  return adjusted.toISOString().slice(0,10);
-}
-
 /* ===== Init ===== */
 (function init(){
-  // Load saved profile if exists
+  // Load profile if exists
   loadProfile();
   toggleHeightUI(false);
   toggleWeightUI(false);
