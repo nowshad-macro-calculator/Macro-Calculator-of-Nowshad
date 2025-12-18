@@ -1333,6 +1333,15 @@ const FOOD = {
    (Adds missing foods without overwriting your original list)
 ========================= */
 
+
+
+const CATEGORY_EXTENSIONS = {
+  "Meals (BD)": ["Chicken Biryani","Kacchi Biryani","Beef Biryani","Khichuri (plain)","Bhuna Khichuri"],
+  "Chicken (Parts)": ["Chicken Thigh (cooked)","Chicken Wing (cooked)","Chicken Leg/Drumstick (cooked)"],
+  "Daal": ["Daal (plain, cooked)","Daal (tadka/fried)"],
+  "Drinks": ["Black Coffee","Coffee w/ Milk + Sugar","Milk Tea (sweet)"],
+  "Dessert": ["Cake Slice","Chocolate Cube","Ice Cream Scoop","Firni","Jorda","Rice Pudding (Kheer)"],
+};
 const FOOD_EXTENSIONS = {
   // Chicken parts (approx. USDA cooked averages)
   "Chicken Thigh (cooked)": { unitOptions:["g"], perUnit:{ g:{P:26/100, C:0, F:8/100, K:209/100} }, source:"USDA avg", confidence:"High" },
@@ -1366,15 +1375,6 @@ const FOOD_EXTENSIONS = {
   // Extra nuts (if some already exist, this won’t overwrite unless name matches)
   "Hazelnuts": { unitOptions:["g"], perUnit:{ g:{P:15/100, C:17/100, F:61/100, K:628/100} }, source:"USDA avg", confidence:"High" }
 };
-
-const CATEGORY_EXTENSIONS = {
-  "Meals (BD)": ["Chicken Biryani","Kacchi Biryani","Beef Biryani","Khichuri (plain)","Bhuna Khichuri"],
-  "Chicken (Parts)": ["Chicken Thigh (cooked)","Chicken Wing (cooked)","Chicken Leg/Drumstick (cooked)"],
-  "Daal": ["Daal (plain, cooked)","Daal (tadka/fried)"],
-  "Drinks": ["Black Coffee","Coffee w/ Milk + Sugar","Milk Tea (sweet)"],
-  "Dessert": ["Cake Slice","Chocolate Cube","Ice Cream Scoop","Firni","Jorda","Rice Pudding (Kheer)"],
-};
-
 /* Merge extensions safely */
 function applyFoodExtensions(){
   // 1) Add foods (don’t overwrite if you already have same key)
