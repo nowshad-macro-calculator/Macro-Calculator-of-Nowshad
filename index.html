@@ -193,7 +193,7 @@
     <section id="page-dashboard" class="grid cols2" style="margin-top:14px;">
       <div class="card">
         <h2>Today’s Dashboard</h2>
-        <div class="sub">Targets are based on selected Profile. Protein target is weight × multiplier. Carbs target is calories left after protein + fats.</div>
+        <div class="sub">Targets use selected Profile. Dashboard uses your “day start hour” to define “today”.</div>
 
         <div class="divider"></div>
 
@@ -261,6 +261,24 @@
             <div class="cap">Fat balance</div>
             <div class="big" id="dashFatBalance">—</div>
             <div class="cap" id="dashFatBalanceMsg">—</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ✅ FIX: Lifestyle summary on Dashboard -->
+        <h3>Lifestyle Summary (Today)</h3>
+        <div class="sub">This pulls from Lifestyle tab for the same “day start hour”.</div>
+        <div class="row cols2" style="margin-top:10px">
+          <div class="kpi">
+            <div class="cap">Workout (multiple supported)</div>
+            <div class="big" id="dashLifeWorkout">—</div>
+            <div class="cap" id="dashLifeWorkoutSub">—</div>
+          </div>
+          <div class="kpi">
+            <div class="cap">Sleep & Water</div>
+            <div class="big" id="dashLifeSleepWater">—</div>
+            <div class="cap" id="dashLifeSleepWaterSub">—</div>
           </div>
         </div>
 
@@ -458,7 +476,7 @@
         <div class="divider"></div>
 
         <h3>Targets</h3>
-        <div class="sub">Protein auto = weight × multiplier. Calories/Fats/Carbs can be auto OR manual. Manual entry will never be overwritten once you type.</div>
+        <div class="sub">Protein auto = weight × multiplier. Calories/Fats/Carbs can be auto OR manual.</div>
 
         <div class="row cols3" style="margin-top:10px">
           <div>
@@ -628,8 +646,8 @@
     <!-- LIFESTYLE -->
     <section id="page-lifestyle" class="grid cols2 hide" style="margin-top:14px;">
       <div class="card">
-        <h2>Lifestyle (Sleep • Water • Workout)</h2>
-        <div class="sub">Saved per day. Workout calories burned reduce your net calories on Dashboard.</div>
+        <h2>Lifestyle (Multiple Workouts • Sleep • Water)</h2>
+        <div class="sub">Add multiple workouts (e.g., Cardio + Strength). Total burn updates Dashboard net calories.</div>
 
         <div class="divider"></div>
 
@@ -638,23 +656,28 @@
             <label>Date</label>
             <input type="date" id="lifeDate">
           </div>
+          <div class="pill">
+            Total burn today: <b><span id="burnTotalPreview">0</span> kcal</b>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>Add Workout</h3>
+        <div class="row cols2">
           <div>
             <label>Workout type</label>
             <select id="workoutType">
-              <option value="none" selected>None</option>
               <option value="walking">Walking</option>
               <option value="running">Running</option>
               <option value="cycling">Cycling</option>
               <option value="aerobic">Aerobics</option>
               <option value="cardio">Cardio (general)</option>
               <option value="hiit">HIIT</option>
-              <option value="strength">Strength training</option>
+              <option value="strength" selected>Strength training</option>
             </select>
           </div>
-        </div>
-
-        <div class="row cols2" style="margin-top:10px">
-          <div id="strengthSplitWrap" class="hide">
+          <div id="strengthSplitWrap">
             <label>Strength split</label>
             <select id="strengthSplit">
               <option value="chest_triceps">Chest + Triceps</option>
@@ -665,13 +688,36 @@
             </select>
           </div>
           <div>
-            <label>Workout duration (minutes)</label>
+            <label>Duration (minutes)</label>
             <input type="number" min="0" step="1" id="workoutMins" placeholder="e.g., 45">
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button class="btn" onclick="addWorkout()">Add Workout</button>
           </div>
         </div>
 
         <div class="pill" style="margin-top:10px">
-          Estimated calories burned: <b><span id="burnPreview">0</span> kcal</b>
+          This workout burn estimate: <b><span id="burnPreview">0</span> kcal</b>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3>Workouts List (Today)</h3>
+        <div class="sub">You can add multiple workouts and delete any one.</div>
+        <div class="tableWrap" style="margin-top:10px">
+          <table style="min-width:640px;">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Split</th>
+                <th>Minutes</th>
+                <th>Burn (kcal)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="workoutsTbody"></tbody>
+          </table>
         </div>
 
         <div class="divider"></div>
@@ -730,14 +776,14 @@
 
         <div class="row cols2">
           <div class="kpi">
-            <div class="cap">Workout</div>
+            <div class="cap">Workout summary</div>
             <div class="big" id="lifeWorkoutLine">—</div>
-            <div class="cap">Minutes • Estimated burn</div>
+            <div class="cap" id="lifeWorkoutLineSub">—</div>
           </div>
           <div class="kpi">
             <div class="cap">Sleep / Water</div>
             <div class="big" id="lifeSleepWaterLine">—</div>
-            <div class="cap">Today’s lifestyle summary</div>
+            <div class="cap" id="lifeSleepWaterLineSub">—</div>
           </div>
         </div>
       </div>
@@ -746,12 +792,12 @@
 
 <script>
 /* ===========================
-   Multi-profile Storage
+   Storage Keys
 =========================== */
-const LS_PROFILES = "nowshad_profiles_v1";       // map of profiles by id
+const LS_PROFILES = "nowshad_profiles_v1";
 const LS_ACTIVE_PROFILE = "nowshad_active_profile_v1";
-const LS_LOG = "nowshad_macro_dailylog_v9";
-const LS_LIFE = "nowshad_macro_lifestyle_v9";
+const LS_LOG = "nowshad_macro_dailylog_v10";
+const LS_LIFE = "nowshad_macro_lifestyle_v10";
 
 /* ===== Helpers ===== */
 const $ = (id)=>document.getElementById(id);
@@ -813,19 +859,10 @@ function scheduleRefresh(){
 /* ===========================
    Profiles DB
 =========================== */
-function loadProfiles(){
-  try { return JSON.parse(localStorage.getItem(LS_PROFILES) || "{}"); }
-  catch(e){ return {}; }
-}
-function saveProfiles(map){
-  localStorage.setItem(LS_PROFILES, JSON.stringify(map));
-}
-function getActiveProfileId(){
-  return localStorage.getItem(LS_ACTIVE_PROFILE) || "";
-}
-function setActiveProfileId(id){
-  localStorage.setItem(LS_ACTIVE_PROFILE, id);
-}
+function loadProfiles(){ try { return JSON.parse(localStorage.getItem(LS_PROFILES) || "{}"); } catch(e){ return {}; } }
+function saveProfiles(map){ localStorage.setItem(LS_PROFILES, JSON.stringify(map)); }
+function getActiveProfileId(){ return localStorage.getItem(LS_ACTIVE_PROFILE) || ""; }
+function setActiveProfileId(id){ localStorage.setItem(LS_ACTIVE_PROFILE, id); }
 function getActiveProfile(){
   const map = loadProfiles();
   const id = getActiveProfileId();
@@ -849,13 +886,13 @@ function ensureDefaultProfile(){
 }
 
 /* ===========================
-   “Dirty” helpers (manual overrides)
+   Manual overrides
 =========================== */
 function setDirty(id, val=true){ $(id).dataset.dirty = val ? "1" : ""; }
 function isDirty(id){ return $(id).dataset.dirty === "1"; }
 
 /* ===========================
-   Unit-safe readers + auto-convert on switch
+   Unit readers + convert
 =========================== */
 function readWeightKg(){
   const u = $("p_weight_unit").value;
@@ -914,11 +951,9 @@ function getProfileDraft(){
   const tdee=bmr?bmr*activity:0;
   const basicsOk = (wkg>0 && hcm>0 && age>0 && tdee>0);
 
-  // Protein ALWAYS weight × multiplier
   const protMult = n($("p_protMult").value) || 2.2;
   const targetProtein = (wkg>0) ? Math.round((wkg * protMult)/5)*5 : 0;
 
-  // Calories auto from goal (unless manual override)
   let targetCaloriesAuto = 0;
   if (basicsOk) {
     const goal = $("p_goal").value;
@@ -930,7 +965,6 @@ function getProfileDraft(){
     ? Math.max(800, Math.round(n($("p_targetCalories").value)))
     : targetCaloriesAuto;
 
-  // Fat auto by preset (unless manual override)
   let fatPct = 0.30;
   const preset=$("p_macroPreset").value;
   if(preset==="higherCarb") fatPct = 0.25;
@@ -944,7 +978,6 @@ function getProfileDraft(){
     ? Math.max(0, Math.round(n($("p_targetFats").value)))
     : fatsAuto;
 
-  // Carbs auto from remaining (unless manual override)
   let carbsAuto = 0;
   if(targetCalories>0 && targetProtein>0){
     let remaining = targetCalories - (targetProtein*4) - (targetFats*9);
@@ -980,8 +1013,6 @@ function getProfileDraft(){
     targetProtein,
     targetFats,
     targetCarbs,
-
-    // persist override intent
     dirtyCalories:isDirty("p_targetCalories"),
     dirtyFats:isDirty("p_targetFats"),
     dirtyCarbs:isDirty("p_targetCarbs"),
@@ -1013,7 +1044,7 @@ $("p_weight_unit").addEventListener("change", ()=>{
   toggleWeightUI(true);
 });
 
-/* ===== Profile preview updates (FIXED) ===== */
+/* ===== Profile preview updates ===== */
 function updateProfilePreviewOnly(){
   const p=getProfileDraft();
 
@@ -1022,10 +1053,8 @@ function updateProfilePreviewOnly(){
   $("p_tdeeLine").textContent = p.tdee? Math.round(p.tdee)+" kcal" : "—";
   $("p_targetLine").textContent = "Target: " + (p.targetCalories?Math.round(p.targetCalories)+" kcal":"—");
 
-  // Protein auto always
   $("p_targetProtein").value = p.targetProtein ? p.targetProtein : "";
 
-  // Always write auto values if NOT manually overridden (this makes Calculate Targets reliable)
   if(!isDirty("p_targetCalories") && p.targetCalories) $("p_targetCalories").value = p.targetCalories;
   if(!isDirty("p_targetFats") && p.targetFats>=0) $("p_targetFats").value = p.targetFats;
   if(!isDirty("p_targetCarbs") && p.targetCarbs>=0) $("p_targetCarbs").value = p.targetCarbs;
@@ -1033,7 +1062,6 @@ function updateProfilePreviewOnly(){
   scheduleRefresh();
 }
 
-/* ===== Calculate Targets (NO SAVE NEEDED) ===== */
 function calculateTargetsOnly(){
   setDirty("p_targetCalories", false);
   setDirty("p_targetFats", false);
@@ -1050,13 +1078,11 @@ function calculateTargetsOnly(){
   refreshAll();
 }
 
-/* ===== Save profile into multi-profile store ===== */
 function saveProfile(){
   try{
     const p=getProfileDraft();
     const map = loadProfiles();
     if(!p.id){
-      // if no active profile, create one
       const id = uid();
       p.id = id;
       setActiveProfileId(id);
@@ -1075,7 +1101,6 @@ function saveProfile(){
   }
 }
 
-/* ===== Load active profile into UI ===== */
 function loadProfileToUI(){
   const p = getActiveProfile();
   if(!p) return null;
@@ -1104,7 +1129,6 @@ function loadProfileToUI(){
   setDirty("p_targetFats", !!p.dirtyFats);
   setDirty("p_targetCarbs", !!p.dirtyCarbs);
 
-  // restore manual values only if dirty; else allow auto
   $("p_targetCalories").value = p.dirtyCalories && p.targetCalories ? Math.round(p.targetCalories) : "";
   $("p_targetFats").value = p.dirtyFats && (p.targetFats>=0) ? Math.round(p.targetFats) : "";
   $("p_targetCarbs").value = p.dirtyCarbs && (p.targetCarbs>=0) ? Math.round(p.targetCarbs) : "";
@@ -1117,9 +1141,6 @@ function loadProfileToUI(){
   return p;
 }
 
-/* ===========================
-   Profile selector UI
-=========================== */
 function rebuildProfileSelect(){
   const sel = $("profileSelect");
   const map = loadProfiles();
@@ -1162,8 +1183,6 @@ function createProfile(){
   $("newProfileName").value = "";
   rebuildProfileSelect();
   loadProfileToUI();
-  $("profileSaveHint").style.display="none";
-  $("profileCalcHint").style.display="none";
   scheduleRefresh();
 }
 
@@ -1173,11 +1192,9 @@ function resetCurrentProfile(){
   if(!confirm("Reset the current profile data?")) return;
 
   const map = loadProfiles();
-  // keep profile shell but clear fields
   map[id] = { id, name: (map[id]?.name || "Profile"), label:(map[id]?.label || "Profile"), createdAt:(map[id]?.createdAt||Date.now()) };
   saveProfiles(map);
 
-  // clear UI + dirty flags
   ["p_name","p_age","p_height_cm","p_height_ft","p_height_in","p_weight_kg","p_weight_lbs"].forEach(x=>$(x).value="");
   $("p_goal").value="loss";
   $("p_activity").value="1.2";
@@ -1194,11 +1211,7 @@ function resetCurrentProfile(){
   $("p_targetCarbs").value="";
   $("p_targetProtein").value="";
 
-  $("profileSaveHint").style.display="none";
-  $("profileCalcHint").style.display="none";
   $("profileSavedNote").style.display="none";
-  $("profileSaveHint").style.display="none";
-
   toggleHeightUI(false);
   toggleWeightUI(false);
   updateProfilePreviewOnly();
@@ -1206,9 +1219,6 @@ function resetCurrentProfile(){
   scheduleRefresh();
 }
 
-/* ===========================
-   Profile listeners
-=========================== */
 [
  "p_name","p_age","p_height_cm","p_height_ft","p_height_in","p_weight_kg","p_weight_lbs",
  "p_goal","p_activity","p_dayStartHour","p_sex","p_macroPreset","p_protMult"
@@ -1216,8 +1226,6 @@ function resetCurrentProfile(){
   $(id).addEventListener("input", updateProfilePreviewOnly);
   $(id).addEventListener("change", updateProfilePreviewOnly);
 });
-
-// Dirty flags: once user types manual values, never overwrite
 ["p_targetCalories","p_targetFats","p_targetCarbs"].forEach(id=>{
   $(id).addEventListener("input", ()=>{
     setDirty(id, true);
@@ -1227,8 +1235,7 @@ function resetCurrentProfile(){
 });
 
 /* ===========================
-   Day starts at (hour)
-   If you log food after midnight but consider it “yesterday”, set dayStartHour.
+   Day start hour
 =========================== */
 function getDefaultLogDate(profile){
   const now=new Date();
@@ -1239,7 +1246,7 @@ function getDefaultLogDate(profile){
 }
 
 /* ===========================
-   Logs
+   Food Logs
 =========================== */
 function loadAllLogs(){ try{ return JSON.parse(localStorage.getItem(LS_LOG) || "{}"); }catch(e){ return {}; } }
 function saveAllLogs(obj){ localStorage.setItem(LS_LOG, JSON.stringify(obj)); }
@@ -1247,94 +1254,89 @@ function getDayLog(dateKey){ const all=loadAllLogs(); return all[dateKey] || { e
 function setDayLog(dateKey, dayLog){ const all=loadAllLogs(); all[dateKey]=dayLog; saveAllLogs(all); }
 
 /* ===========================
-   Food DB (same as your set, add Dessert if you want later)
+   FOOD DATABASE
+   (popular items, Fruits separated, Drinks separate, Desserts added, Daal added)
 =========================== */
 const FOOD = {
+  // Proteins
   "Chicken Breast": { unitOptions:["g"], perUnit:{g:{P:31/100, C:0, F:3.6/100, K:165/100}} },
-  "Chicken Thigh": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:8/100, K:209/100}} },
-  "Chicken Wings": { unitOptions:["g"], perUnit:{g:{P:30/100, C:0, F:13/100, K:290/100}} },
-  "Chicken Drumsticks": { unitOptions:["g"], perUnit:{g:{P:28/100, C:0, F:10/100, K:215/100}} },
-
+  "Beef (cooked)": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:15/100, K:250/100}} },
+  "Fish (generic)": { unitOptions:["g"], perUnit:{g:{P:22/100, C:0, F:5/100, K:120/100}} },
   "Egg": { unitOptions:["pcs"], perUnit:{pcs:{P:6, C:0.6, F:5, K:72}} },
-  "Protein Shake": { unitOptions:["scoop"], perUnit:{scoop:{P:25, C:3, F:2, K:120}} },
-  "Mutton": { unitOptions:["g"], perUnit:{g:{P:25/100, C:0, F:20/100, K:294/100}} },
-  "Duck": { unitOptions:["g"], perUnit:{g:{P:23/100, C:0, F:28/100, K:337/100}} },
-  "Pigeon": { unitOptions:["g"], perUnit:{g:{P:25/100, C:0, F:15/100, K:250/100}} },
-  "Quail": { unitOptions:["g"], perUnit:{g:{P:22/100, C:0, F:12/100, K:210/100}} },
-  "Beef": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:15/100, K:250/100}} },
-  "Fish": { unitOptions:["g"], perUnit:{g:{P:22/100, C:0, F:5/100, K:120/100}} },
-  "Shrimp": { unitOptions:["g"], perUnit:{g:{P:24/100, C:0, F:2/100, K:99/100}} },
-  "Dried Fish / Bombay Duck": { unitOptions:["g"], perUnit:{g:{P:60/100, C:0, F:5/100, K:300/100}} },
+  "Yogurt / Curd": { unitOptions:["g"], perUnit:{g:{P:3.5/100, C:4.7/100, F:3.3/100, K:61/100}} },
 
+  // Daal / Lentils
+  "Daal (cooked, 1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:18, C:40, F:1, K:230}} },
+  "Daal (cooked, 1/2 cup)": { unitOptions:["half_cup"], perUnit:{half_cup:{P:9, C:20, F:0.5, K:115}} },
+
+  // Carbs (basic)
   "Rice (cooked)": { unitOptions:["g","plate"], perUnit:{
       g:{P:2.7/100, C:28/100, F:0.3/100, K:130/100},
       plate:{P:8, C:90, F:1, K:420}
   }},
-  "Bread": { unitOptions:["slice"], perUnit:{slice:{P:3, C:15, F:1, K:80}} },
   "Roti": { unitOptions:["pcs"], perUnit:{pcs:{P:3.5, C:18, F:3, K:120}} },
   "Paratha": { unitOptions:["pcs"], perUnit:{pcs:{P:6, C:30, F:12, K:260}} },
   "Oats (dry)": { unitOptions:["g"], perUnit:{g:{P:16.9/100, C:66.3/100, F:6.9/100, K:389/100}} },
-  "Milk Tea": { unitOptions:["cup"], perUnit:{cup:{P:2, C:10, F:3, K:80}} },
-  "Carbonated Beverage": { unitOptions:["ml"], perUnit:{ml:{P:0, C:10.6/100, F:0, K:42/100}} },
 
+  // Vegetables
   "Salad": { unitOptions:["cup"], perUnit:{cup:{P:0.5, C:2, F:0.1, K:15}} },
-  "Vegetables": { unitOptions:["cup"], perUnit:{cup:{P:2, C:5, F:0.2, K:35}} },
+  "Vegetables (mixed)": { unitOptions:["cup"], perUnit:{cup:{P:2, C:5, F:0.2, K:35}} },
 
+  // Fats
   "Butter": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0.12, C:0.01, F:11.5, K:102}} },
   "Olive Oil": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:13.5, K:119}} },
-  "Soybean Oil": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:13.6, K:120}} },
   "Ghee": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:14, K:126}} },
 
+  // Snacks (popular)
   "Peanut Butter": { unitOptions:["tbsp"], perUnit:{tbsp:{P:3.5, C:4, F:8, K:100}} },
-  "Yogurt / Curd": { unitOptions:["g"], perUnit:{g:{P:3.5/100, C:4.7/100, F:3.3/100, K:61/100}} },
-
-  "Dates (Deglet Noor style)": { unitOptions:["g","pcs"], perUnit:{
-      g:{P:2.2/100, C:75/100, F:0.3/100, K:282/100},
-      pcs:{P:0.18, C:6.0, F:0.02, K:23}
-  }},
-  "Dates (Ajwa small)": { unitOptions:["pcs"], perUnit:{pcs:{P:0.20, C:6.7, F:0.03, K:26}} },
-  "Dates (Medjool large)": { unitOptions:["pcs"], perUnit:{pcs:{P:0.43, C:18, F:0.05, K:66}} },
-
   "Almonds": { unitOptions:["g"], perUnit:{g:{P:21.2/100, C:21.6/100, F:49.9/100, K:579/100}} },
   "Peanuts": { unitOptions:["g"], perUnit:{g:{P:25.8/100, C:16.1/100, F:49.2/100, K:567/100}} },
-  "Cashews": { unitOptions:["g"], perUnit:{g:{P:18.2/100, C:30.2/100, F:43.9/100, K:553/100}} },
-  "Walnuts": { unitOptions:["g"], perUnit:{g:{P:15.2/100, C:13.7/100, F:65.2/100, K:654/100}} },
-  "Pistachios": { unitOptions:["g"], perUnit:{g:{P:20.2/100, C:27.2/100, F:45.3/100, K:562/100}} },
+  "Biscuits (2 pcs)": { unitOptions:["serving"], perUnit:{serving:{P:2, C:20, F:6, K:140}} },
+  "Chips (small pack)": { unitOptions:["pack"], perUnit:{pack:{P:3, C:18, F:10, K:170}} },
 
+  // Fruits (separated)
   "Banana": { unitOptions:["pcs"], perUnit:{pcs:{P:1.3, C:27, F:0.4, K:105}} },
   "Apple": { unitOptions:["pcs"], perUnit:{pcs:{P:0.5, C:25, F:0.3, K:95}} },
   "Orange": { unitOptions:["pcs"], perUnit:{pcs:{P:1.2, C:15.4, F:0.2, K:62}} },
   "Mango (1 cup slices)": { unitOptions:["cup"], perUnit:{cup:{P:1.4, C:25, F:0.6, K:99}} },
   "Grapes (1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:1.1, C:27.3, F:0.2, K:104}} },
 
-  "Kacchi Biryani": { unitOptions:["plate"], perUnit:{plate:{P:26, C:90, F:39, K:800}} },
-  "Biryani (general)": { unitOptions:["plate"], perUnit:{plate:{P:20, C:85, F:15, K:600}} },
+  // Drinks (separate section)
+  "Milk Tea (1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:2, C:10, F:3, K:80}} },
+  "Black Coffee (no sugar)": { unitOptions:["cup"], perUnit:{cup:{P:0.3, C:0, F:0, K:2}} },
+  "Coffee with milk (no sugar)": { unitOptions:["cup"], perUnit:{cup:{P:3, C:5, F:2, K:50}} },
+  "Soft Drink (330 ml)": { unitOptions:["can"], perUnit:{can:{P:0, C:35, F:0, K:140}} },
+
+  // Meals
   "Khichuri": { unitOptions:["plate"], perUnit:{plate:{P:14, C:70, F:12, K:450}} },
-  "Fried Rice": { unitOptions:["plate"], perUnit:{plate:{P:12, C:75, F:14, K:520}} },
+  "Biryani (general)": { unitOptions:["plate"], perUnit:{plate:{P:20, C:85, F:15, K:600}} },
   "Shawarma (wrap)": { unitOptions:["pcs"], perUnit:{pcs:{P:30, C:40, F:20, K:450}} },
-  "Chicken Broast": { unitOptions:["plate"], perUnit:{plate:{P:35, C:25, F:25, K:550}} },
-  "Beef Steak Meal": { unitOptions:["plate"], perUnit:{plate:{P:45, C:10, F:25, K:500}} },
-  "Fried Chicken Meal (KFC style)": { unitOptions:["plate"], perUnit:{plate:{P:35, C:45, F:30, K:700}} },
-  "Whopper": { unitOptions:["pcs"], perUnit:{pcs:{P:30.4, C:51.1, F:38.4, K:678.8}} },
-  "Double Whopper": { unitOptions:["pcs"], perUnit:{pcs:{P:46, C:46, F:52, K:838}} },
+
+  // Desserts (popular)
+  "Cake slice": { unitOptions:["slice"], perUnit:{slice:{P:4, C:45, F:15, K:330}} },
+  "Chocolate cube": { unitOptions:["pcs"], perUnit:{pcs:{P:1, C:8, F:6, K:90}} },
+  "Ice cream (1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:5, C:30, F:14, K:270}} },
 };
 
 const CATEGORY_ITEMS = {
-  "Chicken": ["Chicken Breast","Chicken Thigh","Chicken Wings","Chicken Drumsticks"],
-  "Protein": ["Egg","Protein Shake","Mutton","Duck","Pigeon","Quail","Beef","Fish","Shrimp","Dried Fish / Bombay Duck"],
-  "Carbs": ["Rice (cooked)","Bread","Roti","Paratha","Oats (dry)","Milk Tea","Carbonated Beverage"],
-  "Vegetables": ["Salad","Vegetables"],
-  "Fats": ["Butter","Olive Oil","Soybean Oil","Ghee"],
-  "Snacks & Fruits": ["Peanut Butter","Yogurt / Curd","Dates (Deglet Noor style)","Dates (Ajwa small)","Dates (Medjool large)","Almonds","Peanuts","Cashews","Walnuts","Pistachios","Banana","Apple","Orange","Mango (1 cup slices)","Grapes (1 cup)"],
-  "Meals": ["Kacchi Biryani","Biryani (general)","Khichuri","Fried Rice","Shawarma (wrap)","Chicken Broast","Beef Steak Meal","Fried Chicken Meal (KFC style)","Whopper","Double Whopper"],
+  "Protein": ["Chicken Breast","Beef (cooked)","Fish (generic)","Egg","Yogurt / Curd"],
+  "Daal / Lentils": ["Daal (cooked, 1 cup)","Daal (cooked, 1/2 cup)"],
+  "Carbs": ["Rice (cooked)","Roti","Paratha","Oats (dry)","Khichuri","Biryani (general)"],
+  "Vegetables": ["Salad","Vegetables (mixed)"],
+  "Fats": ["Butter","Olive Oil","Ghee"],
+  "Snacks": ["Peanut Butter","Almonds","Peanuts","Biscuits (2 pcs)","Chips (small pack)"],
+  "Fruits": ["Banana","Apple","Orange","Mango (1 cup slices)","Grapes (1 cup)"],
+  "Drinks": ["Milk Tea (1 cup)","Black Coffee (no sugar)","Coffee with milk (no sugar)","Soft Drink (330 ml)"],
+  "Desserts": ["Cake slice","Chocolate cube","Ice cream (1 cup)"],
+  "Meals": ["Shawarma (wrap)"],
 };
 
 /* ===== Food compute ===== */
 function computeFood(foodName, qty, unit){
   const item=FOOD[foodName];
-  if(!item) return zero();
+  if(!item) return {P:0,C:0,F:0,K:0};
   const map=item.perUnit[unit];
-  if(!map) return zero();
+  if(!map) return {P:0,C:0,F:0,K:0};
   return { P: map.P*qty, C: map.C*qty, F: map.F*qty, K: map.K*qty };
 }
 
@@ -1388,16 +1390,16 @@ $("entryFood").addEventListener("change", ()=>{
 $("entryUnit").addEventListener("change", updateEntryPreview);
 $("entryQty").addEventListener("input", updateEntryPreview);
 
-function computeTotalsFromEntries(){
-  const profile=getActiveProfile() || getProfileDraft();
-  const dateKey=$("logDate").value || getDefaultLogDate(profile);
+function computeTotalsFromEntries(dateKey){
   const day=getDayLog(dateKey);
-  let total=zero();
-  day.entries.forEach(e=> total = sum(total, computeFood(e.food, n(e.qty), e.unit)));
+  let total={P:0,C:0,F:0,K:0};
+  day.entries.forEach(e=>{
+    const t = computeFood(e.food, n(e.qty), e.unit);
+    total = {P:total.P+t.P, C:total.C+t.C, F:total.F+t.F, K:total.K+t.K};
+  });
   return total;
 }
 
-/* ===== Add entry ===== */
 function addEntry(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
@@ -1409,11 +1411,7 @@ function addEntry(){
   const qty=n($("entryQty").value);
   if(!food || qty<=0){ alert("Select a food and enter a quantity > 0."); return; }
 
-  day.entries.push({
-    id: uid(),
-    meal: $("mealType").value,
-    category, food, unit, qty
-  });
+  day.entries.push({ id: uid(), meal: $("mealType").value, category, food, unit, qty });
   setDayLog(dateKey, day);
 
   $("entryQty").value="";
@@ -1421,7 +1419,6 @@ function addEntry(){
   scheduleRefresh();
 }
 
-/* ===== Entries table ===== */
 function renderEntries(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
@@ -1472,14 +1469,13 @@ function renderEntries(){
     });
   });
 
-  const total=computeTotalsFromEntries();
+  const total=computeTotalsFromEntries(dateKey);
   $("liveP").textContent = round1(total.P) + " g";
   $("liveC").textContent = round1(total.C) + " g";
   $("liveF").textContent = round1(total.F) + " g";
   $("liveK").textContent = Math.round(total.K) + " kcal";
 }
 
-/* ===== Save/Reset foods ===== */
 function saveDay(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
@@ -1495,16 +1491,21 @@ function resetFoodLogs(){
 }
 
 /* ===========================
-   Lifestyle
+   Lifestyle (MULTI-WORKOUT)
 =========================== */
 function loadAllLifestyle(){ try{ return JSON.parse(localStorage.getItem(LS_LIFE) || "{}"); }catch(e){ return {}; } }
 function saveAllLifestyle(obj){ localStorage.setItem(LS_LIFE, JSON.stringify(obj)); }
+
+function emptyLifestyle(){
+  return {
+    workouts: [], // [{id,type,split,mins,burn}]
+    sleepHours:0, sleepGoal:8,
+    waterLiters:0, waterGoal:3
+  };
+}
 function getLifestyle(dateKey){
   const all=loadAllLifestyle();
-  return all[dateKey] || {
-    workoutType:"none", strengthSplit:"chest_triceps", workoutMins:0, burnKcal:0,
-    sleepHours:0, sleepGoal:8, waterLiters:0, waterGoal:3
-  };
+  return all[dateKey] || emptyLifestyle();
 }
 function setLifestyle(dateKey, data){
   const all=loadAllLifestyle();
@@ -1512,78 +1513,159 @@ function setLifestyle(dateKey, data){
   saveAllLifestyle(all);
 }
 
-const BURN_PER_MIN = { none:0, walking:4.0, running:10.0, cycling:8.0, aerobic:7.0, cardio:7.5, hiit:12.0, strength:6.5 };
-function calcBurn(){
-  const type=$("workoutType").value;
-  const mins=n($("workoutMins").value);
+const BURN_PER_MIN = { walking:4.0, running:10.0, cycling:8.0, aerobic:7.0, cardio:7.5, hiit:12.0, strength:6.5 };
+
+function calcWorkoutBurn(type, mins){
   const per=BURN_PER_MIN[type] ?? 0;
   return Math.round(per * mins);
 }
+function workoutLabel(w){
+  if(w.type==="strength"){
+    const map = {
+      chest_triceps:"Chest + Triceps", back_biceps:"Back + Biceps",
+      shoulders_forearms:"Shoulders + Forearms", legs:"Legs", fullbody:"Full body"
+    };
+    return "Strength";
+  }
+  const opt = document.querySelector(`#workoutType option[value="${w.type}"]`);
+  return opt ? opt.textContent : w.type;
+}
+function updateBurnPreview(){
+  const type=$("workoutType").value;
+  const mins=n($("workoutMins").value);
+  $("strengthSplitWrap").classList.toggle("hide", type!=="strength");
+  $("burnPreview").textContent = calcWorkoutBurn(type, mins);
+}
+
+$("workoutType").addEventListener("change", updateBurnPreview);
+$("workoutMins").addEventListener("input", updateBurnPreview);
+$("strengthSplit").addEventListener("change", updateBurnPreview);
+
+function addWorkout(){
+  const profile=getActiveProfile() || getProfileDraft();
+  const dateKey=$("lifeDate").value || getDefaultLogDate(profile);
+  const data=getLifestyle(dateKey);
+
+  const type=$("workoutType").value;
+  const mins=n($("workoutMins").value);
+  const split = (type==="strength") ? $("strengthSplit").value : "";
+  if(mins<=0){ alert("Enter workout minutes > 0"); return; }
+
+  const burn = calcWorkoutBurn(type, mins);
+  data.workouts.push({ id: uid(), type, split, mins, burn });
+  setLifestyle(dateKey, data);
+
+  $("workoutMins").value="";
+  renderWorkouts();
+  updateLifestyleSummaryCards();
+  scheduleRefresh();
+}
+
+function renderWorkouts(){
+  const profile=getActiveProfile() || getProfileDraft();
+  const dateKey=$("lifeDate").value || getDefaultLogDate(profile);
+  const data=getLifestyle(dateKey);
+
+  const tb=$("workoutsTbody");
+  tb.innerHTML="";
+
+  data.workouts.forEach(w=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${workoutLabel(w)}</td>
+      <td>${w.type==="strength" ? (w.split || "-") : "-"}</td>
+      <td>${w.mins}</td>
+      <td>${w.burn}</td>
+      <td><button class="actionBtn" data-id="${w.id}">Delete</button></td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  tb.querySelectorAll("button.actionBtn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id=btn.dataset.id;
+      const data2=getLifestyle(dateKey);
+      data2.workouts = data2.workouts.filter(x=>x.id!==id);
+      setLifestyle(dateKey, data2);
+      renderWorkouts();
+      updateLifestyleSummaryCards();
+      scheduleRefresh();
+    });
+  });
+
+  const totalBurn = data.workouts.reduce((s,x)=>s+n(x.burn),0);
+  $("burnTotalPreview").textContent = Math.round(totalBurn);
+}
+
 function updateLifestyleUI(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("lifeDate").value || getDefaultLogDate(profile);
   const data=getLifestyle(dateKey);
 
-  $("workoutType").value=data.workoutType || "none";
-  $("strengthSplit").value=data.strengthSplit || "chest_triceps";
-  $("workoutMins").value=data.workoutMins ?? 0;
   $("sleepHours").value=data.sleepHours ?? 0;
   $("sleepGoal").value(String(data.sleepGoal ?? 8));
   $("waterLiters").value=data.waterLiters ?? 0;
   $("waterGoal").value(String(data.waterGoal ?? 3));
 
-  $("strengthSplitWrap").classList.toggle("hide", $("workoutType").value!=="strength");
-  $("burnPreview").textContent = data.burnKcal ?? 0;
-
-  const wLabel = $("workoutType").value==="strength"
-    ? "Strength (" + $("strengthSplit").options[$("strengthSplit").selectedIndex].text + ")"
-    : $("workoutType").options[$("workoutType").selectedIndex].text;
-
-  $("lifeWorkoutLine").textContent = (wLabel==="None" ? "No workout" : wLabel) + " • " + (data.workoutMins||0) + " min • " + (data.burnKcal||0) + " kcal";
-  $("lifeSleepWaterLine").textContent = (data.sleepHours||0) + "h sleep • " + (data.waterLiters||0) + "L water";
+  renderWorkouts();
+  updateLifestyleSummaryCards();
+  updateBurnPreview();
 }
-$("workoutType").addEventListener("change", ()=>{
-  $("strengthSplitWrap").classList.toggle("hide", $("workoutType").value!=="strength");
-  $("burnPreview").textContent = calcBurn();
-});
-["workoutMins","strengthSplit","sleepHours","sleepGoal","waterLiters","waterGoal"].forEach(id=>{
-  $(id).addEventListener("input", ()=>{ $("burnPreview").textContent = calcBurn(); });
-  $(id).addEventListener("change", ()=>{ $("burnPreview").textContent = calcBurn(); });
-});
+
+function updateLifestyleSummaryCards(){
+  const profile=getActiveProfile() || getProfileDraft();
+  const dateKey=$("lifeDate").value || getDefaultLogDate(profile);
+  const data=getLifestyle(dateKey);
+
+  const totalBurn = data.workouts.reduce((s,x)=>s+n(x.burn),0);
+  const totalMins = data.workouts.reduce((s,x)=>s+n(x.mins),0);
+  const count = data.workouts.length;
+
+  // Lifestyle tab summary
+  $("lifeWorkoutLine").textContent = count ? `${count} workout(s) • ${totalMins} min` : "No workout";
+  $("lifeWorkoutLineSub").textContent = `Total burn: ${Math.round(totalBurn)} kcal`;
+
+  $("lifeSleepWaterLine").textContent = `${n(data.sleepHours)||0}h sleep • ${n(data.waterLiters)||0}L water`;
+  $("lifeSleepWaterLineSub").textContent = `Goals: ${n(data.sleepGoal)||0}h • ${n(data.waterGoal)||0}L`;
+
+  // Dashboard summary (same day key used by dashboard refresh)
+  $("dashLifeWorkout").textContent = count ? `${count} workout(s) • ${totalMins} min` : "No workout";
+  $("dashLifeWorkoutSub").textContent = `Burn: ${Math.round(totalBurn)} kcal`;
+
+  $("dashLifeSleepWater").textContent = `${n(data.sleepHours)||0}h sleep • ${n(data.waterLiters)||0}L water`;
+  $("dashLifeSleepWaterSub").textContent = `Goals: ${n(data.sleepGoal)||0}h • ${n(data.waterGoal)||0}L`;
+}
+
 function saveLifestyle(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("lifeDate").value || getDefaultLogDate(profile);
+  const data=getLifestyle(dateKey);
 
-  const data = {
-    workoutType:$("workoutType").value,
-    strengthSplit:$("strengthSplit").value,
-    workoutMins:n($("workoutMins").value),
-    burnKcal:calcBurn(),
-    sleepHours:n($("sleepHours").value),
-    sleepGoal:n($("sleepGoal").value),
-    waterLiters:n($("waterLiters").value),
-    waterGoal:n($("waterGoal").value),
-  };
+  data.sleepHours=n($("sleepHours").value);
+  data.sleepGoal=n($("sleepGoal").value);
+  data.waterLiters=n($("waterLiters").value);
+  data.waterGoal=n($("waterGoal").value);
 
   setLifestyle(dateKey, data);
+
   $("lifeSavedNote").style.display="block";
-  updateLifestyleUI();
+  updateLifestyleSummaryCards();
   scheduleRefresh();
 }
 function resetLifestyle(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("lifeDate").value || getDefaultLogDate(profile);
-  if(!confirm("Reset lifestyle inputs for "+dateKey+"?")) return;
-  setLifestyle(dateKey, {
-    workoutType:"none", strengthSplit:"chest_triceps", workoutMins:0, burnKcal:0,
-    sleepHours:0, sleepGoal:8, waterLiters:0, waterGoal:3
-  });
+  if(!confirm("Reset lifestyle (workouts + sleep + water) for "+dateKey+"?")) return;
+
+  setLifestyle(dateKey, emptyLifestyle());
   $("lifeSavedNote").style.display="none";
   updateLifestyleUI();
   scheduleRefresh();
 }
 
-/* ===== BMI bar ===== */
+/* ===========================
+   BMI Bar
+=========================== */
 function updateBMIBar(bmi){
   const fill=$("bmiFill");
   const pin=$("bmiPin");
@@ -1603,12 +1685,18 @@ function refreshAll(){
 
   $("needProfileNote").style.display = hasSavedProfile ? "none" : "block";
 
-  if(!$("logDate").value) $("logDate").value = getDefaultLogDate(profile);
-  if(!$("lifeDate").value) $("lifeDate").value = getDefaultLogDate(profile);
+  const dashDate = getDefaultLogDate(profile);
 
-  const total=computeTotalsFromEntries();
-  const life = getLifestyle($("lifeDate").value || getDefaultLogDate(profile));
-  const burn = n(life.burnKcal);
+  if(!$("logDate").value) $("logDate").value = dashDate;
+  if(!$("lifeDate").value) $("lifeDate").value = dashDate;
+
+  const foodDateKey = $("logDate").value || dashDate;
+  const lifeDateKey = $("lifeDate").value || dashDate;
+
+  const total=computeTotalsFromEntries(foodDateKey);
+
+  const life = getLifestyle(lifeDateKey);
+  const burn = life.workouts.reduce((s,x)=>s+n(x.burn),0);
   const netK = total.K - burn;
 
   $("dashCalories").textContent = Math.round(total.K) + " kcal";
@@ -1629,7 +1717,6 @@ function refreshAll(){
   $("dashCarbTarget").textContent = tC?Math.round(tC):0;
   $("dashFatTarget").textContent  = tF?Math.round(tF):0;
 
-  // Net calories balance
   if(!tCal){
     $("dashCalBalance").textContent="—";
     $("dashCalBalanceMsg").textContent="Use Calculate Targets in Profile tab.";
@@ -1680,16 +1767,17 @@ function refreshAll(){
   $("dashTDEE").textContent = profile.tdee ? Math.round(profile.tdee) : "—";
   updateBMIBar(profile.bmi);
 
-  // macro chart
   if(macroChart){
     macroChart.data.datasets[0].data = [round1(total.P), round1(total.C), round1(total.F)];
     macroChart.update();
   }
 
-  // dashboard profile summary
   $("dashProfileName").textContent = (profile.name || profile.label || "—");
   $("dashProfileMeta").textContent = (profile.age ? ("Age " + profile.age) : "—") + " • " + (profile.sex || "—");
   $("dashProtMult").textContent = (profile.protMult ? profile.protMult : "—");
+
+  // ✅ keep lifestyle summaries synced
+  updateLifestyleSummaryCards();
 }
 
 /* ===========================
@@ -1697,19 +1785,12 @@ function refreshAll(){
 =========================== */
 function resetOnlyToday(){
   const profile = getActiveProfile() || getProfileDraft();
-  const dateKey = $("logDate").value || getDefaultLogDate(profile);
-  const lifeKey = $("lifeDate").value || getDefaultLogDate(profile);
+  const dateKey = getDefaultLogDate(profile);
 
   if(!confirm("Reset ONLY today's food log and lifestyle for " + dateKey + "?")) return;
 
-  // clear today entries
   setDayLog(dateKey, { entries: [] });
-
-  // clear today lifestyle
-  setLifestyle(lifeKey, {
-    workoutType:"none", strengthSplit:"chest_triceps", workoutMins:0, burnKcal:0,
-    sleepHours:0, sleepGoal:8, waterLiters:0, waterGoal:3
-  });
+  setLifestyle(dateKey, emptyLifestyle());
 
   renderEntries();
   updateLifestyleUI();
@@ -1728,15 +1809,17 @@ function resetEverything(){
 }
 
 /* ===========================
-   PDF (kept from your version)
+   PDF
 =========================== */
 async function savePDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:"pt", format:"a4" });
   const profile = getActiveProfile() || getProfileDraft();
-  const total = computeTotalsFromEntries();
-  const life = getLifestyle($("lifeDate").value || getDefaultLogDate(profile));
-  const burn = n(life.burnKcal);
+  const dateKey = getDefaultLogDate(profile);
+
+  const total = computeTotalsFromEntries(dateKey);
+  const life = getLifestyle(dateKey);
+  const burn = life.workouts.reduce((s,x)=>s+n(x.burn),0);
   const netK = total.K - burn;
 
   const pageW = doc.internal.pageSize.getWidth();
@@ -1746,7 +1829,7 @@ async function savePDF(){
   doc.text("Nowshad's Macro Calculator — Report", 40, y); y+=18;
 
   doc.setFont("helvetica","normal"); doc.setFontSize(10);
-  doc.text("Generated: " + new Date().toLocaleString(), 40, y); y+=20;
+  doc.text("Date: " + dateKey + "   |   Generated: " + new Date().toLocaleString(), 40, y); y+=20;
 
   doc.setFont("helvetica","bold"); doc.setFontSize(12);
   doc.text("Profile Summary", 40, y); y+=10;
@@ -1763,8 +1846,13 @@ async function savePDF(){
   y+=6;
   doc.setFont("helvetica","bold"); doc.text("Lifestyle", 40, y); y+=14;
   doc.setFont("helvetica","normal");
-  doc.text(`Workout: ${life.workoutType || "none"} ${life.workoutType==="strength" ? "("+(life.strengthSplit||"")+")" : ""} • ${life.workoutMins||0} min • Burn: ${burn} kcal`, 40, y); y+=14;
-  doc.text(`Sleep: ${life.sleepHours||0} h (Goal ${life.sleepGoal||0} h) • Water: ${life.waterLiters||0} L (Goal ${life.waterGoal||0} L)`, 40, y); y+=18;
+
+  const workoutLine = life.workouts.length
+    ? `Workouts: ${life.workouts.length} session(s), ${life.workouts.reduce((s,x)=>s+n(x.mins),0)} min, Burn ${Math.round(burn)} kcal`
+    : "Workouts: None";
+  doc.text(workoutLine, 40, y); y+=14;
+
+  doc.text(`Sleep: ${n(life.sleepHours)||0} h (Goal ${n(life.sleepGoal)||0} h) • Water: ${n(life.waterLiters)||0} L (Goal ${n(life.waterGoal)||0} L)`, 40, y); y+=18;
 
   doc.setFont("helvetica","bold"); doc.text("Today’s Totals", 40, y); y+=14;
   doc.setFont("helvetica","normal");
@@ -1787,17 +1875,17 @@ async function savePDF(){
   rebuildProfileSelect();
   loadProfileToUI();
 
-  // default dates
   const p = getActiveProfile() || getProfileDraft();
-  $("logDate").value = getDefaultLogDate(p);
-  $("lifeDate").value = getDefaultLogDate(p);
+  const today = getDefaultLogDate(p);
+
+  $("logDate").value = today;
+  $("lifeDate").value = today;
 
   $("logDate").addEventListener("change", ()=>{ renderEntries(); scheduleRefresh(); });
   $("lifeDate").addEventListener("change", ()=>{ updateLifestyleUI(); scheduleRefresh(); });
 
-  // build food dropdowns
   buildCategorySelect();
-  const firstCat = Object.keys(CATEGORY_ITEMS)[0] || "Chicken";
+  const firstCat = Object.keys(CATEGORY_ITEMS)[0] || "Protein";
   $("entryCategory").value = firstCat;
   buildFoodSelectForCategory(firstCat);
   buildUnitSelect($("entryFood").value);
