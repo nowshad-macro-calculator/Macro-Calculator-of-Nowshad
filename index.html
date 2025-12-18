@@ -571,6 +571,11 @@
         <h3>Add Food Entry</h3>
         <div class="row cols2" style="margin-top:10px">
           <div>
+            <div>
+  <label>Search food</label>
+  <input id="foodSearch" placeholder="Search: biryani, dates, chicken..." />
+</div>
+
             <label>Category</label>
             <select id="entryCategory"></select>
           </div>
@@ -1464,11 +1469,26 @@ function buildCategorySelect(){
 function buildFoodSelectForCategory(category){
   const sel=$("entryFood");
   sel.innerHTML="";
-  (CATEGORY_ITEMS[category]||[]).forEach(name=>{
+
+  const q = ($("foodSearch")?.value || "").trim().toLowerCase();
+
+  const list = (CATEGORY_ITEMS[category]||[]);
+  const filtered = q ? list.filter(name => name.toLowerCase().includes(q)) : list;
+
+  filtered.forEach(name=>{
     const opt=document.createElement("option");
     opt.value=name; opt.textContent=name;
     sel.appendChild(opt);
   });
+
+  // if filter yields nothing, show a friendly placeholder
+  if(filtered.length===0){
+    const opt=document.createElement("option");
+    opt.value=""; opt.textContent="No matches (try another search)";
+    sel.appendChild(opt);
+  }
+}
+
 }
 function buildUnitSelect(foodName){
   const uSel=$("entryUnit");
