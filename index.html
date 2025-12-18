@@ -821,12 +821,6 @@ document.querySelectorAll(".tabbtn").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
-  $("foodSearch")?.addEventListener("input", ()=>{
-  buildFoodSelectForCategory($("entryCategory").value);
-  buildUnitSelect($("entryFood").value);
-  updateEntryPreview();
-});
-
     showPage(btn.dataset.page);
     scheduleRefresh();
   });
@@ -836,10 +830,6 @@ function showPage(name){
     $("page-"+p).classList.toggle("hide", p!==name);
   });
 }
-const preset = n($("portionPreset")?.value) || 1;
-const qtyRaw = n($("entryQty").value);
-const qty = qtyRaw || preset;  // fallback
-const t = computeFood(food, qty, unit);
 
 /* ===========================
    Chart (no blue)
@@ -1347,16 +1337,7 @@ const FOOD = {
    PATCH 1: FOOD EXTENSIONS
    (Adds missing foods without overwriting your original list)
 ========================= */
-<div>
-  <label>Portion preset</label>
-  <select id="portionPreset">
-    <option value="1" selected>1×</option>
-    <option value="0.5">½ plate</option>
-    <option value="1.5">1.5 plate</option>
-  </select>
-</div>
 
-  
 
 
 const CATEGORY_EXTENSIONS = {
@@ -1539,12 +1520,6 @@ $("entryFood").addEventListener("change", ()=>{
 });
 $("entryUnit").addEventListener("change", updateEntryPreview);
 $("entryQty").addEventListener("input", updateEntryPreview);
-$("portionPreset")?.addEventListener("change", ()=>{
-  const preset = n($("portionPreset").value) || 1;
-  // If user left qty empty, set qty = preset; otherwise multiply preview only
-  if(!n($("entryQty").value)) $("entryQty").value = preset;
-  updateEntryPreview();
-});
 
 function computeTotalsFromEntries(dateKey){
   const day=getDayLog(dateKey);
