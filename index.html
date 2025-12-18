@@ -1392,6 +1392,30 @@ function applyFoodExtensions(){
 }
 
 };
+  /* =========================
+   PATCH 2: Split Fruits from Snacks (no overwrite)
+========================= */
+const FRUIT_LIST = ["Banana","Apple","Orange","Mango (1 cup slices)","Grapes (1 cup)"];
+const SNACK_LIST = [
+  "Peanut Butter","Yogurt / Curd",
+  "Almonds","Peanuts","Cashews","Walnuts","Pistachios",
+  "Dates (Deglet Noor style)","Dates (Ajwa small)","Dates (Medjool large)",
+];
+
+function applyFruitSnackSplit(){
+  // Create Fruits category if missing
+  if(!CATEGORY_ITEMS["Fruits"]) CATEGORY_ITEMS["Fruits"] = [];
+  FRUIT_LIST.forEach(x=>{
+    if(FOOD[x] && !CATEGORY_ITEMS["Fruits"].includes(x)) CATEGORY_ITEMS["Fruits"].push(x);
+  });
+
+  // Create Snacks category if missing
+  if(!CATEGORY_ITEMS["Snacks"]) CATEGORY_ITEMS["Snacks"] = [];
+  SNACK_LIST.forEach(x=>{
+    if(FOOD[x] && !CATEGORY_ITEMS["Snacks"].includes(x)) CATEGORY_ITEMS["Snacks"].push(x);
+  });
+}
+
 
 /* ===== CATEGORY MAP ===== */
 const CATEGORY_ITEMS = {
@@ -1961,6 +1985,8 @@ async function savePDF(){
   ensureDefaultProfile();
   rebuildProfileSelect();
   loadProfileToUI();
+applyFoodExtensions();
+applyFruitSnackSplit();
 
   const p = getActiveProfile() || getProfileDraft();
   const today = getDefaultLogDate(p);
