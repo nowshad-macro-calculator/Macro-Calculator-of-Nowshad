@@ -1714,6 +1714,27 @@ let FOOD = {
   "Chicken Wing": { unitOptions:["g"], perUnit:{ g:{P:24/100,C:0,F:13/100,K:203/100} }, source:"USDA avg", confidence:"High" },
   "Chicken (with skin)": { unitOptions:["g"], perUnit:{ g:{P:23/100,C:0,F:14/100,K:215/100} }, source:"USDA avg", confidence:"High" },
   /* ===== BREAD & BUN (CARBS) ===== */
+  /* ===== BREAD (WHITE vs BROWN) ===== */
+
+  "White Bread Slice": {
+    unitOptions:["pcs","g"],
+    perUnit:{
+      pcs:{P:3, C:15, F:1.2, K:80},
+      g:{P:0.09, C:0.45, F:0.035, K:2.65}
+    },
+    source:"USDA/bakery avg",
+    confidence:"Medium"
+  },
+
+  "Brown Bread Slice": {
+    unitOptions:["pcs","g"],
+    perUnit:{
+      pcs:{P:4, C:14, F:1.4, K:85},
+      g:{P:0.11, C:0.41, F:0.04, K:2.45}
+    },
+    source:"USDA/bakery avg",
+    confidence:"Medium"
+  },
 
   "Bread Slice": {
     unitOptions:["pcs","g"],
@@ -1769,8 +1790,7 @@ let FOOD = {
   source:"USDA + portion est", 
   confidence:"Medium" 
 },
-  "Plain Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
-  "Bhuna Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:16,C:75,F:18,K:520} }, source:"BD home avg", confidence:"Low" },
+
   "Chicken Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:25,C:85,F:18,K:650} }, source:"BD restaurant avg", confidence:"Low" },
   "Kacchi Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:28,C:90,F:28,K:800} }, source:"BD restaurant avg", confidence:"Low" },
   "Beef Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:30,C:85,F:25,K:780} }, source:"BD restaurant avg", confidence:"Low" },
@@ -1832,19 +1852,24 @@ let CATEGORY_ITEMS = {
 
   "Daal / Lentils": ["Daal (cooked)","Daal (fried/tadka)"],
 
-  "Rice & Meals": [
-    "Plain Khichuri","Bhuna Khichuri",
-    "Chicken Biryani","Kacchi Biryani","Beef Biryani"
-  ],
+ "Rice & Meals": [
+  "Khichuri (plain)",
+  "Chicken Biryani",
+  "Kacchi Biryani",
+  "Beef Biryani"
+],
+
 
 "Carbs": [
   "Rice (cooked)",
   "Polau / Pulao",
   "Roti",
   "Paratha",
-  "Bread Slice",
+  "White Bread Slice",
+  "Brown Bread Slice",
   "Butter Bun"
 ],
+
 
 
   "Roti / Bread": ["Roti","Paratha"],
@@ -1996,8 +2021,6 @@ const FOOD_PATCH_1 = {
   "Chicken Leg/Drumstick (cooked)": { unitOptions:["g"], perUnit:{ g:{P:25/100,C:0,F:9/100,K:216/100} }, source:"USDA avg", confidence:"High" },
 
   // popular BD meals
-  "Chicken Biryani (heavy)": { unitOptions:["plate"], perUnit:{ plate:{P:30,C:95,F:22,K:760} }, source:"BD restaurant avg", confidence:"Low" },
-  "Kacchi Biryani (half plate)": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:45,F:14,K:400} }, source:"portion est", confidence:"Low" },
   "Khichuri (plain)": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
 
   // nuts + dates (commonly missing)
@@ -2015,7 +2038,12 @@ const FOOD_PATCH_1 = {
 
 const CATEGORY_PATCH_1 = {
   "Chicken (Parts)": ["Chicken Thigh (cooked)","Chicken Wing (cooked)","Chicken Leg/Drumstick (cooked)"],
-  "Meals (BD)": ["Chicken Biryani","Chicken Biryani (heavy)","Kacchi Biryani","Kacchi Biryani (half plate)","Beef Biryani","Khichuri (plain)","Plain Khichuri","Bhuna Khichuri"],
+  "Meals (BD)": [
+  "Chicken Biryani",
+  "Kacchi Biryani",
+  "Beef Biryani"
+],
+
   "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
   "Drinks": ["Coffee w/ Milk + Sugar"]
 };
