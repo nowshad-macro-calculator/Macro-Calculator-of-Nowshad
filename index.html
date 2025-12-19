@@ -982,8 +982,10 @@ function setActiveProfileId(id){ localStorage.setItem(LS_ACTIVE_PROFILE, id); }
 function getActiveProfile(){
   const map = loadProfiles();
   const id = getActiveProfileId();
-  return (id && map[id]) ? map[id] : null;
+  const p = (id && map[id]) ? map[id] : null;
+  return fixProfileIfNeeded(p);
 }
+
 function ensureDefaultProfile(){
   const map = loadProfiles();
   const active = getActiveProfileId();
@@ -1017,19 +1019,43 @@ function unlockManualTargets(){
 /* ===========================
    Unit readers + convert
 =========================== */
+/* ===== PATCH A: Robust unit readers (prevents wrong protein like 15g) ===== */
 function readWeightKg(){
   const u = $("p_weight_unit").value;
-  const kg = n($("p_weight_kg").value);
-  const lbs = n($("p_weight_lbs").value);
-  return (u==="lbs") ? lbs*0.45359237 : kg;
+  const kgField = n($("p_weight_kg").value);
+  const lbsField = n($("p_weight_lbs").value);
+
+  // If user selected lbs but typed in kg (or vice versa), still read the filled field.
+  if(u === "lbs"){
+    if(lbsField > 0) return lbsField * 0.45359237;
+    if(kgField > 0) return kgField; // fallback
+    return 0;
+  }else{ // kg
+    if(kgField > 0) return kgField;
+    if(lbsField > 0) return lbsField * 0.45359237; // fallback
+    return 0;
+  }
 }
+
 function readHeightCm(){
   const u = $("p_height_unit").value;
-  const cm = n($("p_height_cm").value);
-  const ft = n($("p_height_ft").value);
-  const inch = n($("p_height_in").value);
-  return (u==="cm") ? cm : (ft*30.48 + inch*2.54);
+  const cmField = n($("p_height_cm").value);
+  const ftField = n($("p_height_ft").value);
+  const inField = n($("p_height_in").value);
+
+  if(u === "cm"){
+    if(cmField > 0) return cmField;
+    // fallback: if user typed ft/in but selector is cm
+    if(ftField > 0 || inField > 0) return (ftField * 30.48 + inField * 2.54);
+    return 0;
+  }else{ // ftin
+    if(ftField > 0 || inField > 0) return (ftField * 30.48 + inField * 2.54);
+    // fallback: if user typed cm but selector is ft/in
+    if(cmField > 0) return cmField;
+    return 0;
+  }
 }
+
 function convertWeight(from,to){
   const kg = (from==="kg") ? n($("p_weight_kg").value) : n($("p_weight_lbs").value)*0.45359237;
   if(!kg) return;
@@ -1055,7 +1081,34 @@ function convertHeight(from,to){
 /* ===========================
    Profile calc (works WITHOUT saving)
 =========================== */
-function getProfileDraft(){
+/* ===== PATCH B: Migrate old saved profiles with wrong protein targets ===== */
+function computeTargetProteinFrom(wkg, protMult){
+  const pm = isFinite(protMult) && protMult > 0 ? protMult : 2.2;
+  const w = isFinite(wkg) ? wkg : 0;
+  return (w > 0) ? Math.round((w * pm)/5)*5 : 0;
+}
+
+function fixProfileIfNeeded(p){
+  if(!p) return p;
+
+  // Derive wkg if missing
+  const wkg = (p.wkg && p.wkg > 0) ? p.wkg : (
+    (p.weightUnit==="lbs" && p.weight_lbs) ? (n(p.weight_lbs)*0.45359237) :
+    (p.weight_kg ? n(p.weight_kg) : 0)
+  );
+
+  const correctedProtein = computeTargetProteinFrom(wkg, p.protMult || 2.2);
+
+  // If targetProtein is missing or suspiciously low while weight exists, fix it.
+  if(wkg > 20 && (!p.targetProtein || p.targetProtein < 50)){
+    p.wkg = wkg;
+    p.targetProtein = correctedProtein;
+  }
+
+  return p;
+}
+
+  function getProfileDraft(){
   const sex=$("p_sex").value;
   const age=n($("p_age").value);
 
@@ -1232,6 +1285,15 @@ function saveProfile(){
 
 function loadProfileToUI(){
   const p = getActiveProfile();
+  // PATCH B: persist migration fix (so it stays correct permanently)
+try{
+  const map = loadProfiles();
+  if(p?.id && map[p.id]){
+    map[p.id] = { ...map[p.id], ...p, updatedAt: Date.now() };
+    saveProfiles(map);
+  }
+}catch(e){}
+
   if(!p) return null;
 
   $("p_name").value=p.name||"";
