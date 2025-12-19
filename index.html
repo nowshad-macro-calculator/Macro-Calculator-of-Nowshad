@@ -350,6 +350,70 @@
     border-radius: 999px !important;
   }
 }
+/* =========================
+   PATCH 2.1: Mobile header + tabs layout (compact, clean)
+   Paste AFTER Patch 2
+   ========================= */
+
+@media (max-width: 720px){
+
+  /* Header card spacing */
+  .header-card, .top-card, header, .header {
+    padding: 14px !important;
+  }
+
+  /* Title smaller so it doesn't push everything down */
+  .header-card h1, header h1, .header h1 {
+    font-size: 20px !important;
+    line-height: 1.2 !important;
+    margin: 0 0 6px 0 !important;
+  }
+
+  /* Put tabs in 2 columns (no clipping, looks intentional) */
+  nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    overflow: visible !important;   /* stop horizontal scroll now */
+    padding-bottom: 0 !important;
+  }
+
+  /* Buttons full width in grid */
+  nav a, nav button,
+  .nav a, .nav button,
+  .menu a, .menu button,
+  .tabs a, .tabs button,
+  .nav-tabs a, .nav-tabs button,
+  .tabbtn, .tabBtn {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    padding: 12px 10px !important;
+  }
+}
+/* =========================
+   PATCH 2.2: Daily Entries table mobile scroll (no cut-off columns)
+   Paste AFTER Patch 2.1
+   ========================= */
+
+@media (max-width: 720px){
+
+  /* Wrap the table container to allow horizontal scroll */
+  .table-wrap, .tableWrap, .entries-table-wrap, .entriesTableWrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 16px;
+  }
+
+  table {
+    min-width: 820px !important; /* forces scroll instead of squish */
+  }
+
+  th, td {
+    white-space: nowrap !important;
+    font-size: 12px !important;
+  }
+}
 
   </style>
 </head>
