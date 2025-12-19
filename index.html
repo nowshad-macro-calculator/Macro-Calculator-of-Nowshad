@@ -2452,6 +2452,33 @@ Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
 
    // Build simplified dropdown categories (SAFE)
   buildCategoryView();
+const CATEGORY_VIEW_MAP = {
+  /* ===== CARBS (AUTHORITATIVE) ===== */
+  "Carbs": [
+    "Rice & Meals",   // ✅ Rice (cooked), Khichuri, Biryani base
+    "Carbs (BD)",     // ✅ Polau / Pulao
+    "Roti / Bread"    // optional but logical
+  ],
+
+  /* ===== MEALS (SERVING CONTEXT) ===== */
+  "Meals": [
+    "Meals (BD)",
+    "Meals (Mixed)",
+    "BD Takeout"
+  ],
+
+  "Protein – Chicken": ["Chicken & Poultry", "Chicken (Parts)"],
+  "Protein – Meat": ["Meat", "Offal / Traditional", "Poultry / Game"],
+  "Fish & Seafood": ["Fish", "Seafood (Shellfish)", "Sea Fish", "River Fish", "Small Fish"],
+  "Eggs & Dairy": ["Eggs & Dairy", "Cheese & Dairy"],
+  "Vegetables": ["Vegetables", "BD Sides / Bhaji", "Soups"],
+  "Fruits": ["Fruits"],
+  "Daal / Lentils": ["Daal / Lentils"],
+  "Snacks": ["Snacks", "BD Snacks", "BD Street Food / Snacks", "Nuts & Dates"],
+  "Drinks": ["Drinks"],
+  "Desserts & Sweets": ["Desserts", "Pitha / Sweets"],
+  "Fats & Oils": ["Fats & Oils"]
+};
 
 }
 
