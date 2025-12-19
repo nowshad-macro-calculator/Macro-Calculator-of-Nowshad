@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes, maximum-scale=5" />
   <title>Nowshad's Macro Calculator</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -178,6 +178,179 @@
       background:rgba(255,255,255,.10); color:var(--text); cursor:pointer; font-weight:800; font-size:12px;
     }
     .chipBtn:hover{background:rgba(255,255,255,.14)}
+    /* ===========================
+   PATCH M (Mobile UX)
+=========================== */
+@media (max-width: 720px){
+  .wrap{ padding:12px 10px 80px; }
+
+  /* Topbar: tabs should scroll horizontally (like app tabs) */
+  .topbar{
+    gap:10px;
+    padding:12px;
+  }
+  .tabs{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    gap:8px;
+    padding-bottom:2px;
+    max-width:55vw;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tabbtn{
+    flex:0 0 auto;
+    padding:9px 11px;
+    font-size:12px;
+    border-radius:12px;
+    white-space:nowrap;
+  }
+
+  /* Inputs easier to tap */
+  input, select, textarea{ padding:12px 12px; font-size:15px; }
+
+  /* Reduce card padding a bit */
+  .card{ padding:12px; }
+
+  /* Tables: keep horizontal scroll inside wrapper, not page */
+  .tableWrap{
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+  table{ min-width:760px; } /* was 920px (too wide for phones) */
+
+  /* KPIs stack tighter */
+  .kpi{ padding:10px; }
+  .kpi .big{ font-size:17px; }
+}
+
+/* Make form grids stack nicely on small phones */
+@media (max-width: 420px){
+  .row.cols2, .row.cols3{ grid-template-columns:1fr !important; }
+}
+
+/* Food log top bar (added in Patch 3) */
+.foodBar{
+  position:sticky;
+  top:72px; /* sits below main topbar */
+  z-index:40;
+  border:1px solid var(--stroke);
+  background:rgba(10,20,60,.55);
+  backdrop-filter: blur(10px);
+  border-radius:16px;
+  padding:12px;
+  box-shadow:0 10px 28px rgba(0,0,0,.25);
+}
+
+.foodBarTop{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.foodDateWrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.foodDateWrap label{ margin:0; }
+.foodDate{
+  width:auto;
+  min-width:150px;
+  padding:10px 12px;
+  border-radius:999px;
+}
+
+/* Big, distinct search bar like your screenshot */
+.searchBig{
+  margin-top:10px;
+  position:relative;
+}
+.searchBig input{
+  padding:14px 14px 14px 44px;
+  border-radius:18px;
+  font-size:16px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(120,170,255,.55);
+  box-shadow:0 8px 20px rgba(0,0,0,.22);
+}
+.searchBig:before{
+  content:"🔎";
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  opacity:.85;
+}
+
+/* Make the “Filter” row feel secondary vs Search */
+.filterRow{
+  margin-top:10px;
+  display:grid;
+  gap:10px;
+}
+@media (min-width: 640px){
+  .filterRow{ grid-template-columns:1fr 1fr; }
+}
+
+/* Keep FoodBar spacing correct under sticky topbar on very small screens */
+@media (max-width: 720px){
+  .foodBar{ top:86px; }
+}
+/* =========================
+   PATCH 2: Mobile top menu shows all tabs (Dashboard/Profile/Food Log/Lifestyle/PDF)
+   Paste at END of <style>
+   ========================= */
+
+@media (max-width: 720px){
+
+  /* 1) Stop header/top container from clipping */
+  header, .header, .topbar, .topBar, .top-card, .topCard, .container, .wrap {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* 2) Make the menu row swipeable instead of wrapping/clipping */
+  nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
+    display: flex !important;
+    flex-wrap: wrap !important;       /* IMPORTANT */
+    overflow-x: auto !important;      /* IMPORTANT */
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    width: 100% !important;
+    padding-bottom: 6px;
+  }
+
+  /* Hide scrollbar (optional) */
+  nav::-webkit-scrollbar,
+  .nav::-webkit-scrollbar,
+  .menu::-webkit-scrollbar,
+  .tabs::-webkit-scrollbar,
+  .topTabs::-webkit-scrollbar,
+  .nav-tabs::-webkit-scrollbar,
+  .navTabs::-webkit-scrollbar { display: none; }
+
+  /* 3) Prevent each button from shrinking or wrapping */
+  nav a, nav button,
+  .nav a, .nav button,
+  .menu a, .menu button,
+  .tabs a, .tabs button,
+  .nav-tabs a, .nav-tabs button,
+  .tabbtn, .tabBtn {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+    border-radius: 999px !important;
+  }
+}
+
   </style>
 </head>
 
@@ -359,7 +532,7 @@
           </div>
           <div>
             <label>New profile name</label>
-            <input id="newProfileName" placeholder="e.g., Nowshad / Aymaan / Guest">
+            <input id="newProfileName" placeholder="e.g., Nowshad / Yeasmin/ Aymaan / Guest">
           </div>
         </div>
 
@@ -558,41 +731,49 @@
         <div class="sub">Search + Category + Food → Unit → Qty → Add Entry (repeat anytime).</div>
 
         <div class="divider"></div>
+<!-- ===== PATCH: Food Log Header (date separate + big search) ===== -->
+<div class="foodBar">
+  <div class="foodBarTop">
+    <div class="foodDateWrap">
+      <label class="sub" style="margin:0;">Log date</label>
+      <input class="foodDate" type="date" id="logDate">
+    </div>
 
-        <div class="row cols2">
-          <div>
-            <label>Log date</label>
-            <input type="date" id="logDate">
-          </div>
-          <div>
-            <label>Meal type</label>
-            <select id="mealType">
-              <option>Breakfast</option>
-              <option>Brunch</option>
-              <option selected>Lunch</option>
-              <option>Dinner</option>
-              <option>Supper</option>
-              <option>Pre-workout meal</option>
-              <option>Post-workout meal</option>
-              <option>Snacks</option>
-            </select>
-          </div>
-        </div>
+    <div style="min-width:180px; flex:1; max-width:260px;">
+      <label class="sub" style="margin:0;">Meal</label>
+      <select id="mealType">
+        <option>Breakfast</option>
+        <option>Brunch</option>
+        <option selected>Lunch</option>
+        <option>Dinner</option>
+        <option>Supper</option>
+        <option>Pre-workout meal</option>
+        <option>Post-workout meal</option>
+        <option>Snacks</option>
+      </select>
+    </div>
+  </div>
 
-        <div class="divider"></div>
+  <div class="searchBig">
+    <input id="foodSearch" placeholder="Search for a food (biryani, dates, chicken…)" />
+  </div>
 
-        <h3>Add Food Entry</h3>
+  <div class="filterRow">
+    <div>
+      <label>Filter (Category)</label>
+      <select id="entryCategory"></select>
+    </div>
+    <div class="pill" style="justify-content:center;">
+      Quick add → choose food, unit, qty, then Add Entry
+    </div>
+  </div>
+</div>
+<!-- ===== END PATCH ===== -->
 
-        <div class="row cols2">
-          <div>
-            <label>Search food</label>
-            <input id="foodSearch" placeholder="Search: biryani, dates, chicken..." />
-          </div>
-          <div>
-            <label>Filter (Category)</label>
-            <select id="entryCategory"></select>
-          </div>
-        </div>
+<div class="divider"></div>
+
+<h3>Add Food Entry</h3>
+
 
         <div class="row cols2" style="margin-top:10px">
           <div>
@@ -611,6 +792,19 @@
             <input type="number" min="0" step="0.1" id="entryQty" placeholder="Enter qty">
           </div>
           <div>
+            <!-- >>> START PATCH: Oil absorption inputs -->
+<div class="row cols2" style="margin-top:10px">
+  <div>
+    <label>Cooking oil used (grams) — optional</label>
+    <input type="number" min="0" step="1" id="oilUsedG" placeholder="e.g., 10">
+  </div>
+  <div>
+    <label>Oil absorption (%) — optional</label>
+    <input type="number" min="0" max="100" step="1" id="oilAbsorbPct" placeholder="e.g., 30">
+  </div>
+</div>
+<!-- <<< END PATCH: Oil absorption inputs -->
+
             <label>Portion presets</label>
             <div class="chipRow">
               <button class="chipBtn" type="button" onclick="applyPortionPreset(0.5)">½ plate</button>
@@ -982,8 +1176,10 @@ function setActiveProfileId(id){ localStorage.setItem(LS_ACTIVE_PROFILE, id); }
 function getActiveProfile(){
   const map = loadProfiles();
   const id = getActiveProfileId();
-  return (id && map[id]) ? map[id] : null;
+  const p = (id && map[id]) ? map[id] : null;
+  return fixProfileIfNeeded(p);
 }
+
 function ensureDefaultProfile(){
   const map = loadProfiles();
   const active = getActiveProfileId();
@@ -1017,19 +1213,43 @@ function unlockManualTargets(){
 /* ===========================
    Unit readers + convert
 =========================== */
+/* ===== PATCH A: Robust unit readers (prevents wrong protein like 15g) ===== */
 function readWeightKg(){
   const u = $("p_weight_unit").value;
-  const kg = n($("p_weight_kg").value);
-  const lbs = n($("p_weight_lbs").value);
-  return (u==="lbs") ? lbs*0.45359237 : kg;
+  const kgField = n($("p_weight_kg").value);
+  const lbsField = n($("p_weight_lbs").value);
+
+  // If user selected lbs but typed in kg (or vice versa), still read the filled field.
+  if(u === "lbs"){
+    if(lbsField > 0) return lbsField * 0.45359237;
+    if(kgField > 0) return kgField; // fallback
+    return 0;
+  }else{ // kg
+    if(kgField > 0) return kgField;
+    if(lbsField > 0) return lbsField * 0.45359237; // fallback
+    return 0;
+  }
 }
+
 function readHeightCm(){
   const u = $("p_height_unit").value;
-  const cm = n($("p_height_cm").value);
-  const ft = n($("p_height_ft").value);
-  const inch = n($("p_height_in").value);
-  return (u==="cm") ? cm : (ft*30.48 + inch*2.54);
+  const cmField = n($("p_height_cm").value);
+  const ftField = n($("p_height_ft").value);
+  const inField = n($("p_height_in").value);
+
+  if(u === "cm"){
+    if(cmField > 0) return cmField;
+    // fallback: if user typed ft/in but selector is cm
+    if(ftField > 0 || inField > 0) return (ftField * 30.48 + inField * 2.54);
+    return 0;
+  }else{ // ftin
+    if(ftField > 0 || inField > 0) return (ftField * 30.48 + inField * 2.54);
+    // fallback: if user typed cm but selector is ft/in
+    if(cmField > 0) return cmField;
+    return 0;
+  }
 }
+
 function convertWeight(from,to){
   const kg = (from==="kg") ? n($("p_weight_kg").value) : n($("p_weight_lbs").value)*0.45359237;
   if(!kg) return;
@@ -1055,6 +1275,33 @@ function convertHeight(from,to){
 /* ===========================
    Profile calc (works WITHOUT saving)
 =========================== */
+/* ===== PATCH B: Migrate old saved profiles with wrong protein targets ===== */
+function computeTargetProteinFrom(wkg, protMult){
+  const pm = isFinite(protMult) && protMult > 0 ? protMult : 2.2;
+  const w = isFinite(wkg) ? wkg : 0;
+  return (w > 0) ? Math.round((w * pm)/5)*5 : 0;
+}
+
+function fixProfileIfNeeded(p){
+  if(!p) return p;
+
+  // Derive wkg if missing
+  const wkg = (p.wkg && p.wkg > 0) ? p.wkg : (
+    (p.weightUnit==="lbs" && p.weight_lbs) ? (n(p.weight_lbs)*0.45359237) :
+    (p.weight_kg ? n(p.weight_kg) : 0)
+  );
+
+  const correctedProtein = computeTargetProteinFrom(wkg, p.protMult || 2.2);
+
+  // If targetProtein is missing or suspiciously low while weight exists, fix it.
+  if(wkg > 20 && (!p.targetProtein || p.targetProtein < 50)){
+    p.wkg = wkg;
+    p.targetProtein = correctedProtein;
+  }
+
+  return p;
+}
+
 function getProfileDraft(){
   const sex=$("p_sex").value;
   const age=n($("p_age").value);
@@ -1232,6 +1479,15 @@ function saveProfile(){
 
 function loadProfileToUI(){
   const p = getActiveProfile();
+  // PATCH B: persist migration fix (so it stays correct permanently)
+try{
+  const map = loadProfiles();
+  if(p?.id && map[p.id]){
+    map[p.id] = { ...map[p.id], ...p, updatedAt: Date.now() };
+    saveProfiles(map);
+  }
+}catch(e){}
+
   if(!p) return null;
 
   $("p_name").value=p.name||"";
@@ -1526,6 +1782,441 @@ const CATEGORY_PATCH_1 = {
   "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
   "Drinks": ["Coffee w/ Milk + Sugar"]
 };
+  /* PATCH 3: Mixed Meals + BD Takeout + Soft Drinks */
+const FOOD_PATCH_3 = {
+
+  /* ===== MEALS (MIXED) ===== */
+  "Beef Steak (grilled)": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.27,C:0,F:0.12,K:2.5},         // ~250 kcal /100g
+      serving:{P:40,C:0,F:18,K:420}        // ~150g cooked portion
+    },
+    source:"USDA avg (grilled steak)",
+    confidence:"Medium"
+  },
+
+  "Grilled Chicken (mixed pieces)": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.27,C:0,F:0.07,K:1.65},        // ~165 kcal /100g
+      serving:{P:40,C:0,F:10,K:250}        // ~150g cooked portion
+    },
+    source:"USDA avg (grilled chicken)",
+    confidence:"Medium"
+  },
+
+  "Noodles (cooked)": {
+    unitOptions:["g","bowl","plate"],
+    perUnit:{
+      g:{P:0.05,C:0.25,F:0.01,K:1.38},     // ~138 kcal /100g
+      bowl:{P:12,C:60,F:4,K:320},          // bowl estimate
+      plate:{P:14,C:75,F:6,K:390}          // plate estimate
+    },
+    source:"Avg cooked noodles + oil estimate",
+    confidence:"Low"
+  },
+
+  "Pasta (cooked)": {
+    unitOptions:["g","bowl","plate"],
+    perUnit:{
+      g:{P:0.05,C:0.30,F:0.01,K:1.58},     // ~158 kcal /100g
+      bowl:{P:11,C:55,F:4,K:310},
+      plate:{P:14,C:75,F:6,K:420}
+    },
+    source:"Avg cooked pasta + oil estimate",
+    confidence:"Low"
+  },
+
+  "Pizza (1 slice)": {
+    unitOptions:["slice"],
+    perUnit:{ slice:{P:12,C:34,F:10,K:285} },
+    source:"Label/restaurant avg",
+    confidence:"Low"
+  },
+
+  "Burger (single, generic)": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:25,C:33,F:18,K:430} },
+    source:"Fast food avg",
+    confidence:"Low"
+  },
+
+  "Burger King Whopper": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:28,C:49,F:18,K:660} },
+    source:"Restaurant nutrition avg",
+    confidence:"Medium"
+  },
+
+  "Burger King Double Whopper": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:48,C:49,F:32,K:900} },
+    source:"Restaurant nutrition avg",
+    confidence:"Medium"
+  },
+
+  "KFC Chicken Bucket (8 pcs estimate)": {
+    unitOptions:["bucket","pcs"],
+    perUnit:{
+      bucket:{P:160,C:60,F:140,K:2200},    // very rough bucket estimate
+      pcs:{P:20,C:7.5,F:17.5,K:275}        // per piece rough avg
+    },
+    source:"Takeout estimate (varies a lot by pieces/breading)",
+    confidence:"Low"
+  },
+
+  /* ===== CARBS (BD) ===== */
+  "Polau / Pulao": {
+    unitOptions:["plate","g"],
+    perUnit:{
+      g:{P:0.03,C:0.25,F:0.04,K:1.65},     // ~165 kcal /100g (oil + rice)
+      plate:{P:9,C:80,F:12,K:520}          // typical plate estimate
+    },
+    source:"BD home/restaurant avg",
+    confidence:"Low"
+  },
+
+  /* ===== BD TAKEOUT (BRAND ITEMS - ESTIMATES) ===== */
+  "Chilox Burger (avg)": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:28,C:40,F:22,K:560} },
+    source:"BD takeout estimate",
+    confidence:"Low"
+  },
+
+  "Madchef Burger (avg)": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:30,C:42,F:24,K:600} },
+    source:"BD takeout estimate",
+    confidence:"Low"
+  },
+
+  /* ===== DRINKS (SOFT DRINKS) ===== */
+  "Coke (330ml can)": {
+    unitOptions:["can"],
+    perUnit:{ can:{P:0,C:35,F:0,K:140} },
+    source:"Label avg",
+    confidence:"High"
+  },
+
+  "Sprite (330ml can)": {
+    unitOptions:["can"],
+    perUnit:{ can:{P:0,C:38,F:0,K:150} },
+    source:"Label avg",
+    confidence:"High"
+  },
+
+  "Diet Coke (330ml can)": {
+    unitOptions:["can"],
+    perUnit:{ can:{P:0,C:0,F:0,K:1} },
+    source:"Label avg",
+    confidence:"High"
+  }
+};
+
+const CATEGORY_PATCH_3 = {
+  "Meals (Mixed)": [
+    "Beef Steak (grilled)",
+    "Grilled Chicken (mixed pieces)",
+    "Noodles (cooked)",
+    "Pasta (cooked)",
+    "Pizza (1 slice)",
+    "Burger (single, generic)",
+    "Burger King Whopper",
+    "Burger King Double Whopper",
+    "KFC Chicken Bucket (8 pcs estimate)"
+  ],
+  "Carbs (BD)": ["Polau / Pulao"],
+  "BD Takeout": ["Chilox Burger (avg)", "Madchef Burger (avg)"],
+  "Drinks": ["Coke (330ml can)", "Sprite (330ml can)", "Diet Coke (330ml can)"]
+};
+
+  /* ===========================
+   PATCH 2: BD Street Foods + Seafood + Poultry/Game + Soups + Sweets
+   (Adds new foods without overwriting existing keys)
+=========================== */
+
+const FOOD_PATCH_2 = {
+  // ===== BD Street Food / Snacks =====
+  "Alur Chop (Aloo r Chop)": { unitOptions:["pcs"], perUnit:{ pcs:{P:2, C:15, F:7, K:130} }, source:"BD street food avg", confidence:"Low" },
+  "Fuchka (Fuchsia / Pani Puri)": { unitOptions:["pcs"], perUnit:{ pcs:{P:1, C:7, F:1, K:45} }, source:"BD street food avg", confidence:"Low" },
+  "Chotpoti": { unitOptions:["bowl"], perUnit:{ bowl:{P:10, C:35, F:12, K:320} }, source:"BD street food avg", confidence:"Low" },
+  "Jhal Muri": { unitOptions:["bowl"], perUnit:{ bowl:{P:7, C:45, F:10, K:300} }, source:"BD street food avg", confidence:"Low" },
+  "Bhel Puri": { unitOptions:["bowl"], perUnit:{ bowl:{P:7, C:55, F:12, K:360} }, source:"South Asian street food avg", confidence:"Low" },
+  "Momo (Chicken) — 6 pcs": { unitOptions:["serving"], perUnit:{ serving:{P:12, C:36, F:6, K:270} }, source:"restaurant avg", confidence:"Low" },
+
+  // ===== BD Curries / Sides =====
+  "Alu Bhaji (Alu Vaji)": { unitOptions:["cup"], perUnit:{ cup:{P:3, C:20, F:6, K:150} }, source:"BD home avg", confidence:"Low" },
+
+  // ===== Organ / Offal / Traditional =====
+  "Kolija (Chicken Liver, cooked)": { unitOptions:["g"], perUnit:{ g:{P:24/100, C:1/100, F:7/100, K:167/100} }, source:"USDA/avg", confidence:"Medium" },
+  "Vuri (Tripe, cooked)": { unitOptions:["g"], perUnit:{ g:{P:12/100, C:0/100, F:4/100, K:85/100} }, source:"avg", confidence:"Medium" },
+  "Paya (Beef trotters soup)": { unitOptions:["bowl"], perUnit:{ bowl:{P:20, C:3, F:12, K:210} }, source:"traditional recipe avg", confidence:"Low" },
+  "Nehari (Beef)": { unitOptions:["bowl"], perUnit:{ bowl:{P:28, C:12, F:20, K:350} }, source:"restaurant avg", confidence:"Low" },
+
+  // ===== Seafood (Shellfish) =====
+  "Shrimp (cooked)": { unitOptions:["g"], perUnit:{ g:{P:24/100, C:0/100, F:0.3/100, K:99/100} }, source:"USDA avg", confidence:"High" },
+  "Prawn (cooked)": { unitOptions:["g"], perUnit:{ g:{P:24/100, C:0/100, F:0.5/100, K:105/100} }, source:"USDA/avg", confidence:"High" },
+  "Crab (cooked)": { unitOptions:["g"], perUnit:{ g:{P:19/100, C:0/100, F:1.5/100, K:97/100} }, source:"USDA/avg", confidence:"High" },
+
+  // ===== Fish Types =====
+  "Sea Fish (generic)": { unitOptions:["g"], perUnit:{ g:{P:22/100, C:0/100, F:6/100, K:140/100} }, source:"avg", confidence:"Medium" },
+  "River Fish (generic)": { unitOptions:["g"], perUnit:{ g:{P:20/100, C:0/100, F:5/100, K:125/100} }, source:"avg", confidence:"Medium" },
+  "Small Fish (fried)": { unitOptions:["g"], perUnit:{ g:{P:28/100, C:0/100, F:12/100, K:220/100} }, source:"BD small fish avg", confidence:"Low" },
+
+  // ===== Poultry / Game =====
+  "Quail Meat (cooked)": { unitOptions:["g"], perUnit:{ g:{P:25/100, C:0/100, F:6/100, K:170/100} }, source:"avg", confidence:"Medium" },
+  "Pigeon Meat (cooked)": { unitOptions:["g"], perUnit:{ g:{P:21/100, C:0/100, F:7/100, K:142/100} }, source:"avg", confidence:"Medium" },
+
+  // ===== Soups =====
+  "Mushroom Soup": { unitOptions:["cup"], perUnit:{ cup:{P:3, C:8, F:4, K:80} }, source:"recipe avg", confidence:"Low" },
+  "Thai Soup": { unitOptions:["cup"], perUnit:{ cup:{P:6, C:10, F:6, K:120} }, source:"recipe avg", confidence:"Low" },
+  "Vegetable Soup": { unitOptions:["cup"], perUnit:{ cup:{P:2, C:10, F:2, K:60} }, source:"recipe avg", confidence:"Low" },
+  "Corn Soup": { unitOptions:["cup"], perUnit:{ cup:{P:6, C:20, F:4, K:140} }, source:"recipe avg", confidence:"Low" },
+
+  // ===== Mixed / Meals =====
+  "Fish and Chips": { unitOptions:["plate"], perUnit:{ plate:{P:25, C:70, F:25, K:700} }, source:"restaurant avg", confidence:"Low" },
+
+  // ===== Pitha / Sweets =====
+  "Pitha (sweet, generic)": { unitOptions:["pcs"], perUnit:{ pcs:{P:3, C:30, F:8, K:200} }, source:"BD sweet avg", confidence:"Low" },
+  "Bhapa Pitha (Vapa Pitha)": { unitOptions:["pcs"], perUnit:{ pcs:{P:3, C:35, F:4, K:190} }, source:"BD pitha avg", confidence:"Low" },
+  "Mishti (sweet, generic)": { unitOptions:["pcs"], perUnit:{ pcs:{P:3, C:20, F:6, K:150} }, source:"BD sweet avg", confidence:"Low" },
+  "Mishti Doi": { unitOptions:["cup"], perUnit:{ cup:{P:6, C:30, F:8, K:220} }, source:"BD dairy sweet avg", confidence:"Low" }
+};
+
+const CATEGORY_PATCH_2 = {
+  "BD Street Food / Snacks": [
+    "Alur Chop (Aloo r Chop)",
+    "Fuchka (Fuchsia / Pani Puri)",
+    "Chotpoti",
+    "Jhal Muri",
+    "Bhel Puri",
+    "Momo (Chicken) — 6 pcs"
+  ],
+  "BD Sides / Bhaji": [
+    "Alu Bhaji (Alu Vaji)"
+  ],
+  "Offal / Traditional": [
+    "Kolija (Chicken Liver, cooked)",
+    "Vuri (Tripe, cooked)",
+    "Paya (Beef trotters soup)",
+    "Nehari (Beef)"
+  ],
+  "Seafood (Shellfish)": [
+    "Shrimp (cooked)",
+    "Prawn (cooked)",
+    "Crab (cooked)"
+  ],
+  "Sea Fish": [
+    "Sea Fish (generic)"
+  ],
+  "River Fish": [
+    "River Fish (generic)"
+  ],
+  "Small Fish": [
+    "Small Fish (fried)"
+  ],
+  "Poultry / Game": [
+    "Quail Meat (cooked)",
+    "Pigeon Meat (cooked)"
+  ],
+  "Soups": [
+    "Mushroom Soup",
+    "Thai Soup",
+    "Vegetable Soup",
+    "Corn Soup"
+  ],
+  "Meals (Mixed)": [
+    "Fish and Chips"
+  ],
+  "Pitha / Sweets": [
+    "Pitha (sweet, generic)",
+    "Bhapa Pitha (Vapa Pitha)",
+    "Mishti (sweet, generic)",
+    "Mishti Doi"
+  ]
+};
+
+/* ===========================
+   >>> START PATCH X: Oils/Fats + Dairy + Veg + Snacks + Oil Absorption
+=========================== */
+
+const FOOD_PATCH_X = {
+  /* ===== FATS & OILS ===== */
+  "Butter": {
+    unitOptions:["g","tbsp"],
+    perUnit:{
+      g:{P:0.1,C:0,F:0.81,K:7.17},
+      tbsp:{P:0.1,C:0,F:11.5,K:102}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Ghee": {
+    unitOptions:["g","tbsp"],
+    perUnit:{
+      g:{P:0,C:0,F:1,K:9},
+      tbsp:{P:0,C:0,F:13.5,K:120}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Olive Oil": {
+    unitOptions:["g","tbsp"],
+    perUnit:{
+      g:{P:0,C:0,F:1,K:9},
+      tbsp:{P:0,C:0,F:13.5,K:119}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Soybean Oil": {
+    unitOptions:["g","tbsp"],
+    perUnit:{
+      g:{P:0,C:0,F:1,K:9},
+      tbsp:{P:0,C:0,F:13.6,K:120}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+
+  /* ===== CHEESE & DAIRY ===== */
+  "Cheddar Cheese": {
+    unitOptions:["g","slice"],
+    perUnit:{
+      g:{P:0.25,C:0.013,F:0.33,K:4.02},
+      slice:{P:7,C:1,F:9,K:113}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Mozzarella Cheese": {
+    unitOptions:["g","slice"],
+    perUnit:{
+      g:{P:0.22,C:0.022,F:0.22,K:2.8},
+      slice:{P:6,C:1,F:6,K:85}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Processed Cheese Slice": {
+    unitOptions:["slice"],
+    perUnit:{ slice:{P:4,C:2,F:5,K:70} },
+    source:"Label avg",
+    confidence:"Medium"
+  },
+
+  /* ===== VEGETABLES ===== */
+  "Mushroom": {
+    unitOptions:["g","cup"],
+    perUnit:{
+      g:{P:0.031,C:0.033,F:0.003,K:0.22},
+      cup:{P:2.2,C:2.3,F:0.2,K:15}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Avocado": {
+    unitOptions:["g","pcs"],
+    perUnit:{
+      g:{P:0.02,C:0.085,F:0.15,K:1.6},
+      pcs:{P:3,C:12,F:21,K:234}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+
+  /* ===== POTATO: BOILED vs FRIED ===== */
+  "Potato (boiled)": {
+    unitOptions:["g","pcs"],
+    perUnit:{
+      g:{P:0.02,C:0.20,F:0.001,K:0.87},
+      pcs:{P:4,C:37,F:0.2,K:160}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Potato (fried/fries)": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.035,C:0.41,F:0.15,K:3.12},
+      serving:{P:3,C:35,F:15,K:320}
+    },
+    source:"Restaurant avg",
+    confidence:"Medium"
+  },
+
+  /* ===== POPULAR SNACKS ===== */
+  "Potato Chips": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.06,C:0.53,F:0.35,K:5.36},
+      serving:{P:2,C:15,F:10,K:160}
+    },
+    source:"Label avg",
+    confidence:"Medium"
+  },
+  "Popcorn (air popped)": {
+    unitOptions:["cup"],
+    perUnit:{ cup:{P:1.2,C:6,F:0.1,K:31} },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Popcorn (buttered)": {
+    unitOptions:["cup"],
+    perUnit:{ cup:{P:1.5,C:7,F:4,K:75} },
+    source:"Label avg",
+    confidence:"Medium"
+  },
+
+  /* ===== BANGLADESHI SNACKS ===== */
+  "Singara": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:4,C:22,F:10,K:190} },
+    source:"BD street food avg",
+    confidence:"Low"
+  },
+  "Samosa (BD)": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:3,C:18,F:9,K:165} },
+    source:"BD street food avg",
+    confidence:"Low"
+  },
+  "Chanachur": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.12,C:0.55,F:0.25,K:4.8},
+      serving:{P:3,C:14,F:6,K:120}   // ~25g
+    },
+    source:"Label avg / BD brands",
+    confidence:"Medium"
+  }
+};
+
+const CATEGORY_PATCH_X = {
+  "Fats & Oils": ["Butter","Ghee","Olive Oil","Soybean Oil"],
+  "Cheese & Dairy": ["Cheddar Cheese","Mozzarella Cheese","Processed Cheese Slice"],
+  "Vegetables": ["Mushroom","Avocado","Potato (boiled)"],
+  "Potato": ["Potato (boiled)","Potato (fried/fries)"],
+  "Snacks": ["Potato Chips","Popcorn (air popped)","Popcorn (buttered)","Chanachur"],
+  "BD Snacks": ["Singara","Samosa (BD)","Chanachur"]
+};
+
+/* Oil absorption helpers */
+function calcAbsorbedOilGrams(oilUsedGrams, absorptionPct){
+  const g = n(oilUsedGrams);
+  const pct = clamp(n(absorptionPct), 0, 100);
+  return (g * pct) / 100;
+}
+function oilMacrosFromAbsorbed(absorbedOilGrams){
+  const g = Math.max(0, n(absorbedOilGrams));
+  return { P:0, C:0, F:g, K:g*9 };
+}
+
+/* ===========================
+   <<< END PATCH X
+=========================== */
 
 /* PATCH 2: Split Fruits from Snacks (already separate; keep, but also ensure category arrays are clean) */
 function applyFruitSnackSplit(){
@@ -1546,6 +2237,16 @@ function saveCustomFoods(map){
 function applyAllFoodPatches(){
   // 1) Merge food extensions (no overwrite)
   Object.keys(FOOD_PATCH_1).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_1[k]; });
+  // X) Merge PATCH X foods (no overwrite)
+  Object.keys(FOOD_PATCH_X).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_X[k]; });
+
+  // X) Merge PATCH X categories
+  Object.keys(CATEGORY_PATCH_X).forEach(cat=>{
+    if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat]=[];
+    CATEGORY_PATCH_X[cat].forEach(item=>{
+      if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
+    });
+  });
 
   // 1) Merge category extensions
   Object.keys(CATEGORY_PATCH_1).forEach(cat=>{
@@ -1556,6 +2257,30 @@ function applyAllFoodPatches(){
   });
 
   // 2) Ensure split exists
+    // 2) Merge PATCH 2 foods (no overwrite)
+  Object.keys(FOOD_PATCH_2).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_2[k]; });
+
+  // 2) Merge PATCH 2 categories
+  Object.keys(CATEGORY_PATCH_2).forEach(cat=>{
+    if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat]=[];
+    CATEGORY_PATCH_2[cat].forEach(item=>{
+      if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
+    });
+  });
+/* PATCH 3 merge */
+Object.keys(FOOD_PATCH_3).forEach(k=>{
+  if(!FOOD[k]) FOOD[k] = FOOD_PATCH_3[k];
+});
+
+Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
+  if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat] = [];
+  CATEGORY_PATCH_3[cat].forEach(item=>{
+    if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)){
+      CATEGORY_ITEMS[cat].push(item);
+    }
+  });
+});
+
   applyFruitSnackSplit();
 
   // 4) Merge custom foods (no overwrite of base unless same key—custom wins only if same name explicitly)
@@ -1693,8 +2418,16 @@ function computeTotalsFromEntries(dateKey){
   const day=getDayLog(dateKey);
   let total={P:0,C:0,F:0,K:0};
   day.entries.forEach(e=>{
-    const t = computeFood(e.food, n(e.qty), e.unit);
-    total.P += t.P; total.C += t.C; total.F += t.F; total.K += t.K;
+        const t = computeFood(e.food, n(e.qty), e.unit);
+
+    const absorbed = calcAbsorbedOilGrams(e.oilUsedG || 0, e.oilAbsorbPct || 0);
+    const oilT = oilMacrosFromAbsorbed(absorbed);
+
+    total.P += (t.P + oilT.P);
+    total.C += (t.C + oilT.C);
+    total.F += (t.F + oilT.F);
+    total.K += (t.K + oilT.K);
+
   });
   return total;
 }
@@ -1710,7 +2443,23 @@ function addEntry(){
   const qty=n($("entryQty").value);
   if(!food || qty<=0){ alert("Select a food and enter a quantity > 0."); return; }
 
-  day.entries.push({ id: uid(), meal: $("mealType").value, category, food, unit, qty });
+    const oilUsedG = n($("oilUsedG") ? $("oilUsedG").value : 0);
+  const oilAbsorbPct = n($("oilAbsorbPct") ? $("oilAbsorbPct").value : 0);
+
+  day.entries.push({
+    id: uid(),
+    meal: $("mealType").value,
+    category,
+    food,
+    unit,
+    qty,
+    oilUsedG,
+    oilAbsorbPct
+  });
+
+  if($("oilUsedG")) $("oilUsedG").value = "";
+  if($("oilAbsorbPct")) $("oilAbsorbPct").value = "";
+
   setDayLog(dateKey, day);
 
   $("entryQty").value="";
