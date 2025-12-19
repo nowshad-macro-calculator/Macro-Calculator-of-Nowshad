@@ -1790,8 +1790,7 @@ let FOOD = {
   source:"USDA + portion est", 
   confidence:"Medium" 
 },
-  "Plain Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
-  "Bhuna Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:16,C:75,F:18,K:520} }, source:"BD home avg", confidence:"Low" },
+
   "Chicken Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:25,C:85,F:18,K:650} }, source:"BD restaurant avg", confidence:"Low" },
   "Kacchi Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:28,C:90,F:28,K:800} }, source:"BD restaurant avg", confidence:"Low" },
   "Beef Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:30,C:85,F:25,K:780} }, source:"BD restaurant avg", confidence:"Low" },
@@ -1853,10 +1852,13 @@ let CATEGORY_ITEMS = {
 
   "Daal / Lentils": ["Daal (cooked)","Daal (fried/tadka)"],
 
-  "Rice & Meals": [
-    "Plain Khichuri","Bhuna Khichuri",
-    "Chicken Biryani","Kacchi Biryani","Beef Biryani"
-  ],
+ "Rice & Meals": [
+  "Khichuri (plain)",
+  "Chicken Biryani",
+  "Kacchi Biryani",
+  "Beef Biryani"
+],
+
 
 "Carbs": [
   "Rice (cooked)",
@@ -2038,7 +2040,14 @@ const FOOD_PATCH_1 = {
 
 const CATEGORY_PATCH_1 = {
   "Chicken (Parts)": ["Chicken Thigh (cooked)","Chicken Wing (cooked)","Chicken Leg/Drumstick (cooked)"],
-  "Meals (BD)": ["Chicken Biryani","Chicken Biryani (heavy)","Kacchi Biryani","Kacchi Biryani (half plate)","Beef Biryani","Khichuri (plain)","Plain Khichuri","Bhuna Khichuri"],
+  "Meals (BD)": [
+  "Chicken Biryani",
+  "Chicken Biryani (heavy)",
+  "Kacchi Biryani",
+  "Kacchi Biryani (half plate)",
+  "Beef Biryani"
+],
+
   "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
   "Drinks": ["Coffee w/ Milk + Sugar"]
 };
