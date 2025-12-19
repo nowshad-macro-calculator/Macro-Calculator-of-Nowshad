@@ -1798,62 +1798,7 @@ let CATEGORY_ITEMS = {
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
-/* ===========================
-   CATEGORY MERGE (Simplify UX)
-   - merges multiple categories into fewer ones
-   - keeps FOOD items unchanged
-=========================== */
 
-const CATEGORY_MERGE_MAP = {
-  // Merge meals
-  "Meals": [
-    "Rice & Meals",
-    "Meals (BD)",
-    "Meals (Mixed)",
-    "BD Takeout",
-    "Carbs (BD)" // Polau is basically a meal/carb dish; you can keep it here or move to Carbs
-  ],
-
-  // Proteins
-  "Protein – Chicken": ["Chicken & Poultry", "Chicken (Parts)"],
-  "Protein – Meat": ["Meat", "Offal / Traditional", "Poultry / Game"],
-
-  // Merge all fish-related
-  "Fish & Seafood": [
-    "Fish",
-    "Seafood (Shellfish)",
-    "Sea Fish",
-    "River Fish",
-    "Small Fish"
-  ],
-
-  // Carbs
-  "Carbs – Rice & Bread": ["Roti / Bread"], // Rice dishes come from Meals bucket above
-
-  // Dairy
-  "Eggs & Dairy": ["Eggs & Dairy", "Cheese & Dairy"],
-
-  // Snacks
-  "Snacks": [
-    "Snacks",
-    "BD Snacks",
-    "BD Street Food / Snacks"
-  ],
-
-  // Drinks
-  "Drinks": ["Drinks"],
-
-  // Desserts
-  "Desserts & Sweets": ["Desserts", "Pitha / Sweets"],
-
-  // Keep clean singles (these exist already)
-  "Vegetables": ["Vegetables", "BD Sides / Bhaji", "Soups"],
-  "Fruits": ["Fruits"],
-  "Daal / Lentils": ["Daal / Lentils"],
-
-  // Optional: keep nuts separate or merge into Snacks
-  "Nuts & Dates": ["Nuts & Dates"]
-};
 
 function mergeCategories(){
   // Helper: get unique items
@@ -1890,7 +1835,77 @@ function mergeCategories(){
   CATEGORY_ITEMS = merged;
 
   // rebuild "All"
-  CATEGORY_ITEMS["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
+  /* ===========================
+   CATEGORY VIEW (Simplify UX) — SAFE
+   - DOES NOT overwrite CATEGORY_ITEMS
+   - Builds CATEGORY_VIEW for dropdown only
+   - Guarantees no missing foods via "Uncategorized"
+=========================== */
+
+let CATEGORY_VIEW = {}; // dropdown categories (simplified)
+
+const CATEGORY_VIEW_MAP = {
+  // ✅ Carbs MUST include rice items
+  "Carbs": [
+    "Rice & Meals",
+    "Roti / Bread",
+    "Carbs (BD)"
+  ],
+
+  // Meals (mixed / restaurants / takeout)
+  "Meals": [
+    "Meals (BD)",
+    "Meals (Mixed)",
+    "BD Takeout"
+  ],
+
+  // Protein
+  "Protein – Chicken": ["Chicken & Poultry", "Chicken (Parts)"],
+  "Protein – Meat": ["Meat", "Offal / Traditional", "Poultry / Game"],
+
+  // Fish
+  "Fish & Seafood": ["Fish", "Seafood (Shellfish)", "Sea Fish", "River Fish", "Small Fish"],
+
+  // Core singles
+  "Eggs & Dairy": ["Eggs & Dairy", "Cheese & Dairy"],
+  "Vegetables": ["Vegetables", "BD Sides / Bhaji", "Soups"],
+  "Fruits": ["Fruits"],
+  "Daal / Lentils": ["Daal / Lentils"],
+
+  // Snacks / sweets / drinks
+  "Snacks": ["Snacks", "BD Snacks", "BD Street Food / Snacks", "Nuts & Dates"],
+  "Drinks": ["Drinks"],
+  "Desserts & Sweets": ["Desserts", "Pitha / Sweets"],
+
+  // Oils (your PATCH X)
+  "Fats & Oils": ["Fats & Oils"]
+};
+
+function buildCategoryView(){
+  const uniq = (arr)=>Array.from(new Set(arr));
+  CATEGORY_VIEW = { "All": Object.keys(FOOD).sort((a,b)=>a.localeCompare(b)) };
+
+  // Build mapped view categories
+  Object.keys(CATEGORY_VIEW_MAP).forEach(viewCat=>{
+    const rawCats = CATEGORY_VIEW_MAP[viewCat] || [];
+    let items = [];
+    rawCats.forEach(rc=>{
+      if(Array.isArray(CATEGORY_ITEMS[rc])) items = items.concat(CATEGORY_ITEMS[rc]);
+    });
+    CATEGORY_VIEW[viewCat] = uniq(items.filter(name => FOOD[name]));
+  });
+
+  // Catch anything that didn't make it into any view category
+  const used = new Set();
+  Object.keys(CATEGORY_VIEW).forEach(vc=>{
+    if(vc==="All") return;
+    (CATEGORY_VIEW[vc] || []).forEach(x=>used.add(x));
+  });
+
+  const uncategorized = CATEGORY_VIEW["All"].filter(x=>!used.has(x));
+  if(uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
+}
+
 }
 
 /* PATCH 1: Extensions (adds missing foods without overwriting existing keys) */
@@ -2435,8 +2450,9 @@ Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
     if(!CATEGORY_ITEMS[c].includes(k)) CATEGORY_ITEMS[c].push(k);
   });
 
-  // Merge/simplify categories for UX
-  mergeCategories();
+   // Build simplified dropdown categories (SAFE)
+  buildCategoryView();
+
 }
 
 
@@ -2462,19 +2478,29 @@ function foodMeta(foodName){
 function buildCategorySelect(){
   const sel=$("entryCategory");
   sel.innerHTML="";
-  Object.keys(CATEGORY_ITEMS).forEach(cat=>{
+
+  // Ensure view exists
+  if(!CATEGORY_VIEW || !CATEGORY_VIEW["All"]) buildCategoryView();
+
+  Object.keys(CATEGORY_VIEW).forEach(cat=>{
     const opt=document.createElement("option");
     opt.value=cat; opt.textContent=cat;
     sel.appendChild(opt);
   });
+
   sel.value = "All";
 }
+
 function buildFoodSelect(){
   const category = $("entryCategory").value || "All";
   const q = ($("foodSearch").value || "").trim().toLowerCase();
 
-  let list = (CATEGORY_ITEMS[category] || []).slice();
-  if(category==="All") list = CATEGORY_ITEMS["All"].slice();
+    // Ensure view exists
+  if(!CATEGORY_VIEW || !CATEGORY_VIEW["All"]) buildCategoryView();
+
+  let list = (CATEGORY_VIEW[category] || []).slice();
+  if(category==="All") list = CATEGORY_VIEW["All"].slice();
+
 
   // If search typed, search across ALL foods regardless of category (best UX)
   let filtered = list;
