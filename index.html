@@ -1494,57 +1494,7 @@ let CATEGORY_ITEMS = {
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
-/* ===========================
-   PATCH 1: Extensions (adds missing foods without overwriting existing keys)
-=========================== */
-const FOOD_PATCH_1 = {
-  // more chicken parts (cooked)
-  "Chicken Thigh (cooked)": { unitOptions:["g"], perUnit:{ g:{P:26/100,C:0,F:8/100,K:209/100} }, source:"USDA avg", confidence:"High" },
-  "Chicken Wing (cooked)": { unitOptions:["g"], perUnit:{ g:{P:24/100,C:0,F:13/100,K:290/100} }, source:"USDA avg", confidence:"High" },
-  "Chicken Leg/Drumstick (cooked)": { unitOptions:["g"], perUnit:{ g:{P:25/100,C:0,F:9/100,K:216/100} }, source:"USDA avg", confidence:"High" },
 
-  // popular BD meals
-  "Chicken Biryani (heavy)": { unitOptions:["plate"], perUnit:{ plate:{P:30,C:95,F:22,K:760} }, source:"BD restaurant avg", confidence:"Low" },
-  "Kacchi Biryani (half plate)": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:45,F:14,K:400} }, source:"portion est", confidence:"Low" },
-  "Khichuri (plain)": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
-
-  // nuts + dates (commonly missing)
-  "Cashews": { unitOptions:["g"], perUnit:{ g:{P:18.2/100,C:30.2/100,F:43.9/100,K:553/100} }, source:"USDA", confidence:"High" },
-  "Walnuts": { unitOptions:["g"], perUnit:{ g:{P:15.2/100,C:13.7/100,F:65.2/100,K:654/100} }, source:"USDA", confidence:"High" },
-  "Pistachios": { unitOptions:["g"], perUnit:{ g:{P:20.2/100,C:27.2/100,F:45.4/100,K:562/100} }, source:"USDA", confidence:"High" },
-  "Hazelnuts": { unitOptions:["g"], perUnit:{ g:{P:15/100,C:17/100,F:61/100,K:628/100} }, source:"USDA", confidence:"High" },
-
-  "Dates (Deglet Noor)": { unitOptions:["pcs","g"], perUnit:{ pcs:{P:0.2,C:5.3,F:0,K:20}, g:{P:1.8/100,C:75/100,F:0.2/100,K:282/100} }, source:"USDA avg", confidence:"Medium" },
-  "Dates (Medjool)": { unitOptions:["pcs","g"], perUnit:{ pcs:{P:0.4,C:18,F:0,K:66}, g:{P:1.8/100,C:75/100,F:0.2/100,K:277/100} }, source:"USDA avg", confidence:"Medium" },
-
-  // drinks alias
-  "Coffee w/ Milk + Sugar": { unitOptions:["cup"], perUnit:{ cup:{P:3,C:14,F:4,K:120} }, source:"recipe avg", confidence:"Medium" }
-};
-
-const CATEGORY_PATCH_1 = {
-  "Chicken (Parts)": ["Chicken Thigh (cooked)","Chicken Wing (cooked)","Chicken Leg/Drumstick (cooked)"],
-  "Meals (BD)": ["Chicken Biryani","Chicken Biryani (heavy)","Kacchi Biryani","Kacchi Biryani (half plate)","Beef Biryani","Khichuri (plain)","Plain Khichuri","Bhuna Khichuri"],
-  "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
-  "Drinks": ["Coffee w/ Milk + Sugar"]
-};
-/* ===========================
-   PATCH 2: Split Fruits from Snacks (guard)
-=========================== */
-function applyFruitSnackSplit(){
-  if(!CATEGORY_ITEMS["Fruits"]) CATEGORY_ITEMS["Fruits"] = [];
-  if(!CATEGORY_ITEMS["Snacks"]) CATEGORY_ITEMS["Snacks"] = [];
-}
-/* ===========================
-   PATCH 4: Custom food storage
-=========================== */
-function loadCustomFoods(){
-  try{ return JSON.parse(localStorage.getItem(LS_CUSTOM_FOOD) || "{}"); }catch(e){ return {}; }
-}
-function saveCustomFoods(map){
-  localStorage.setItem(LS_CUSTOM_FOOD, JSON.stringify(map));
-}
-
-  
 /* PATCH 1: Extensions (adds missing foods without overwriting existing keys) */
 const FOOD_PATCH_1 = {
   // more chicken parts (cooked)
@@ -1619,38 +1569,6 @@ function applyAllFoodPatches(){
   });
 
   // rebuild "All" as union of FOOD keys
-  CATEGORY_ITEMS["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
-}
-/* ===========================
-   APPLY PATCHES 1..6 (build categories + All)
-=========================== */
-function applyAllFoodPatches(){
-  // 1) Merge food extensions (no overwrite)
-  Object.keys(FOOD_PATCH_1).forEach(k=>{
-    if(!FOOD[k]) FOOD[k]=FOOD_PATCH_1[k];
-  });
-
-  // 1) Merge category extensions
-  Object.keys(CATEGORY_PATCH_1).forEach(cat=>{
-    if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat]=[];
-    CATEGORY_PATCH_1[cat].forEach(item=>{
-      if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
-    });
-  });
-
-  // 2) Ensure split exists
-  applyFruitSnackSplit();
-
-  // 4) Merge custom foods (custom overrides)
-  const custom = loadCustomFoods();
-  Object.keys(custom).forEach(k=>{
-    FOOD[k] = custom[k];
-    const c = custom[k]?.category || "Custom";
-    if(!CATEGORY_ITEMS[c]) CATEGORY_ITEMS[c]=[];
-    if(!CATEGORY_ITEMS[c].includes(k)) CATEGORY_ITEMS[c].push(k);
-  });
-
-  // rebuild "All"
   CATEGORY_ITEMS["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
 }
 
@@ -2327,7 +2245,6 @@ async function savePDF(){
   ensureDefaultProfile();
   rebuildProfileSelect();
   loadProfileToUI();
-  applyAllFoodPatches();
 
   // build foods + patches 1..6
   applyAllFoodPatches();
