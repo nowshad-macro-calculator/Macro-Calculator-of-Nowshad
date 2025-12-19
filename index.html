@@ -1830,52 +1830,10 @@ let CATEGORY_ITEMS = {
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
-  /* Step 3 — Build “All” automatically (critical) */
-(function buildAllCategory(){
-  CATEGORY_ITEMS["All"] = Object.keys(FOOD).slice().sort();
-})();
-
-
-
-/* ===========================
-   CATEGORY VIEW (Dropdown)
-   - One definition only
-   - Uses CATEGORY_VIEW_MAP
-
-// Build once after everything is defined
-buildCategoryView();
-
+  
 /* Step 3 — Build “All” automatically (critical) */
 (function buildAllCategory(){
   CATEGORY_ITEMS["All"] = Object.keys(FOOD).slice().sort();
-})();
-
-  /* ===== Step 4 Debug: Prove string mismatch ===== */
-(function debugRiceMismatch(){
-  const FOOD_KEYS = Object.keys(FOOD);
-
-  const riceFoodKey = FOOD_KEYS.find(k => k.toLowerCase().includes("rice"));
-  console.log("FOOD rice-like key found:", riceFoodKey);
-
-  // If you have Carbs category:
-  const carbsList =
-    CATEGORY_ITEMS["Carbs"] ||
-    CATEGORY_ITEMS["Carb"] ||
-    CATEGORY_ITEMS["Rice & Meals"] ||   // fallback: in your current code it's here
-    [];
-
-  console.log("Carbs/Rice list contains:", carbsList);
-
-  const riceExactInCarbs = carbsList.includes("Rice (cooked)");
-  console.log('Carbs includes exact "Rice (cooked)"?', riceExactInCarbs);
-
-  if (riceFoodKey) {
-    console.log("Does carbsList include FOOD key exactly?", carbsList.includes(riceFoodKey));
-    console.log("FOOD key length:", riceFoodKey.length, "chars:", [...riceFoodKey].map(c=>c.charCodeAt(0)));
-  }
-
-  const target = "Rice (cooked)";
-  console.log("Target length:", target.length, "chars:", [...target].map(c=>c.charCodeAt(0)));
 })();
 
 /* ===========================
@@ -1907,6 +1865,69 @@ function buildCategoryView(){
   });
 
   const uncategorized = CATEGORY_VIEW["All"].filter(x=>!used.has(x));
+  if(uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
+}
+/* ===========================
+   CATEGORY VIEW (Dropdown) — SINGLE SOURCE OF TRUTH
+   - Defines CATEGORY_VIEW + CATEGORY_VIEW_MAP
+     // Build simplified dropdown categories after patches
+  buildCategoryView();
+}
+=========================== */
+
+let CATEGORY_VIEW = {}; // MUST exist globally
+
+const CATEGORY_VIEW_MAP = {
+  "All": ["All"],
+
+  // Your main dropdown buckets
+  "Carbs": ["Carbs"],
+  "Rice & Meals": ["Rice & Meals"],
+  "Eggs & Dairy": ["Eggs & Dairy"],
+
+  "Chicken & Poultry": ["Chicken & Poultry"],
+  "Meat": ["Meat"],
+  "Fish": ["Fish"],
+
+  "Vegetables": ["Vegetables"],
+  "Fruits": ["Fruits"],
+  "Daal / Lentils": ["Daal / Lentils"],
+
+  "Snacks": ["Snacks"],
+  "Drinks": ["Drinks"],
+  "Desserts": ["Desserts"]
+};
+
+function buildCategoryView(){
+  const uniq = (arr)=>Array.from(new Set(arr)).filter(Boolean);
+
+  // Always rebuild "All" from FOOD keys (single source of truth)
+  const allFoods = Object.keys(FOOD).slice().sort((a,b)=>a.localeCompare(b));
+  CATEGORY_VIEW = { "All": allFoods };
+
+  // Build each view category by mapping to CATEGORY_ITEMS categories
+  Object.keys(CATEGORY_VIEW_MAP).forEach(viewCat=>{
+    if(viewCat === "All") return;
+
+    const rawCats = CATEGORY_VIEW_MAP[viewCat] || [];
+    let items = [];
+
+    rawCats.forEach(rc=>{
+      if(Array.isArray(CATEGORY_ITEMS[rc])) items = items.concat(CATEGORY_ITEMS[rc]);
+    });
+
+    // keep only items that exist in FOOD
+    CATEGORY_VIEW[viewCat] = uniq(items).filter(name => FOOD[name]);
+  });
+
+  // Create Uncategorized = food keys not used in any view category
+  const used = new Set();
+  Object.keys(CATEGORY_VIEW).forEach(vc=>{
+    if(vc === "All") return;
+    (CATEGORY_VIEW[vc] || []).forEach(x=>used.add(x));
+  });
+
+  const uncategorized = allFoods.filter(x=>!used.has(x));
   if(uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
 }
 
