@@ -1713,6 +1713,27 @@ let FOOD = {
   "Chicken Leg (drumstick)": { unitOptions:["g"], perUnit:{ g:{P:25/100,C:0,F:7/100,K:170/100} }, source:"USDA avg", confidence:"High" },
   "Chicken Wing": { unitOptions:["g"], perUnit:{ g:{P:24/100,C:0,F:13/100,K:203/100} }, source:"USDA avg", confidence:"High" },
   "Chicken (with skin)": { unitOptions:["g"], perUnit:{ g:{P:23/100,C:0,F:14/100,K:215/100} }, source:"USDA avg", confidence:"High" },
+  /* ===== BREAD & BUN (CARBS) ===== */
+
+  "Bread Slice": {
+    unitOptions:["pcs","g"],
+    perUnit:{
+      pcs:{P:3, C:15, F:1.5, K:80},     // 1 standard slice
+      g:{P:0.09, C:0.45, F:0.04, K:2.7}
+    },
+    source:"Bakery / USDA avg",
+    confidence:"Medium"
+  },
+
+  "Butter Bun": {
+    unitOptions:["pcs","g"],
+    perUnit:{
+      pcs:{P:6, C:35, F:9, K:250},      // 1 butter bun / pav
+      g:{P:0.12, C:0.70, F:0.18, K:5.0}
+    },
+    source:"BD bakery avg",
+    confidence:"Low"
+  },
 
   // Meat
   "Beef (cooked)": { unitOptions:["g"], perUnit:{ g:{P:26/100,C:0,F:15/100,K:250/100} }, source:"USDA avg", confidence:"High" },
@@ -1816,12 +1837,15 @@ let CATEGORY_ITEMS = {
     "Chicken Biryani","Kacchi Biryani","Beef Biryani"
   ],
 
-  "Carbs": [
-    "Rice (cooked)",
-    "Polau / Pulao",
-    "Roti",
-    "Paratha"
-  ],
+"Carbs": [
+  "Rice (cooked)",
+  "Polau / Pulao",
+  "Roti",
+  "Paratha",
+  "Bread Slice",
+  "Butter Bun"
+],
+
 
   "Roti / Bread": ["Roti","Paratha"],
   "Vegetables": ["Mixed Vegetables","Salad","Potato (boiled)","Potato (fried/fries)"],
