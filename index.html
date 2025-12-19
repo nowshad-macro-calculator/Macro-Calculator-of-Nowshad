@@ -1841,9 +1841,10 @@ let CATEGORY_ITEMS = {
    - DOES NOT overwrite CATEGORY_ITEMS
    - Builds CATEGORY_VIEW for dropdown only
    - Guarantees no missing foods via "Uncategorized"
-
+=========================== */
 
 let CATEGORY_VIEW = {}; // MUST exist globally
+
 
 const CATEGORY_VIEW_MAP = {
   "All": ["All"],
@@ -2692,15 +2693,19 @@ function addEntry(){
   renderEntries();
   scheduleRefresh();
 }
+  const CATEGORY_MERGE_MAP = {};
 function normalizeEntryCategory(cat){
   if(!cat) return "";
-  if(CATEGORY_ITEMS[cat]) return cat; // already exists after merge
+  if(CATEGORY_ITEMS && CATEGORY_ITEMS[cat]) return cat;
 
-  for(const newCat in CATEGORY_MERGE_MAP){
-    if((CATEGORY_MERGE_MAP[newCat] || []).includes(cat)) return newCat;
+  if(typeof CATEGORY_MERGE_MAP === "object" && CATEGORY_MERGE_MAP){
+    for(const newCat in CATEGORY_MERGE_MAP){
+      if((CATEGORY_MERGE_MAP[newCat] || []).includes(cat)) return newCat;
+    }
   }
   return cat;
 }
+
 function renderEntries(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
