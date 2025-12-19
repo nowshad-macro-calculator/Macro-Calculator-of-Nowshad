@@ -1792,13 +1792,15 @@ let FOOD = {
 /* Base categories */
 let CATEGORY_ITEMS = {
   "All": [], // filled at runtime
+
   "Chicken & Poultry": [
     "Chicken Breast (skinless)","Chicken Thigh (skinless)",
     "Chicken Leg (drumstick)","Chicken Wing","Chicken (with skin)"
   ],
   "Meat": ["Beef (cooked)","Mutton (cooked)","Lamb (cooked)","Duck (cooked)"],
   "Fish": ["Fish (generic)","Hilsa Fish"],
-    "Eggs & Dairy": [
+
+  "Eggs & Dairy": [
     "Egg (whole)",
     "Egg White",
     "Yogurt / Curd",
@@ -1808,12 +1810,13 @@ let CATEGORY_ITEMS = {
   ],
 
   "Daal / Lentils": ["Daal (cooked)","Daal (fried/tadka)"],
-    "Rice & Meals": [
+
+  "Rice & Meals": [
     "Plain Khichuri","Bhuna Khichuri",
     "Chicken Biryani","Kacchi Biryani","Beef Biryani"
   ],
 
-    "Carbs": [
+  "Carbs": [
     "Rice (cooked)",
     "Polau / Pulao",
     "Roti",
@@ -1821,12 +1824,38 @@ let CATEGORY_ITEMS = {
   ],
 
   "Roti / Bread": ["Roti","Paratha"],
-    "Vegetables": ["Mixed Vegetables","Salad","Potato (boiled)","Potato (fried/fries)"],
+  "Vegetables": ["Mixed Vegetables","Salad","Potato (boiled)","Potato (fried/fries)"],
   "Fruits": ["Banana","Apple","Orange","Mango"],
   "Snacks": ["Peanuts","Almonds","Biscuits"],
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
+/* Step 3 — Build “All” automatically (critical) */
+(function buildAllCategory(){
+  CATEGORY_ITEMS["All"] = Object.keys(FOOD).slice().sort();
+})();
+/* ===== Debug: Prove mismatch ===== */
+(function debugRiceMismatch(){
+  const keys = Object.keys(FOOD);
+
+  const riceCandidates = keys.filter(k => k.toLowerCase().includes("rice"));
+  console.log("FOOD rice candidates:", riceCandidates);
+
+  const carbsList = CATEGORY_ITEMS["Carbs"] || [];
+  console.log("CATEGORY_ITEMS['Carbs']:", carbsList);
+
+  console.log("Carbs includes exact 'Rice (cooked)'?", carbsList.includes("Rice (cooked)"));
+
+  const exact = keys.find(k => k === "Rice (cooked)");
+  console.log("FOOD has exact key 'Rice (cooked)'?", !!exact);
+
+  if (!exact && riceCandidates.length) {
+    console.log("Likely mismatch. Compare first candidate char codes:");
+    console.log("Candidate:", riceCandidates[0], [...riceCandidates[0]].map(c=>c.charCodeAt(0)));
+    console.log("Target   :", "Rice (cooked)", [..."Rice (cooked)"].map(c=>c.charCodeAt(0)));
+  }
+})();
+
   /* ===== Step 4 Debug: Prove string mismatch ===== */
 (function debugRiceMismatch(){
   const FOOD_KEYS = Object.keys(FOOD);
@@ -1868,7 +1897,8 @@ CATEGORY_ITEMS["All"] = Object.keys(FOOD);
    - DOES NOT overwrite CATEGORY_ITEMS
    - Builds CATEGORY_VIEW for dropdown only
    - Guarantees no missing foods via "Uncategorized"
-   // Build a separate view map for dropdown without mutating CATEGORY_ITEMS
+=========================== */
+
 let CATEGORY_VIEW = null;
 
 (function buildCategoryView(){
@@ -1879,17 +1909,16 @@ let CATEGORY_VIEW = null;
     CATEGORY_VIEW[cat] = (CATEGORY_ITEMS[cat] || []).slice();
   });
 
-  // Guarantee uncategorized bucket
+  // Track used items
   const used = new Set();
   Object.keys(CATEGORY_VIEW).forEach(cat => {
     (CATEGORY_VIEW[cat] || []).forEach(item => used.add(item));
   });
 
+  // Anything not used goes to Uncategorized
   const uncategorized = Object.keys(FOOD).filter(k => !used.has(k)).sort();
-  if(uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
+  if (uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
 })();
-
-=========================== */
 
 let CATEGORY_VIEW = {}; // dropdown categories (simplified)
 
