@@ -1841,62 +1841,36 @@ let CATEGORY_ITEMS = {
    - DOES NOT overwrite CATEGORY_ITEMS
    - Builds CATEGORY_VIEW for dropdown only
    - Guarantees no missing foods via "Uncategorized"
-=========================== */
 
-function buildCategoryView(){
-  const uniq = (arr)=>Array.from(new Set(arr));
-  CATEGORY_VIEW = { "All": Object.keys(FOOD).sort((a,b)=>a.localeCompare(b)) };
-
-  // Build mapped view categories
-  Object.keys(CATEGORY_VIEW_MAP).forEach(viewCat=>{
-    const rawCats = CATEGORY_VIEW_MAP[viewCat] || [];
-    let items = [];
-    rawCats.forEach(rc=>{
-      if(Array.isArray(CATEGORY_ITEMS[rc])) items = items.concat(CATEGORY_ITEMS[rc]);
-    });
-    CATEGORY_VIEW[viewCat] = uniq(items.filter(name => FOOD[name]));
-  });
-
-  // Catch anything that didn't make it into any view category
-  const used = new Set();
-  Object.keys(CATEGORY_VIEW).forEach(vc=>{
-    if(vc==="All") return;
-    (CATEGORY_VIEW[vc] || []).forEach(x=>used.add(x));
-  });
-
-  const uncategorized = CATEGORY_VIEW["All"].filter(x=>!used.has(x));
-  if(uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
-}
-/* ===========================
-   CATEGORY VIEW (Dropdown) — SINGLE SOURCE OF TRUTH
-   - Defines CATEGORY_VIEW + CATEGORY_VIEW_MAP
-     // Build simplified dropdown categories after patches
-  buildCategoryView();
-}
-=========================== */
 
 let CATEGORY_VIEW = {}; // MUST exist globally
 
 const CATEGORY_VIEW_MAP = {
   "All": ["All"],
 
-  // Your main dropdown buckets
-  "Carbs": ["Carbs"],
-  "Rice & Meals": ["Rice & Meals"],
-  "Eggs & Dairy": ["Eggs & Dairy"],
+  /* Core buckets */
+  "Carbs": ["Carbs", "Carbs (BD)"],
+  "Rice & Meals": ["Rice & Meals", "Meals (BD)", "Meals (Mixed)", "BD Takeout"],
+  "Eggs & Dairy": ["Eggs & Dairy", "Cheese & Dairy"],
 
-  "Chicken & Poultry": ["Chicken & Poultry"],
-  "Meat": ["Meat"],
-  "Fish": ["Fish"],
+  "Chicken & Poultry": ["Chicken & Poultry", "Chicken (Parts)", "Poultry / Game"],
+  "Meat": ["Meat", "Offal / Traditional"],
+  "Fish": ["Fish", "Sea Fish", "River Fish", "Small Fish", "Seafood (Shellfish)"],
 
-  "Vegetables": ["Vegetables"],
+  "Vegetables": ["Vegetables", "Potato", "BD Sides / Bhaji", "Soups"],
   "Fruits": ["Fruits"],
+
   "Daal / Lentils": ["Daal / Lentils"],
 
-  "Snacks": ["Snacks"],
+  "Snacks": ["Snacks", "BD Street Food / Snacks", "BD Snacks", "Nuts & Dates"],
   "Drinks": ["Drinks"],
-  "Desserts": ["Desserts"]
+  "Desserts": ["Desserts", "Pitha / Sweets"],
+
+  /* Optional: show oils as its own dropdown bucket.
+     If you don't want a separate dropdown item, map "Fats & Oils" into Snacks or Meals instead. */
+  "Fats & Oils": ["Fats & Oils"]
 };
+
 
 function buildCategoryView(){
   const uniq = (arr)=>Array.from(new Set(arr)).filter(Boolean);
@@ -2471,10 +2445,13 @@ function saveCustomFoods(map){
   localStorage.setItem(LS_CUSTOM_FOOD, JSON.stringify(map));
 }
 
-/* Apply patches 1..6 (build categories + All) */
 function applyAllFoodPatches(){
+  // Ensure base arrays exist early
+  applyFruitSnackSplit();
+
   // 1) Merge food extensions (no overwrite)
   Object.keys(FOOD_PATCH_1).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_1[k]; });
+
   // X) Merge PATCH X foods (no overwrite)
   Object.keys(FOOD_PATCH_X).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_X[k]; });
 
@@ -2494,8 +2471,7 @@ function applyAllFoodPatches(){
     });
   });
 
-  // 2) Ensure split exists
-    // 2) Merge PATCH 2 foods (no overwrite)
+  // 2) Merge PATCH 2 foods (no overwrite)
   Object.keys(FOOD_PATCH_2).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_2[k]; });
 
   // 2) Merge PATCH 2 categories
@@ -2505,36 +2481,36 @@ function applyAllFoodPatches(){
       if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
     });
   });
-/* PATCH 3 merge */
-Object.keys(FOOD_PATCH_3).forEach(k=>{
-  if(!FOOD[k]) FOOD[k] = FOOD_PATCH_3[k];
-});
 
-Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
-  if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat] = [];
-  CATEGORY_PATCH_3[cat].forEach(item=>{
-    if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)){
-      CATEGORY_ITEMS[cat].push(item);
-    }
+  // 3) Merge PATCH 3 foods + categories
+  Object.keys(FOOD_PATCH_3).forEach(k=>{
+    if(!FOOD[k]) FOOD[k] = FOOD_PATCH_3[k];
   });
-});
 
-  applyFruitSnackSplit();
+  Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
+    if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat] = [];
+    CATEGORY_PATCH_3[cat].forEach(item=>{
+      if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)){
+        CATEGORY_ITEMS[cat].push(item);
+      }
+    });
+  });
 
-  // 4) Merge custom foods (no overwrite of base unless same key—custom wins only if same name explicitly)
+  // 4) Merge custom foods (custom overrides by design)
   const custom = loadCustomFoods();
   Object.keys(custom).forEach(k=>{
-    FOOD[k] = custom[k]; // custom override by design (user knows what they saved)
-    // ensure it appears in its category
+    FOOD[k] = custom[k];
     const c = custom[k]?.category || "Custom";
     if(!CATEGORY_ITEMS[c]) CATEGORY_ITEMS[c]=[];
     if(!CATEGORY_ITEMS[c].includes(k)) CATEGORY_ITEMS[c].push(k);
   });
 
-   // Build simplified dropdown categories (SAFE)
- 
-}
+  // Rebuild All AFTER all patches + custom foods
+  CATEGORY_ITEMS["All"] = Object.keys(FOOD).slice().sort((a,b)=>a.localeCompare(b));
 
+  // Rebuild dropdown view categories now that categories + FOOD are final
+  buildCategoryView();
+}
 
 /* ===== Food compute ===== */
 function computeFood(foodName, qty, unit){
@@ -2585,7 +2561,8 @@ function buildFoodSelect(){
   // If search typed, search across ALL foods regardless of category (best UX)
   let filtered = list;
   if(q){
-    filtered = CATEGORY_ITEMS["All"].filter(name => name.toLowerCase().includes(q));
+   filtered = (CATEGORY_VIEW["All"] || []).filter(name => name.toLowerCase().includes(q));
+
   }
 
   const sel=$("entryFood");
