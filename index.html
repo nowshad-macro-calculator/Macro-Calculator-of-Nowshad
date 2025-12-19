@@ -1830,30 +1830,24 @@ let CATEGORY_ITEMS = {
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
-/* Step 3 — Build “All” automatically (critical) */
+  /* Step 3 — Build “All” automatically (critical) */
 (function buildAllCategory(){
   CATEGORY_ITEMS["All"] = Object.keys(FOOD).slice().sort();
 })();
-/* ===== Debug: Prove mismatch ===== */
-(function debugRiceMismatch(){
-  const keys = Object.keys(FOOD);
 
-  const riceCandidates = keys.filter(k => k.toLowerCase().includes("rice"));
-  console.log("FOOD rice candidates:", riceCandidates);
 
-  const carbsList = CATEGORY_ITEMS["Carbs"] || [];
-  console.log("CATEGORY_ITEMS['Carbs']:", carbsList);
 
-  console.log("Carbs includes exact 'Rice (cooked)'?", carbsList.includes("Rice (cooked)"));
+/* ===========================
+   CATEGORY VIEW (Dropdown)
+   - One definition only
+   - Uses CATEGORY_VIEW_MAP
 
-  const exact = keys.find(k => k === "Rice (cooked)");
-  console.log("FOOD has exact key 'Rice (cooked)'?", !!exact);
+// Build once after everything is defined
+buildCategoryView();
 
-  if (!exact && riceCandidates.length) {
-    console.log("Likely mismatch. Compare first candidate char codes:");
-    console.log("Candidate:", riceCandidates[0], [...riceCandidates[0]].map(c=>c.charCodeAt(0)));
-    console.log("Target   :", "Rice (cooked)", [..."Rice (cooked)"].map(c=>c.charCodeAt(0)));
-  }
+/* Step 3 — Build “All” automatically (critical) */
+(function buildAllCategory(){
+  CATEGORY_ITEMS["All"] = Object.keys(FOOD).slice().sort();
 })();
 
   /* ===== Step 4 Debug: Prove string mismatch ===== */
@@ -1884,78 +1878,12 @@ let CATEGORY_ITEMS = {
   console.log("Target length:", target.length, "chars:", [...target].map(c=>c.charCodeAt(0)));
 })();
 
-  // Step 3 — Build “All” automatically (critical)
-CATEGORY_ITEMS["All"] = Object.keys(FOOD);
-
-  (function buildAllCategory(){
-  const allFoods = Object.keys(FOOD);
-  CATEGORY_ITEMS["All"] = allFoods.slice().sort();
-})();
-
 /* ===========================
    CATEGORY VIEW (Simplify UX) — SAFE
    - DOES NOT overwrite CATEGORY_ITEMS
    - Builds CATEGORY_VIEW for dropdown only
    - Guarantees no missing foods via "Uncategorized"
 =========================== */
-
-let CATEGORY_VIEW = null;
-
-(function buildCategoryView(){
-  CATEGORY_VIEW = {};
-
-  // Copy categories as-is
-  Object.keys(CATEGORY_ITEMS).forEach(cat => {
-    CATEGORY_VIEW[cat] = (CATEGORY_ITEMS[cat] || []).slice();
-  });
-
-  // Track used items
-  const used = new Set();
-  Object.keys(CATEGORY_VIEW).forEach(cat => {
-    (CATEGORY_VIEW[cat] || []).forEach(item => used.add(item));
-  });
-
-  // Anything not used goes to Uncategorized
-  const uncategorized = Object.keys(FOOD).filter(k => !used.has(k)).sort();
-  if (uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
-})();
-
-let CATEGORY_VIEW = {}; // dropdown categories (simplified)
-
-const CATEGORY_VIEW_MAP = {
-  // ✅ Carbs MUST include rice items
-  "Carbs": [
-    "Rice & Meals",
-    "Roti / Bread",
-    "Carbs (BD)"
-  ],
-
-  // Meals (mixed / restaurants / takeout)
-  "Meals": [
-    "Meals (BD)",
-    "Meals (Mixed)",
-    "BD Takeout"
-  ],
-  "Eggs & Dairy": ["Eggs & Dairy","Cheese & Dairy"],
-
-  // Protein
-  "Protein – Chicken": ["Chicken & Poultry", "Chicken (Parts)"],
-  "Protein – Meat": ["Meat", "Offal / Traditional", "Poultry / Game"],
-
-  // Fish
-  "Fish & Seafood": ["Fish", "Seafood (Shellfish)", "Sea Fish", "River Fish", "Small Fish"],
-  "Vegetables": ["Vegetables", "BD Sides / Bhaji", "Soups"],
-  "Fruits": ["Fruits"],
-  "Daal / Lentils": ["Daal / Lentils"],
-
-  // Snacks / sweets / drinks
-  "Snacks": ["Snacks", "BD Snacks", "BD Street Food / Snacks", "Nuts & Dates"],
-  "Drinks": ["Drinks"],
-  "Desserts & Sweets": ["Desserts", "Pitha / Sweets"],
-
-  // Oils (your PATCH X)
-  "Fats & Oils": ["Fats & Oils"]
-};
 
 function buildCategoryView(){
   const uniq = (arr)=>Array.from(new Set(arr));
@@ -2583,35 +2511,7 @@ Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
   });
 
    // Build simplified dropdown categories (SAFE)
-  buildCategoryView();
-const CATEGORY_VIEW_MAP = {
-  /* ===== CARBS (AUTHORITATIVE) ===== */
-  "Carbs": [
-    "Rice & Meals",   // ✅ Rice (cooked), Khichuri, Biryani base
-    "Carbs (BD)",     // ✅ Polau / Pulao
-    "Roti / Bread"    // optional but logical
-  ],
-
-  /* ===== MEALS (SERVING CONTEXT) ===== */
-  "Meals": [
-    "Meals (BD)",
-    "Meals (Mixed)",
-    "BD Takeout"
-  ],
-
-  "Protein – Chicken": ["Chicken & Poultry", "Chicken (Parts)"],
-  "Protein – Meat": ["Meat", "Offal / Traditional", "Poultry / Game"],
-  "Fish & Seafood": ["Fish", "Seafood (Shellfish)", "Sea Fish", "River Fish", "Small Fish"],
-  "Eggs & Dairy": ["Eggs & Dairy", "Cheese & Dairy"],
-  "Vegetables": ["Vegetables", "BD Sides / Bhaji", "Soups"],
-  "Fruits": ["Fruits"],
-  "Daal / Lentils": ["Daal / Lentils"],
-  "Snacks": ["Snacks", "BD Snacks", "BD Street Food / Snacks", "Nuts & Dates"],
-  "Drinks": ["Drinks"],
-  "Desserts & Sweets": ["Desserts", "Pitha / Sweets"],
-  "Fats & Oils": ["Fats & Oils"]
-};
-
+ 
 }
 
 
