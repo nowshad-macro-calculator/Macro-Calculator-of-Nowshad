@@ -422,6 +422,25 @@ input, select, textarea, button {
     width: 100%;
   }
 }
+/* =====================================================
+   Mobile: prevent button label clipping
+   ===================================================== */
+@media (max-width: 768px) {
+  button, .btn {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+@media (max-width: 768px) {
+  .foodActionStack button,
+  .foodActionStack .btn {
+    flex: 0 0 auto;
+  }
+}
 
 
   </style>
