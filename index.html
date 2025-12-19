@@ -396,6 +396,48 @@
     background:rgba(10,20,60,.35);
   }
 }
+/* =========================
+   PATCH 2A: Mobile Top Menu Usability
+   ========================= */
+
+@media (max-width: 720px){
+
+  /* Ensure header is above everything and not clipped */
+  .topbar{
+    position: sticky;          /* keep visible */
+    top: 8px;
+    z-index: 9999;
+    overflow: visible;         /* IMPORTANT: allow content to show */
+    height: auto;              /* IMPORTANT: prevent clipping */
+    align-items: stretch;
+  }
+
+  /* If you have any parent wrapper clipping it */
+  header, .header, .wrap, body{
+    overflow-x: hidden;        /* ok */
+  }
+
+  /* Tabs row becomes swipeable and never wraps */
+  .tabs{
+    display: flex;
+    flex-wrap: nowrap;         /* no wrap */
+    overflow-x: auto;          /* swipe */
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding-bottom: 4px;
+    width: 100%;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+
+  .tabbtn{
+    flex: 0 0 auto;            /* keeps each tab intact */
+    white-space: nowrap;
+    padding: 10px 12px;
+    font-size: 12px;
+    border-radius: 999px;
+  }
+}
 
   </style>
 </head>
