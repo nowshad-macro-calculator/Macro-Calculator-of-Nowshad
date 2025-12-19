@@ -1738,7 +1738,6 @@ let FOOD = {
       g:{P:2.7/100,C:28/100,F:0.3/100,K:130/100},
       plate:{P:8,C:90,F:1,K:420}
   }, source:"USDA + portion est", confidence:"Medium" },
-  "Plain Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
   "Bhuna Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:16,C:75,F:18,K:520} }, source:"BD home avg", confidence:"Low" },
   "Chicken Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:25,C:85,F:18,K:650} }, source:"BD restaurant avg", confidence:"Low" },
   "Kacchi Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:28,C:90,F:28,K:800} }, source:"BD restaurant avg", confidence:"Low" },
@@ -1786,11 +1785,18 @@ let CATEGORY_ITEMS = {
   ],
   "Meat": ["Beef (cooked)","Mutton (cooked)","Lamb (cooked)","Duck (cooked)"],
   "Fish": ["Fish (generic)","Hilsa Fish"],
+  "Eggs & Dairy": ["Egg (whole)","Egg White","Yogurt / Curd"],
   "Daal / Lentils": ["Daal (cooked)","Daal (fried/tadka)"],
-  "Rice & Meals": [
-    "Rice (cooked)","Plain Khichuri","Bhuna Khichuri",
-    "Chicken Biryani","Kacchi Biryani","Beef Biryani"
-  ],
+  "Carbs": [
+  "Rice (cooked)"
+],
+"Meals": [
+  "Bhuna Khichuri",
+  "Chicken Biryani",
+  "Kacchi Biryani",
+  "Beef Biryani"
+],
+
   "Roti / Bread": ["Roti","Paratha"],
   "Vegetables": ["Mixed Vegetables","Salad"],
   "Fruits": ["Banana","Apple","Orange","Mango"],
@@ -1903,7 +1909,6 @@ const FOOD_PATCH_1 = {
   // popular BD meals
   "Chicken Biryani (heavy)": { unitOptions:["plate"], perUnit:{ plate:{P:30,C:95,F:22,K:760} }, source:"BD restaurant avg", confidence:"Low" },
   "Kacchi Biryani (half plate)": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:45,F:14,K:400} }, source:"portion est", confidence:"Low" },
-  "Khichuri (plain)": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
 
   // nuts + dates (commonly missing)
   "Cashews": { unitOptions:["g"], perUnit:{ g:{P:18.2/100,C:30.2/100,F:43.9/100,K:553/100} }, source:"USDA", confidence:"High" },
@@ -1920,7 +1925,7 @@ const FOOD_PATCH_1 = {
 
 const CATEGORY_PATCH_1 = {
   "Chicken (Parts)": ["Chicken Thigh (cooked)","Chicken Wing (cooked)","Chicken Leg/Drumstick (cooked)"],
-  "Meals (BD)": ["Chicken Biryani","Chicken Biryani (heavy)","Kacchi Biryani","Kacchi Biryani (half plate)","Beef Biryani","Khichuri (plain)","Plain Khichuri","Bhuna Khichuri"],
+  "Meals (BD)": ["Chicken Biryani","Chicken Biryani (heavy)","Kacchi Biryani","Kacchi Biryani (half plate)","Beef Biryani","Bhuna Khichuri"],
   "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
   "Drinks": ["Coffee w/ Milk + Sugar"]
 };
@@ -2069,7 +2074,7 @@ const CATEGORY_PATCH_3 = {
     "Burger King Double Whopper",
     "KFC Chicken Bucket (8 pcs estimate)"
   ],
-  "Carbs (BD)": ["Polau / Pulao"],
+  "Carbs": ["Polau / Pulao"],
   "BD Takeout": ["Chilox Burger (avg)", "Madchef Burger (avg)"],
   "Drinks": ["Coke (330ml can)", "Sprite (330ml can)", "Diet Coke (330ml can)"]
 };
@@ -2339,8 +2344,7 @@ const FOOD_PATCH_X = {
 const CATEGORY_PATCH_X = {
   "Fats & Oils": ["Butter","Ghee","Olive Oil","Soybean Oil"],
   "Cheese & Dairy": ["Cheddar Cheese","Mozzarella Cheese","Processed Cheese Slice"],
-  "Vegetables": ["Mushroom","Avocado","Potato (boiled)"],
-  "Potato": ["Potato (boiled)","Potato (fried/fries)"],
+ "Vegetables": ["Mushroom","Avocado","Potato (boiled)","Potato (fried/fries)"],
   "Snacks": ["Potato Chips","Popcorn (air popped)","Popcorn (buttered)","Chanachur"],
   "BD Snacks": ["Singara","Samosa (BD)","Chanachur"]
 };
