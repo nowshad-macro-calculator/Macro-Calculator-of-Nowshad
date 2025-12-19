@@ -356,6 +356,31 @@ input, select, textarea, button {
   max-width: 100%;
   box-sizing: border-box;
 }
+/* =====================================================
+   FIX: Food Log buttons cut on mobile
+   Stack buttons vertically
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+  /* Wrapper that holds Add Entry + Add Custom Food */
+  .btnRow,
+  .buttonRow,
+  .actionsRow,
+  .twoBtnRow {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  /* Buttons must be full width */
+  .btnRow .btn,
+  .buttonRow .btn,
+  .actionsRow .btn,
+  .twoBtnRow .btn {
+    width: 100% !important;
+  }
+}
 
 
   </style>
