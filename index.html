@@ -381,6 +381,21 @@ input, select, textarea, button {
     width: 100% !important;
   }
 }
+/* =====================================================
+   FIX: Food Log action buttons cut on mobile
+   Targets ONLY the Add Entry + Add Custom Food row
+   ===================================================== */
+@media (max-width: 768px) {
+
+  /* This matches your exact wrapper: <div class="row cols2"> */
+  #page-food .row.cols2 {
+    grid-template-columns: 1fr !important;  /* stack vertically */
+  }
+
+  #page-food .row.cols2 .btn {
+    width: 100% !important;
+  }
+}
 
 
   </style>
