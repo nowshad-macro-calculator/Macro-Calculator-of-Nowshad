@@ -1714,6 +1714,27 @@ let FOOD = {
   "Chicken Wing": { unitOptions:["g"], perUnit:{ g:{P:24/100,C:0,F:13/100,K:203/100} }, source:"USDA avg", confidence:"High" },
   "Chicken (with skin)": { unitOptions:["g"], perUnit:{ g:{P:23/100,C:0,F:14/100,K:215/100} }, source:"USDA avg", confidence:"High" },
   /* ===== BREAD & BUN (CARBS) ===== */
+  /* ===== BREAD (WHITE vs BROWN) ===== */
+
+  "White Bread Slice": {
+    unitOptions:["pcs","g"],
+    perUnit:{
+      pcs:{P:3, C:15, F:1.2, K:80},
+      g:{P:0.09, C:0.45, F:0.035, K:2.65}
+    },
+    source:"USDA/bakery avg",
+    confidence:"Medium"
+  },
+
+  "Brown Bread Slice": {
+    unitOptions:["pcs","g"],
+    perUnit:{
+      pcs:{P:4, C:14, F:1.4, K:85},
+      g:{P:0.11, C:0.41, F:0.04, K:2.45}
+    },
+    source:"USDA/bakery avg",
+    confidence:"Medium"
+  },
 
   "Bread Slice": {
     unitOptions:["pcs","g"],
@@ -1842,9 +1863,11 @@ let CATEGORY_ITEMS = {
   "Polau / Pulao",
   "Roti",
   "Paratha",
-  "Bread Slice",
+  "White Bread Slice",
+  "Brown Bread Slice",
   "Butter Bun"
 ],
+
 
 
   "Roti / Bread": ["Roti","Paratha"],
