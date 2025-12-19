@@ -396,51 +396,6 @@ input, select, textarea, button {
     width: 100% !important;
   }
 }
-/* =====================================================
-   FINAL FIX: Food Log action buttons inside cols2 row
-   ===================================================== */
-
-/* Desktop: allow normal layout */
-.foodActionStack {
-  display: flex;
-  gap: 12px;
-}
-
-/* Mobile fixes */
-@media (max-width: 768px) {
-
-  /* Neutralize the 2-column grid ONLY for this row */
-  .row.cols2 > .foodActionStack {
-    grid-column: 1 / -1;     /* span full width */
-  }
-
-  .foodActionStack {
-    flex-direction: column; /* stack buttons */
-  }
-
-  .foodActionStack .btn {
-    width: 100%;
-  }
-}
-/* =====================================================
-   Mobile: prevent button label clipping
-   ===================================================== */
-@media (max-width: 768px) {
-  button, .btn {
-    width: 100%;
-    box-sizing: border-box;
-    text-align: center !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-@media (max-width: 768px) {
-  .foodActionStack button,
-  .foodActionStack .btn {
-    flex: 0 0 auto;
-  }
-}
 
 
   </style>
@@ -907,10 +862,8 @@ input, select, textarea, button {
         </div>
 
         <div class="row cols2" style="margin-top:10px">
-          <div class="foodActionStack">
           <button class="btn" onclick="addEntry()">Add Entry</button>
           <button class="btn" onclick="openCustomFoodPanel()">Add Custom Food</button>
-          </div>
         </div>
 
         <div class="pill" style="margin-top:10px">
