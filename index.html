@@ -477,7 +477,7 @@ nav a, nav button,
 
 html, body {
   max-width: 100% !important;
-  overflow-x: hidden !important;
+ 
 }
 
 /* Any “row” wrappers that may be fixed-width */
@@ -491,6 +491,90 @@ html, body {
 input, select, textarea, button {
   max-width: 100% !important;
   box-sizing: border-box !important;
+}
+/* =====================================================
+   PATCH-FIX-A: UNLOCK MOBILE VIEWPORT (CRITICAL)
+   Paste LAST inside <style>
+   ===================================================== */
+
+/* ❌ NEVER lock viewport on mobile */
+html, body {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  touch-action: pan-x pan-y !important;
+}
+
+/* ❌ Remove forced clipping from app wrappers */
+.wrap,
+.container,
+.page,
+.pageWrap,
+.content,
+.contentWrap {
+  overflow: visible !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* ✅ Allow pinch-zoom and full scroll */
+@media (max-width: 768px) {
+  * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+/* =====================================================
+   PATCH-FIX-B: MOBILE TOP MENU (SAFE VERSION)
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+  /* Header must NEVER clip children */
+  header,
+  .header,
+  .topbar,
+  .header-card {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Menu layout = 2x2 grid (NO scroll, NO clip) */
+  .tabs,
+  nav,
+  .nav {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Buttons scale properly */
+  .tabbtn,
+  nav a,
+  nav button {
+    width: 100% !important;
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    padding: 12px 10px !important;
+    text-align: center !important;
+  }
+}
+/* =====================================================
+   PATCH-FIX-C: FOOD LOG SAFE SCROLL
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+  /* Tables must scroll, NOT break layout */
+  .tableWrap,
+  .entriesTable,
+  .dailyEntries {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 720px !important;
+  }
 }
 
   </style>
