@@ -414,6 +414,84 @@
     font-size: 12px !important;
   }
 }
+/* =========================
+   PATCH 2.3: Force header/nav to behave same on every page
+   Put at VERY BOTTOM of <style>
+   ========================= */
+
+:root { --appMax: 980px; }
+
+/* 1) Make your top header/card always full-width + same max width */
+.header-card, .top-card, header, .header, .topHeader, .topBar {
+  width: 100% !important;
+  max-width: var(--appMax) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* 2) Force nav container to not clip items */
+nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
+  width: 100% !important;
+  max-width: var(--appMax) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* 3) Make nav buttons flexible so Food Log/Lifestyle can't “shrink” them */
+nav a, nav button,
+.nav a, .nav button,
+.menu a, .menu button,
+.tabs a, .tabs button,
+.nav-tabs a, .nav-tabs button,
+.tabbtn, .tabBtn {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* 4) Mobile: always show all tabs (same as Dashboard/Profile) */
+@media (max-width: 720px){
+  nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  nav a, nav button,
+  .nav a, .nav button,
+  .menu a, .menu button,
+  .tabs a, .tabs button,
+  .nav-tabs a, .nav-tabs button,
+  .tabbtn, .tabBtn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px 10px !important;
+  }
+}
+/* =========================
+   PATCH 2.4: Stop Food Log/Lifestyle from breaking viewport width
+   ========================= */
+
+html, body {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Any “row” wrappers that may be fixed-width */
+.container, .wrap, .page, .pageWrap, .content, .contentWrap {
+  width: 100% !important;
+  max-width: var(--appMax) !important;
+  box-sizing: border-box !important;
+}
+
+/* Inputs/selects should never exceed screen */
+input, select, textarea, button {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
 
   </style>
 </head>
