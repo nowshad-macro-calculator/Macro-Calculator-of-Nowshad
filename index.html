@@ -611,6 +611,19 @@
             <input type="number" min="0" step="0.1" id="entryQty" placeholder="Enter qty">
           </div>
           <div>
+            <!-- >>> START PATCH: Oil absorption inputs -->
+<div class="row cols2" style="margin-top:10px">
+  <div>
+    <label>Cooking oil used (grams) — optional</label>
+    <input type="number" min="0" step="1" id="oilUsedG" placeholder="e.g., 10">
+  </div>
+  <div>
+    <label>Oil absorption (%) — optional</label>
+    <input type="number" min="0" max="100" step="1" id="oilAbsorbPct" placeholder="e.g., 30">
+  </div>
+</div>
+<!-- <<< END PATCH: Oil absorption inputs -->
+
             <label>Portion presets</label>
             <div class="chipRow">
               <button class="chipBtn" type="button" onclick="applyPortionPreset(0.5)">½ plate</button>
@@ -1108,7 +1121,7 @@ function fixProfileIfNeeded(p){
   return p;
 }
 
-  function getProfileDraft(){
+function getProfileDraft(){
   const sex=$("p_sex").value;
   const age=n($("p_age").value);
 
@@ -1588,6 +1601,185 @@ const CATEGORY_PATCH_1 = {
   "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
   "Drinks": ["Coffee w/ Milk + Sugar"]
 };
+/* ===========================
+   >>> START PATCH X: Oils/Fats + Dairy + Veg + Snacks + Oil Absorption
+=========================== */
+
+const FOOD_PATCH_X = {
+  /* ===== FATS & OILS ===== */
+  "Butter": {
+    unitOptions:["g","tbsp"],
+    perUnit:{
+      g:{P:0.1,C:0,F:0.81,K:7.17},
+      tbsp:{P:0.1,C:0,F:11.5,K:102}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Ghee": {
+    unitOptions:["g","tbsp"],
+    perUnit:{
+      g:{P:0,C:0,F:1,K:9},
+      tbsp:{P:0,C:0,F:13.5,K:120}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Olive Oil": {
+    unitOptions:["g","tbsp"],
+    perUnit:{
+      g:{P:0,C:0,F:1,K:9},
+      tbsp:{P:0,C:0,F:13.5,K:119}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Soybean Oil": {
+    unitOptions:["g","tbsp"],
+    perUnit:{
+      g:{P:0,C:0,F:1,K:9},
+      tbsp:{P:0,C:0,F:13.6,K:120}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+
+  /* ===== CHEESE & DAIRY ===== */
+  "Cheddar Cheese": {
+    unitOptions:["g","slice"],
+    perUnit:{
+      g:{P:0.25,C:0.013,F:0.33,K:4.02},
+      slice:{P:7,C:1,F:9,K:113}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Mozzarella Cheese": {
+    unitOptions:["g","slice"],
+    perUnit:{
+      g:{P:0.22,C:0.022,F:0.22,K:2.8},
+      slice:{P:6,C:1,F:6,K:85}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Processed Cheese Slice": {
+    unitOptions:["slice"],
+    perUnit:{ slice:{P:4,C:2,F:5,K:70} },
+    source:"Label avg",
+    confidence:"Medium"
+  },
+
+  /* ===== VEGETABLES ===== */
+  "Mushroom": {
+    unitOptions:["g","cup"],
+    perUnit:{
+      g:{P:0.031,C:0.033,F:0.003,K:0.22},
+      cup:{P:2.2,C:2.3,F:0.2,K:15}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Avocado": {
+    unitOptions:["g","pcs"],
+    perUnit:{
+      g:{P:0.02,C:0.085,F:0.15,K:1.6},
+      pcs:{P:3,C:12,F:21,K:234}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+
+  /* ===== POTATO: BOILED vs FRIED ===== */
+  "Potato (boiled)": {
+    unitOptions:["g","pcs"],
+    perUnit:{
+      g:{P:0.02,C:0.20,F:0.001,K:0.87},
+      pcs:{P:4,C:37,F:0.2,K:160}
+    },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Potato (fried/fries)": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.035,C:0.41,F:0.15,K:3.12},
+      serving:{P:3,C:35,F:15,K:320}
+    },
+    source:"Restaurant avg",
+    confidence:"Medium"
+  },
+
+  /* ===== POPULAR SNACKS ===== */
+  "Potato Chips": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.06,C:0.53,F:0.35,K:5.36},
+      serving:{P:2,C:15,F:10,K:160}
+    },
+    source:"Label avg",
+    confidence:"Medium"
+  },
+  "Popcorn (air popped)": {
+    unitOptions:["cup"],
+    perUnit:{ cup:{P:1.2,C:6,F:0.1,K:31} },
+    source:"USDA",
+    confidence:"High"
+  },
+  "Popcorn (buttered)": {
+    unitOptions:["cup"],
+    perUnit:{ cup:{P:1.5,C:7,F:4,K:75} },
+    source:"Label avg",
+    confidence:"Medium"
+  },
+
+  /* ===== BANGLADESHI SNACKS ===== */
+  "Singara": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:4,C:22,F:10,K:190} },
+    source:"BD street food avg",
+    confidence:"Low"
+  },
+  "Samosa (BD)": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:3,C:18,F:9,K:165} },
+    source:"BD street food avg",
+    confidence:"Low"
+  },
+  "Chanachur": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.12,C:0.55,F:0.25,K:4.8},
+      serving:{P:3,C:14,F:6,K:120}   // ~25g
+    },
+    source:"Label avg / BD brands",
+    confidence:"Medium"
+  }
+};
+
+const CATEGORY_PATCH_X = {
+  "Fats & Oils": ["Butter","Ghee","Olive Oil","Soybean Oil"],
+  "Cheese & Dairy": ["Cheddar Cheese","Mozzarella Cheese","Processed Cheese Slice"],
+  "Vegetables": ["Mushroom","Avocado","Potato (boiled)"],
+  "Potato": ["Potato (boiled)","Potato (fried/fries)"],
+  "Snacks": ["Potato Chips","Popcorn (air popped)","Popcorn (buttered)","Chanachur"],
+  "BD Snacks": ["Singara","Samosa (BD)","Chanachur"]
+};
+
+/* Oil absorption helpers */
+function calcAbsorbedOilGrams(oilUsedGrams, absorptionPct){
+  const g = n(oilUsedGrams);
+  const pct = clamp(n(absorptionPct), 0, 100);
+  return (g * pct) / 100;
+}
+function oilMacrosFromAbsorbed(absorbedOilGrams){
+  const g = Math.max(0, n(absorbedOilGrams));
+  return { P:0, C:0, F:g, K:g*9 };
+}
+
+/* ===========================
+   <<< END PATCH X
+=========================== */
 
 /* PATCH 2: Split Fruits from Snacks (already separate; keep, but also ensure category arrays are clean) */
 function applyFruitSnackSplit(){
@@ -1608,6 +1800,16 @@ function saveCustomFoods(map){
 function applyAllFoodPatches(){
   // 1) Merge food extensions (no overwrite)
   Object.keys(FOOD_PATCH_1).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_1[k]; });
+  // X) Merge PATCH X foods (no overwrite)
+  Object.keys(FOOD_PATCH_X).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_X[k]; });
+
+  // X) Merge PATCH X categories
+  Object.keys(CATEGORY_PATCH_X).forEach(cat=>{
+    if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat]=[];
+    CATEGORY_PATCH_X[cat].forEach(item=>{
+      if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
+    });
+  });
 
   // 1) Merge category extensions
   Object.keys(CATEGORY_PATCH_1).forEach(cat=>{
@@ -1755,8 +1957,16 @@ function computeTotalsFromEntries(dateKey){
   const day=getDayLog(dateKey);
   let total={P:0,C:0,F:0,K:0};
   day.entries.forEach(e=>{
-    const t = computeFood(e.food, n(e.qty), e.unit);
-    total.P += t.P; total.C += t.C; total.F += t.F; total.K += t.K;
+        const t = computeFood(e.food, n(e.qty), e.unit);
+
+    const absorbed = calcAbsorbedOilGrams(e.oilUsedG || 0, e.oilAbsorbPct || 0);
+    const oilT = oilMacrosFromAbsorbed(absorbed);
+
+    total.P += (t.P + oilT.P);
+    total.C += (t.C + oilT.C);
+    total.F += (t.F + oilT.F);
+    total.K += (t.K + oilT.K);
+
   });
   return total;
 }
@@ -1772,7 +1982,23 @@ function addEntry(){
   const qty=n($("entryQty").value);
   if(!food || qty<=0){ alert("Select a food and enter a quantity > 0."); return; }
 
-  day.entries.push({ id: uid(), meal: $("mealType").value, category, food, unit, qty });
+    const oilUsedG = n($("oilUsedG") ? $("oilUsedG").value : 0);
+  const oilAbsorbPct = n($("oilAbsorbPct") ? $("oilAbsorbPct").value : 0);
+
+  day.entries.push({
+    id: uid(),
+    meal: $("mealType").value,
+    category,
+    food,
+    unit,
+    qty,
+    oilUsedG,
+    oilAbsorbPct
+  });
+
+  if($("oilUsedG")) $("oilUsedG").value = "";
+  if($("oilAbsorbPct")) $("oilAbsorbPct").value = "";
+
   setDayLog(dateKey, day);
 
   $("entryQty").value="";
