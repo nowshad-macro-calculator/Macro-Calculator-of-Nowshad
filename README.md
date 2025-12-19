@@ -72,7 +72,7 @@
       .row.cols3{grid-template-columns:1fr 1fr 1fr}
     }
     label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
-    input, select{
+    input, select, textarea{
       width:100%;
       padding:11px 12px;
       border-radius:12px;
@@ -82,6 +82,7 @@
       outline:none;
       font-size:14px;
     }
+    textarea{min-height:74px; resize:vertical}
     input::placeholder{color:rgba(238,243,255,.55)}
     input[readonly]{opacity:.95}
     .btn{
@@ -151,7 +152,7 @@
       overflow:auto;
       background:rgba(255,255,255,.06);
     }
-    table{width:100%; border-collapse:collapse; min-width:760px;}
+    table{width:100%; border-collapse:collapse; min-width:920px;}
     th, td{
       padding:10px 10px;
       border-bottom:1px solid rgba(255,255,255,.10);
@@ -171,6 +172,12 @@
     .actionBtn:hover{background:rgba(255,255,255,.14)}
     .twoBtnRow{display:flex; gap:10px; flex-wrap:wrap}
     .smallBtn{padding:9px 10px; font-size:12px}
+    .chipRow{display:flex; gap:8px; flex-wrap:wrap}
+    .chipBtn{
+      padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.10); color:var(--text); cursor:pointer; font-weight:800; font-size:12px;
+    }
+    .chipBtn:hover{background:rgba(255,255,255,.14)}
   </style>
 </head>
 
@@ -203,7 +210,7 @@
         </div>
 
         <div class="warnNote" id="needProfileNote" style="display:none;">
-          No saved profile selected. Go to <b>Profile</b> tab → create/select a profile → press <b>Calculate Targets</b> or <b>Save Profile</b>.
+          No saved profile selected. Go to <b>Profile</b> tab → create/select a profile → press <b>Calculate Targets</b> (or Save Profile).
         </div>
 
         <div class="divider"></div>
@@ -266,7 +273,6 @@
 
         <div class="divider"></div>
 
-        <!-- ✅ FIX: Lifestyle summary on Dashboard -->
         <h3>Lifestyle Summary (Today)</h3>
         <div class="sub">This pulls from Lifestyle tab for the same “day start hour”.</div>
         <div class="row cols2" style="margin-top:10px">
@@ -314,7 +320,7 @@
 
       <div class="card">
         <h2>Macro Chart</h2>
-        <div class="sub">Stable chart on scroll. Colors are distinct and NOT blue.</div>
+        <div class="sub">Colors are distinct (no blue).</div>
         <div class="chartBox">
           <canvas id="macroChart"></canvas>
         </div>
@@ -357,15 +363,19 @@
           </div>
         </div>
 
-        <div class="row cols2" style="margin-top:10px">
+        <div class="row cols3" style="margin-top:10px">
           <button class="btn" onclick="createProfile()">Create Profile</button>
+          <button class="btn" onclick="calculateTargetsOnly()">Calculate Targets</button>
           <button class="btn danger" onclick="resetCurrentProfile()">Reset Current Profile</button>
         </div>
 
         <div class="divider"></div>
 
         <h3>Profile Details</h3>
-        <div class="sub">Press <b>Calculate Targets</b> to compute instantly (no save needed). Save only to keep it permanently.</div>
+        <div class="sub">
+          You can calculate targets without saving. Save only to keep it permanently.
+          <br><b>Day starts at (hour)</b> means: your “today” starts at that hour (e.g., 4 = day runs 4:00 AM → 3:59 AM).
+        </div>
 
         <div class="divider"></div>
 
@@ -476,7 +486,10 @@
         <div class="divider"></div>
 
         <h3>Targets</h3>
-        <div class="sub">Protein auto = weight × multiplier. Calories/Fats/Carbs can be auto OR manual.</div>
+        <div class="sub">
+          Protein auto = weight × multiplier (default 2.2 g/kg).
+          Calories/Fats/Carbs can be auto OR manual (manual stays editable).
+        </div>
 
         <div class="row cols3" style="margin-top:10px">
           <div>
@@ -513,12 +526,12 @@
         <div class="divider"></div>
 
         <div class="row cols2">
-          <button class="btn" onclick="calculateTargetsOnly()">Calculate Targets</button>
           <button class="btn" onclick="saveProfile()">Save Profile</button>
+          <button class="btn danger" onclick="unlockManualTargets()">Unlock Manual Targets</button>
         </div>
 
         <div class="note" id="profileCalcHint" style="display:none;">
-          Targets calculated ✔️ (not saved yet). Click Save Profile to keep permanently.
+          Targets calculated ✔️ (not saved yet). Save Profile to keep permanently.
         </div>
 
         <div class="note" id="profileSaveHint" style="display:none;">
@@ -542,7 +555,7 @@
     <section id="page-food" class="grid cols2 hide" style="margin-top:14px;">
       <div class="card">
         <h2>Food Log (Multiple entries/day)</h2>
-        <div class="sub">Choose Category → Food → Unit → Qty → Add Entry (repeat anytime).</div>
+        <div class="sub">Search + Category + Food → Unit → Qty → Add Entry (repeat anytime).</div>
 
         <div class="divider"></div>
 
@@ -569,11 +582,19 @@
         <div class="divider"></div>
 
         <h3>Add Food Entry</h3>
-        <div class="row cols2" style="margin-top:10px">
+
+        <div class="row cols2">
           <div>
-            <label>Category</label>
+            <label>Search food</label>
+            <input id="foodSearch" placeholder="Search: biryani, dates, chicken..." />
+          </div>
+          <div>
+            <label>Filter (Category)</label>
             <select id="entryCategory"></select>
           </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px">
           <div>
             <label>Food item</label>
             <select id="entryFood"></select>
@@ -582,18 +603,112 @@
             <label>Unit</label>
             <select id="entryUnit"></select>
           </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px">
           <div>
             <label>Quantity</label>
-            <input type="number" min="0" step="1" id="entryQty" placeholder="Enter qty">
+            <input type="number" min="0" step="0.1" id="entryQty" placeholder="Enter qty">
           </div>
           <div>
-            <label>&nbsp;</label>
-            <button class="btn" onclick="addEntry()">Add Entry</button>
+            <label>Portion presets</label>
+            <div class="chipRow">
+              <button class="chipBtn" type="button" onclick="applyPortionPreset(0.5)">½ plate</button>
+              <button class="chipBtn" type="button" onclick="applyPortionPreset(1)">1 plate</button>
+              <button class="chipBtn" type="button" onclick="applyPortionPreset(1.5)">1.5 plate</button>
+            </div>
           </div>
+        </div>
+
+        <div class="row cols2" style="margin-top:10px">
+          <button class="btn" onclick="addEntry()">Add Entry</button>
+          <button class="btn" onclick="openCustomFoodPanel()">Add Custom Food</button>
         </div>
 
         <div class="pill" style="margin-top:10px">
           Instant preview: <b><span id="entryPrevP">0</span>g P</b> • <b><span id="entryPrevF">0</span>g F</b> • <b><span id="entryPrevC">0</span>g C</b> • <b><span id="entryPrevK">0</span> kcal</b>
+          <span style="margin-left:10px">|</span>
+          <span>Source: <b id="entryPrevSrc">—</b></span>
+          <span>Conf: <b id="entryPrevConf">—</b></span>
+        </div>
+
+        <!-- PATCH 4/6: Custom food entry + source/confidence -->
+        <div id="customFoodPanel" class="card hide" style="margin-top:12px; padding:12px; background:rgba(255,255,255,.06);">
+          <h3 style="margin-top:0;">Custom Food Entry</h3>
+          <div class="sub">Add your own food once, then it appears in search + categories. Macros are per selected unit.</div>
+          <div class="divider"></div>
+
+          <div class="row cols2">
+            <div>
+              <label>Food name</label>
+              <input id="cf_name" placeholder="e.g., Kacchi (My portion), Homemade Khichuri">
+            </div>
+            <div>
+              <label>Category</label>
+              <select id="cf_category"></select>
+            </div>
+          </div>
+
+          <div class="row cols3" style="margin-top:10px">
+            <div>
+              <label>Unit</label>
+              <select id="cf_unit">
+                <option value="g">g</option>
+                <option value="pcs">pcs</option>
+                <option value="cup">cup</option>
+                <option value="plate" selected>plate</option>
+                <option value="slice">slice</option>
+                <option value="bowl">bowl</option>
+                <option value="serving">serving</option>
+              </select>
+            </div>
+            <div>
+              <label>Protein (g)</label>
+              <input type="number" min="0" step="0.1" id="cf_p" placeholder="e.g., 25">
+            </div>
+            <div>
+              <label>Carbs (g)</label>
+              <input type="number" min="0" step="0.1" id="cf_c" placeholder="e.g., 85">
+            </div>
+          </div>
+
+          <div class="row cols3" style="margin-top:10px">
+            <div>
+              <label>Fats (g)</label>
+              <input type="number" min="0" step="0.1" id="cf_f" placeholder="e.g., 18">
+            </div>
+            <div>
+              <label>Calories (kcal)</label>
+              <input type="number" min="0" step="1" id="cf_k" placeholder="e.g., 650">
+            </div>
+            <div>
+              <label>Confidence</label>
+              <select id="cf_conf">
+                <option>High</option>
+                <option selected>Medium</option>
+                <option>Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row cols2" style="margin-top:10px">
+            <div>
+              <label>Source tag</label>
+              <input id="cf_source" placeholder="e.g., label, USDA avg, restaurant avg, recipe estimate">
+            </div>
+            <div>
+              <label>Notes (optional)</label>
+              <input id="cf_notes" placeholder="Optional">
+            </div>
+          </div>
+
+          <div class="row cols3" style="margin-top:10px">
+            <button class="btn" onclick="saveCustomFood()">Save Custom Food</button>
+            <button class="btn danger" onclick="resetCustomFoods()">Reset Custom Foods</button>
+            <button class="btn" onclick="closeCustomFoodPanel()">Close</button>
+          </div>
+
+          <div class="note" id="cf_savedNote" style="display:none;">Custom food saved ✔️</div>
         </div>
 
         <div class="divider"></div>
@@ -606,7 +721,7 @@
         <div class="divider"></div>
 
         <h3>Daily Entries</h3>
-        <div class="sub">Edit quantity inline or delete any row.</div>
+        <div class="sub">Edit quantity inline or delete any row. Includes source/confidence.</div>
         <div class="tableWrap" style="margin-top:10px">
           <table>
             <thead>
@@ -620,6 +735,8 @@
                 <th>C (g)</th>
                 <th>F (g)</th>
                 <th>Kcal</th>
+                <th>Source</th>
+                <th>Conf</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -794,10 +911,11 @@
 /* ===========================
    Storage Keys
 =========================== */
-const LS_PROFILES = "nowshad_profiles_v1";
-const LS_ACTIVE_PROFILE = "nowshad_active_profile_v1";
-const LS_LOG = "nowshad_macro_dailylog_v10";
-const LS_LIFE = "nowshad_macro_lifestyle_v10";
+const LS_PROFILES = "nowshad_profiles_v2";
+const LS_ACTIVE_PROFILE = "nowshad_active_profile_v2";
+const LS_LOG = "nowshad_macro_dailylog_v11";
+const LS_LIFE = "nowshad_macro_lifestyle_v11";
+const LS_CUSTOM_FOOD = "nowshad_custom_food_v1";
 
 /* ===== Helpers ===== */
 const $ = (id)=>document.getElementById(id);
@@ -805,8 +923,6 @@ const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 const n = (v)=>isFinite(parseFloat(v)) ? parseFloat(v) : 0;
 const round1 = (x)=>Math.round(x*10)/10;
 const round2 = (x)=>Math.round(x*100)/100;
-function sum(a,b){ return {P:a.P+b.P, C:a.C+b.C, F:a.F+b.F, K:a.K+b.K}; }
-function zero(){ return {P:0,C:0,F:0,K:0}; }
 function uid(){ return (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random()); }
 
 /* ===========================
@@ -875,21 +991,28 @@ function ensureDefaultProfile(){
 
   if(ids.length === 0){
     const id = uid();
-    map[id] = { id, label:"Default", createdAt:Date.now() };
+    map[id] = { id, name:"Default", label:"Default", createdAt:Date.now() };
     saveProfiles(map);
     setActiveProfileId(id);
     return;
   }
-  if(!active || !map[active]){
-    setActiveProfileId(ids[0]);
-  }
+  if(!active || !map[active]) setActiveProfileId(ids[0]);
 }
 
 /* ===========================
-   Manual overrides
+   Manual overrides (targets)
 =========================== */
 function setDirty(id, val=true){ $(id).dataset.dirty = val ? "1" : ""; }
 function isDirty(id){ return $(id).dataset.dirty === "1"; }
+function unlockManualTargets(){
+  // lets user type again even if previously saved/dirty
+  setDirty("p_targetCalories", true);
+  setDirty("p_targetFats", true);
+  setDirty("p_targetCarbs", true);
+  $("profileCalcHint").style.display="none";
+  $("profileSaveHint").style.display="none";
+  alert("Manual targets unlocked. You can edit Calories/Fats/Carbs now.");
+}
 
 /* ===========================
    Unit readers + convert
@@ -930,7 +1053,7 @@ function convertHeight(from,to){
 }
 
 /* ===========================
-   Profile calc
+   Profile calc (works WITHOUT saving)
 =========================== */
 function getProfileDraft(){
   const sex=$("p_sex").value;
@@ -961,8 +1084,12 @@ function getProfileDraft(){
     targetCaloriesAuto = Math.round(tdee + adj);
   }
 
-  const targetCalories = (isDirty("p_targetCalories") && n($("p_targetCalories").value)>0)
-    ? Math.max(800, Math.round(n($("p_targetCalories").value)))
+  const manualCal = n($("p_targetCalories").value);
+  const manualFat = n($("p_targetFats").value);
+  const manualCarb = n($("p_targetCarbs").value);
+
+  const targetCalories = (isDirty("p_targetCalories") && manualCal>0)
+    ? Math.max(800, Math.round(manualCal))
     : targetCaloriesAuto;
 
   let fatPct = 0.30;
@@ -971,11 +1098,10 @@ function getProfileDraft(){
   if(preset==="higherProtein") fatPct = 0.25;
 
   let fatsAuto = 0;
-  if(targetCalories>0){
-    fatsAuto = Math.round((targetCalories * fatPct)/9);
-  }
-  let targetFats = (isDirty("p_targetFats") && n($("p_targetFats").value)>0)
-    ? Math.max(0, Math.round(n($("p_targetFats").value)))
+  if(targetCalories>0) fatsAuto = Math.round((targetCalories * fatPct)/9);
+
+  let targetFats = (isDirty("p_targetFats") && manualFat>=0)
+    ? Math.max(0, Math.round(manualFat))
     : fatsAuto;
 
   let carbsAuto = 0;
@@ -987,8 +1113,9 @@ function getProfileDraft(){
     }
     carbsAuto = Math.max(0, Math.round(remaining/4));
   }
-  const targetCarbs = (isDirty("p_targetCarbs"))
-    ? Math.max(0, Math.round(n($("p_targetCarbs").value)))
+
+  const targetCarbs = (isDirty("p_targetCarbs") && manualCarb>=0)
+    ? Math.max(0, Math.round(manualCarb))
     : carbsAuto;
 
   return {
@@ -1055,6 +1182,7 @@ function updateProfilePreviewOnly(){
 
   $("p_targetProtein").value = p.targetProtein ? p.targetProtein : "";
 
+  // auto-fill only if NOT dirty (so manual stays editable)
   if(!isDirty("p_targetCalories") && p.targetCalories) $("p_targetCalories").value = p.targetCalories;
   if(!isDirty("p_targetFats") && p.targetFats>=0) $("p_targetFats").value = p.targetFats;
   if(!isDirty("p_targetCarbs") && p.targetCarbs>=0) $("p_targetCarbs").value = p.targetCarbs;
@@ -1063,6 +1191,7 @@ function updateProfilePreviewOnly(){
 }
 
 function calculateTargetsOnly(){
+  // Make sure targets compute even before saving
   setDirty("p_targetCalories", false);
   setDirty("p_targetFats", false);
   setDirty("p_targetCarbs", false);
@@ -1129,6 +1258,7 @@ function loadProfileToUI(){
   setDirty("p_targetFats", !!p.dirtyFats);
   setDirty("p_targetCarbs", !!p.dirtyCarbs);
 
+  // keep manual values if dirty, else blank so auto shows
   $("p_targetCalories").value = p.dirtyCalories && p.targetCalories ? Math.round(p.targetCalories) : "";
   $("p_targetFats").value = p.dirtyFats && (p.targetFats>=0) ? Math.round(p.targetFats) : "";
   $("p_targetCarbs").value = p.dirtyCarbs && (p.targetCarbs>=0) ? Math.round(p.targetCarbs) : "";
@@ -1183,6 +1313,9 @@ function createProfile(){
   $("newProfileName").value = "";
   rebuildProfileSelect();
   loadProfileToUI();
+
+  $("profileCalcHint").style.display="none";
+  $("profileSaveHint").style.display="none";
   scheduleRefresh();
 }
 
@@ -1212,6 +1345,9 @@ function resetCurrentProfile(){
   $("p_targetProtein").value="";
 
   $("profileSavedNote").style.display="none";
+  $("profileCalcHint").style.display="none";
+  $("profileSaveHint").style.display="none";
+
   toggleHeightUI(false);
   toggleWeightUI(false);
   updateProfilePreviewOnly();
@@ -1230,12 +1366,13 @@ function resetCurrentProfile(){
   $(id).addEventListener("input", ()=>{
     setDirty(id, true);
     $("profileCalcHint").style.display="none";
+    $("profileSaveHint").style.display="none";
     scheduleRefresh();
   });
 });
 
 /* ===========================
-   Day start hour
+   Day start hour (defines "today")
 =========================== */
 function getDefaultLogDate(profile){
   const now=new Date();
@@ -1246,7 +1383,7 @@ function getDefaultLogDate(profile){
 }
 
 /* ===========================
-   Food Logs
+   Food Logs storage
 =========================== */
 function loadAllLogs(){ try{ return JSON.parse(localStorage.getItem(LS_LOG) || "{}"); }catch(e){ return {}; } }
 function saveAllLogs(obj){ localStorage.setItem(LS_LOG, JSON.stringify(obj)); }
@@ -1254,93 +1391,206 @@ function getDayLog(dateKey){ const all=loadAllLogs(); return all[dateKey] || { e
 function setDayLog(dateKey, dayLog){ const all=loadAllLogs(); all[dateKey]=dayLog; saveAllLogs(all); }
 
 /* ===========================
-   FOOD DATABASE
-   (popular items, Fruits separated, Drinks separate, Desserts added, Daal added)
+   FOOD DB (Base) + PATCHES 1..6
+   Patch list:
+   1) Missing foods (BD meals + chicken parts + nuts/dates)
+   2) Fruits separated from Snacks
+   3) Search + filter works across categories (incl. All)
+   4) Custom food entry (saved to localStorage)
+   5) Portion presets (½, 1, 1.5 plate)
+   6) Confidence score + source tag shown in UI/table
 =========================== */
-const FOOD = {
-  // Proteins
-  "Chicken Breast": { unitOptions:["g"], perUnit:{g:{P:31/100, C:0, F:3.6/100, K:165/100}} },
-  "Beef (cooked)": { unitOptions:["g"], perUnit:{g:{P:26/100, C:0, F:15/100, K:250/100}} },
-  "Fish (generic)": { unitOptions:["g"], perUnit:{g:{P:22/100, C:0, F:5/100, K:120/100}} },
-  "Egg": { unitOptions:["pcs"], perUnit:{pcs:{P:6, C:0.6, F:5, K:72}} },
-  "Yogurt / Curd": { unitOptions:["g"], perUnit:{g:{P:3.5/100, C:4.7/100, F:3.3/100, K:61/100}} },
 
-  // Daal / Lentils
-  "Daal (cooked, 1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:18, C:40, F:1, K:230}} },
-  "Daal (cooked, 1/2 cup)": { unitOptions:["half_cup"], perUnit:{half_cup:{P:9, C:20, F:0.5, K:115}} },
+/* Base foods (you can expand anytime) */
+let FOOD = {
+  // Chicken & Poultry
+  "Chicken Breast (skinless)": { unitOptions:["g"], perUnit:{ g:{P:31/100,C:0,F:3.6/100,K:165/100} }, source:"USDA avg", confidence:"High" },
+  "Chicken Thigh (skinless)": { unitOptions:["g"], perUnit:{ g:{P:26/100,C:0,F:8/100,K:180/100} }, source:"USDA avg", confidence:"High" },
+  "Chicken Leg (drumstick)": { unitOptions:["g"], perUnit:{ g:{P:25/100,C:0,F:7/100,K:170/100} }, source:"USDA avg", confidence:"High" },
+  "Chicken Wing": { unitOptions:["g"], perUnit:{ g:{P:24/100,C:0,F:13/100,K:203/100} }, source:"USDA avg", confidence:"High" },
+  "Chicken (with skin)": { unitOptions:["g"], perUnit:{ g:{P:23/100,C:0,F:14/100,K:215/100} }, source:"USDA avg", confidence:"High" },
 
-  // Carbs (basic)
+  // Meat
+  "Beef (cooked)": { unitOptions:["g"], perUnit:{ g:{P:26/100,C:0,F:15/100,K:250/100} }, source:"USDA avg", confidence:"High" },
+  "Mutton (cooked)": { unitOptions:["g"], perUnit:{ g:{P:25/100,C:0,F:21/100,K:294/100} }, source:"USDA avg", confidence:"High" },
+  "Lamb (cooked)": { unitOptions:["g"], perUnit:{ g:{P:25/100,C:0,F:20/100,K:282/100} }, source:"USDA avg", confidence:"High" },
+  "Duck (cooked)": { unitOptions:["g"], perUnit:{ g:{P:19/100,C:0,F:28/100,K:337/100} }, source:"USDA avg", confidence:"High" },
+
+  // Fish
+  "Fish (generic)": { unitOptions:["g"], perUnit:{ g:{P:22/100,C:0,F:5/100,K:120/100} }, source:"USDA avg", confidence:"Medium" },
+  "Hilsa Fish": { unitOptions:["g"], perUnit:{ g:{P:22/100,C:0,F:12/100,K:180/100} }, source:"BD fish avg", confidence:"Medium" },
+
+  // Eggs & Dairy
+  "Egg (whole)": { unitOptions:["pcs"], perUnit:{ pcs:{P:6,C:0.6,F:5,K:72} }, source:"USDA", confidence:"High" },
+  "Egg White": { unitOptions:["pcs"], perUnit:{ pcs:{P:3.6,C:0.2,F:0,K:17} }, source:"USDA", confidence:"High" },
+  "Yogurt / Curd": { unitOptions:["g"], perUnit:{ g:{P:3.5/100,C:4.7/100,F:3.3/100,K:61/100} }, source:"USDA avg", confidence:"High" },
+
+  // Daal
+  "Daal (cooked)": { unitOptions:["cup"], perUnit:{ cup:{P:18,C:40,F:1,K:230} }, source:"lentils avg", confidence:"Medium" },
+  "Daal (fried/tadka)": { unitOptions:["cup"], perUnit:{ cup:{P:17,C:38,F:6,K:290} }, source:"lentils+oil avg", confidence:"Medium" },
+
+  // Rice & Meals
   "Rice (cooked)": { unitOptions:["g","plate"], perUnit:{
-      g:{P:2.7/100, C:28/100, F:0.3/100, K:130/100},
-      plate:{P:8, C:90, F:1, K:420}
-  }},
-  "Roti": { unitOptions:["pcs"], perUnit:{pcs:{P:3.5, C:18, F:3, K:120}} },
-  "Paratha": { unitOptions:["pcs"], perUnit:{pcs:{P:6, C:30, F:12, K:260}} },
-  "Oats (dry)": { unitOptions:["g"], perUnit:{g:{P:16.9/100, C:66.3/100, F:6.9/100, K:389/100}} },
+      g:{P:2.7/100,C:28/100,F:0.3/100,K:130/100},
+      plate:{P:8,C:90,F:1,K:420}
+  }, source:"USDA + portion est", confidence:"Medium" },
+  "Plain Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
+  "Bhuna Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:16,C:75,F:18,K:520} }, source:"BD home avg", confidence:"Low" },
+  "Chicken Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:25,C:85,F:18,K:650} }, source:"BD restaurant avg", confidence:"Low" },
+  "Kacchi Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:28,C:90,F:28,K:800} }, source:"BD restaurant avg", confidence:"Low" },
+  "Beef Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:30,C:85,F:25,K:780} }, source:"BD restaurant avg", confidence:"Low" },
+
+  // Roti
+  "Roti": { unitOptions:["pcs"], perUnit:{ pcs:{P:3.5,C:18,F:3,K:120} }, source:"avg", confidence:"Medium" },
+  "Paratha": { unitOptions:["pcs"], perUnit:{ pcs:{P:6,C:30,F:12,K:260} }, source:"avg", confidence:"Medium" },
 
   // Vegetables
-  "Salad": { unitOptions:["cup"], perUnit:{cup:{P:0.5, C:2, F:0.1, K:15}} },
-  "Vegetables (mixed)": { unitOptions:["cup"], perUnit:{cup:{P:2, C:5, F:0.2, K:35}} },
+  "Mixed Vegetables": { unitOptions:["cup"], perUnit:{ cup:{P:2,C:5,F:0.2,K:35} }, source:"avg", confidence:"Medium" },
+  "Salad": { unitOptions:["cup"], perUnit:{ cup:{P:0.5,C:2,F:0.1,K:15} }, source:"avg", confidence:"High" },
 
-  // Fats
-  "Butter": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0.12, C:0.01, F:11.5, K:102}} },
-  "Olive Oil": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:13.5, K:119}} },
-  "Ghee": { unitOptions:["tbsp"], perUnit:{tbsp:{P:0, C:0, F:14, K:126}} },
+  // Fruits
+  "Banana": { unitOptions:["pcs"], perUnit:{ pcs:{P:1.3,C:27,F:0.4,K:105} }, source:"USDA", confidence:"High" },
+  "Apple": { unitOptions:["pcs"], perUnit:{ pcs:{P:0.5,C:25,F:0.3,K:95} }, source:"USDA", confidence:"High" },
+  "Orange": { unitOptions:["pcs"], perUnit:{ pcs:{P:1.2,C:15.4,F:0.2,K:62} }, source:"USDA", confidence:"High" },
+  "Mango": { unitOptions:["cup"], perUnit:{ cup:{P:1.4,C:25,F:0.6,K:99} }, source:"USDA", confidence:"High" },
 
-  // Snacks (popular)
-  "Peanut Butter": { unitOptions:["tbsp"], perUnit:{tbsp:{P:3.5, C:4, F:8, K:100}} },
-  "Almonds": { unitOptions:["g"], perUnit:{g:{P:21.2/100, C:21.6/100, F:49.9/100, K:579/100}} },
-  "Peanuts": { unitOptions:["g"], perUnit:{g:{P:25.8/100, C:16.1/100, F:49.2/100, K:567/100}} },
-  "Biscuits (2 pcs)": { unitOptions:["serving"], perUnit:{serving:{P:2, C:20, F:6, K:140}} },
-  "Chips (small pack)": { unitOptions:["pack"], perUnit:{pack:{P:3, C:18, F:10, K:170}} },
+  // Snacks (base)
+  "Peanuts": { unitOptions:["g"], perUnit:{ g:{P:25.8/100,C:16.1/100,F:49.2/100,K:567/100} }, source:"USDA", confidence:"High" },
+  "Almonds": { unitOptions:["g"], perUnit:{ g:{P:21.2/100,C:21.6/100,F:49.9/100,K:579/100} }, source:"USDA", confidence:"High" },
+  "Biscuits": { unitOptions:["serving"], perUnit:{ serving:{P:2,C:20,F:6,K:140} }, source:"label avg", confidence:"Medium" },
 
-  // Fruits (separated)
-  "Banana": { unitOptions:["pcs"], perUnit:{pcs:{P:1.3, C:27, F:0.4, K:105}} },
-  "Apple": { unitOptions:["pcs"], perUnit:{pcs:{P:0.5, C:25, F:0.3, K:95}} },
-  "Orange": { unitOptions:["pcs"], perUnit:{pcs:{P:1.2, C:15.4, F:0.2, K:62}} },
-  "Mango (1 cup slices)": { unitOptions:["cup"], perUnit:{cup:{P:1.4, C:25, F:0.6, K:99}} },
-  "Grapes (1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:1.1, C:27.3, F:0.2, K:104}} },
+  // Drinks
+  "Milk Tea": { unitOptions:["cup"], perUnit:{ cup:{P:2,C:12,F:3,K:90} }, source:"recipe avg", confidence:"Medium" },
+  "Black Tea (with sugar)": { unitOptions:["cup"], perUnit:{ cup:{P:0,C:10,F:0,K:40} }, source:"recipe avg", confidence:"Medium" },
+  "Black Coffee": { unitOptions:["cup"], perUnit:{ cup:{P:0, C:0, F:0, K:2} }, source:"USDA", confidence:"High" },
+  "Coffee with milk & sugar": { unitOptions:["cup"], perUnit:{ cup:{P:3,C:14,F:4,K:120} }, source:"recipe avg", confidence:"Medium" },
 
-  // Drinks (separate section)
-  "Milk Tea (1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:2, C:10, F:3, K:80}} },
-  "Black Coffee (no sugar)": { unitOptions:["cup"], perUnit:{cup:{P:0.3, C:0, F:0, K:2}} },
-  "Coffee with milk (no sugar)": { unitOptions:["cup"], perUnit:{cup:{P:3, C:5, F:2, K:50}} },
-  "Soft Drink (330 ml)": { unitOptions:["can"], perUnit:{can:{P:0, C:35, F:0, K:140}} },
-
-  // Meals
-  "Khichuri": { unitOptions:["plate"], perUnit:{plate:{P:14, C:70, F:12, K:450}} },
-  "Biryani (general)": { unitOptions:["plate"], perUnit:{plate:{P:20, C:85, F:15, K:600}} },
-  "Shawarma (wrap)": { unitOptions:["pcs"], perUnit:{pcs:{P:30, C:40, F:20, K:450}} },
-
-  // Desserts (popular)
-  "Cake slice": { unitOptions:["slice"], perUnit:{slice:{P:4, C:45, F:15, K:330}} },
-  "Chocolate cube": { unitOptions:["pcs"], perUnit:{pcs:{P:1, C:8, F:6, K:90}} },
-  "Ice cream (1 cup)": { unitOptions:["cup"], perUnit:{cup:{P:5, C:30, F:14, K:270}} },
+  // Desserts
+  "Cake slice": { unitOptions:["slice"], perUnit:{ slice:{P:4,C:45,F:15,K:330} }, source:"bakery avg", confidence:"Low" },
+  "Chocolate cube": { unitOptions:["pcs"], perUnit:{ pcs:{P:1,C:8,F:6,K:90} }, source:"label avg", confidence:"Medium" },
+  "Ice Cream": { unitOptions:["cup"], perUnit:{ cup:{P:5,C:30,F:14,K:270} }, source:"label avg", confidence:"Medium" },
+  "Firni": { unitOptions:["cup"], perUnit:{ cup:{P:6,C:45,F:8,K:280} }, source:"BD dessert avg", confidence:"Low" },
+  "Jorda": { unitOptions:["plate"], perUnit:{ plate:{P:6,C:65,F:12,K:380} }, source:"BD dessert avg", confidence:"Low" }
 };
 
-const CATEGORY_ITEMS = {
-  "Protein": ["Chicken Breast","Beef (cooked)","Fish (generic)","Egg","Yogurt / Curd"],
-  "Daal / Lentils": ["Daal (cooked, 1 cup)","Daal (cooked, 1/2 cup)"],
-  "Carbs": ["Rice (cooked)","Roti","Paratha","Oats (dry)","Khichuri","Biryani (general)"],
-  "Vegetables": ["Salad","Vegetables (mixed)"],
-  "Fats": ["Butter","Olive Oil","Ghee"],
-  "Snacks": ["Peanut Butter","Almonds","Peanuts","Biscuits (2 pcs)","Chips (small pack)"],
-  "Fruits": ["Banana","Apple","Orange","Mango (1 cup slices)","Grapes (1 cup)"],
-  "Drinks": ["Milk Tea (1 cup)","Black Coffee (no sugar)","Coffee with milk (no sugar)","Soft Drink (330 ml)"],
-  "Desserts": ["Cake slice","Chocolate cube","Ice cream (1 cup)"],
-  "Meals": ["Shawarma (wrap)"],
+/* Base categories */
+let CATEGORY_ITEMS = {
+  "All": [], // filled at runtime
+  "Chicken & Poultry": [
+    "Chicken Breast (skinless)","Chicken Thigh (skinless)",
+    "Chicken Leg (drumstick)","Chicken Wing","Chicken (with skin)"
+  ],
+  "Meat": ["Beef (cooked)","Mutton (cooked)","Lamb (cooked)","Duck (cooked)"],
+  "Fish": ["Fish (generic)","Hilsa Fish"],
+  "Daal / Lentils": ["Daal (cooked)","Daal (fried/tadka)"],
+  "Rice & Meals": [
+    "Rice (cooked)","Plain Khichuri","Bhuna Khichuri",
+    "Chicken Biryani","Kacchi Biryani","Beef Biryani"
+  ],
+  "Roti / Bread": ["Roti","Paratha"],
+  "Vegetables": ["Mixed Vegetables","Salad"],
+  "Fruits": ["Banana","Apple","Orange","Mango"],
+  "Snacks": ["Peanuts","Almonds","Biscuits"],
+  "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
+  "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
+
+/* PATCH 1: Extensions (adds missing foods without overwriting existing keys) */
+const FOOD_PATCH_1 = {
+  // more chicken parts (cooked)
+  "Chicken Thigh (cooked)": { unitOptions:["g"], perUnit:{ g:{P:26/100,C:0,F:8/100,K:209/100} }, source:"USDA avg", confidence:"High" },
+  "Chicken Wing (cooked)": { unitOptions:["g"], perUnit:{ g:{P:24/100,C:0,F:13/100,K:290/100} }, source:"USDA avg", confidence:"High" },
+  "Chicken Leg/Drumstick (cooked)": { unitOptions:["g"], perUnit:{ g:{P:25/100,C:0,F:9/100,K:216/100} }, source:"USDA avg", confidence:"High" },
+
+  // popular BD meals
+  "Chicken Biryani (heavy)": { unitOptions:["plate"], perUnit:{ plate:{P:30,C:95,F:22,K:760} }, source:"BD restaurant avg", confidence:"Low" },
+  "Kacchi Biryani (half plate)": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:45,F:14,K:400} }, source:"portion est", confidence:"Low" },
+  "Khichuri (plain)": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
+
+  // nuts + dates (commonly missing)
+  "Cashews": { unitOptions:["g"], perUnit:{ g:{P:18.2/100,C:30.2/100,F:43.9/100,K:553/100} }, source:"USDA", confidence:"High" },
+  "Walnuts": { unitOptions:["g"], perUnit:{ g:{P:15.2/100,C:13.7/100,F:65.2/100,K:654/100} }, source:"USDA", confidence:"High" },
+  "Pistachios": { unitOptions:["g"], perUnit:{ g:{P:20.2/100,C:27.2/100,F:45.4/100,K:562/100} }, source:"USDA", confidence:"High" },
+  "Hazelnuts": { unitOptions:["g"], perUnit:{ g:{P:15/100,C:17/100,F:61/100,K:628/100} }, source:"USDA", confidence:"High" },
+
+  "Dates (Deglet Noor)": { unitOptions:["pcs","g"], perUnit:{ pcs:{P:0.2,C:5.3,F:0,K:20}, g:{P:1.8/100,C:75/100,F:0.2/100,K:282/100} }, source:"USDA avg", confidence:"Medium" },
+  "Dates (Medjool)": { unitOptions:["pcs","g"], perUnit:{ pcs:{P:0.4,C:18,F:0,K:66}, g:{P:1.8/100,C:75/100,F:0.2/100,K:277/100} }, source:"USDA avg", confidence:"Medium" },
+
+  // drinks
+  "Coffee w/ Milk + Sugar": { unitOptions:["cup"], perUnit:{ cup:{P:3,C:14,F:4,K:120} }, source:"recipe avg", confidence:"Medium" }
+};
+
+const CATEGORY_PATCH_1 = {
+  "Chicken (Parts)": ["Chicken Thigh (cooked)","Chicken Wing (cooked)","Chicken Leg/Drumstick (cooked)"],
+  "Meals (BD)": ["Chicken Biryani","Chicken Biryani (heavy)","Kacchi Biryani","Kacchi Biryani (half plate)","Beef Biryani","Khichuri (plain)","Plain Khichuri","Bhuna Khichuri"],
+  "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
+  "Drinks": ["Coffee w/ Milk + Sugar"]
+};
+
+/* PATCH 2: Split Fruits from Snacks (already separate; keep, but also ensure category arrays are clean) */
+function applyFruitSnackSplit(){
+  // ensure category arrays exist
+  if(!CATEGORY_ITEMS["Fruits"]) CATEGORY_ITEMS["Fruits"] = [];
+  if(!CATEGORY_ITEMS["Snacks"]) CATEGORY_ITEMS["Snacks"] = [];
+}
+
+/* PATCH 4: Custom food (loaded from storage and merged) */
+function loadCustomFoods(){
+  try{ return JSON.parse(localStorage.getItem(LS_CUSTOM_FOOD) || "{}"); }catch(e){ return {}; }
+}
+function saveCustomFoods(map){
+  localStorage.setItem(LS_CUSTOM_FOOD, JSON.stringify(map));
+}
+
+/* Apply patches 1..6 (build categories + All) */
+function applyAllFoodPatches(){
+  // 1) Merge food extensions (no overwrite)
+  Object.keys(FOOD_PATCH_1).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_1[k]; });
+
+  // 1) Merge category extensions
+  Object.keys(CATEGORY_PATCH_1).forEach(cat=>{
+    if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat]=[];
+    CATEGORY_PATCH_1[cat].forEach(item=>{
+      if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
+    });
+  });
+
+  // 2) Ensure split exists
+  applyFruitSnackSplit();
+
+  // 4) Merge custom foods (no overwrite of base unless same key—custom wins only if same name explicitly)
+  const custom = loadCustomFoods();
+  Object.keys(custom).forEach(k=>{
+    FOOD[k] = custom[k]; // custom override by design (user knows what they saved)
+    // ensure it appears in its category
+    const c = custom[k]?.category || "Custom";
+    if(!CATEGORY_ITEMS[c]) CATEGORY_ITEMS[c]=[];
+    if(!CATEGORY_ITEMS[c].includes(k)) CATEGORY_ITEMS[c].push(k);
+  });
+
+  // rebuild "All" as union of FOOD keys
+  CATEGORY_ITEMS["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
+}
 
 /* ===== Food compute ===== */
 function computeFood(foodName, qty, unit){
   const item=FOOD[foodName];
   if(!item) return {P:0,C:0,F:0,K:0};
-  const map=item.perUnit[unit];
+  const map=item.perUnit?.[unit];
   if(!map) return {P:0,C:0,F:0,K:0};
   return { P: map.P*qty, C: map.C*qty, F: map.F*qty, K: map.K*qty };
 }
+function foodMeta(foodName){
+  const item = FOOD[foodName] || {};
+  return {
+    source: item.source || "—",
+    confidence: item.confidence || "—"
+  };
+}
 
-/* ===== Food UI ===== */
+/* ===========================
+   Food UI (PATCH 3: search + filter)
+=========================== */
 function buildCategorySelect(){
   const sel=$("entryCategory");
   sel.innerHTML="";
@@ -1349,15 +1599,38 @@ function buildCategorySelect(){
     opt.value=cat; opt.textContent=cat;
     sel.appendChild(opt);
   });
+  sel.value = "All";
 }
-function buildFoodSelectForCategory(category){
+function buildFoodSelect(){
+  const category = $("entryCategory").value || "All";
+  const q = ($("foodSearch").value || "").trim().toLowerCase();
+
+  let list = (CATEGORY_ITEMS[category] || []).slice();
+  if(category==="All") list = CATEGORY_ITEMS["All"].slice();
+
+  // If search typed, search across ALL foods regardless of category (best UX)
+  let filtered = list;
+  if(q){
+    filtered = CATEGORY_ITEMS["All"].filter(name => name.toLowerCase().includes(q));
+  }
+
   const sel=$("entryFood");
   sel.innerHTML="";
-  (CATEGORY_ITEMS[category]||[]).forEach(name=>{
+  filtered.forEach(name=>{
     const opt=document.createElement("option");
     opt.value=name; opt.textContent=name;
     sel.appendChild(opt);
   });
+
+  if(filtered.length===0){
+    const opt=document.createElement("option");
+    opt.value=""; opt.textContent="No matches (try another search)";
+    sel.appendChild(opt);
+  }
+
+  const first = sel.value || filtered[0] || "";
+  buildUnitSelect(first);
+  updateEntryPreview();
 }
 function buildUnitSelect(foodName){
   const uSel=$("entryUnit");
@@ -1377,25 +1650,51 @@ function updateEntryPreview(){
   $("entryPrevC").textContent=round1(t.C);
   $("entryPrevF").textContent=round1(t.F);
   $("entryPrevK").textContent=Math.round(t.K);
+  const m = foodMeta(food);
+  $("entryPrevSrc").textContent = m.source;
+  $("entryPrevConf").textContent = m.confidence;
 }
-$("entryCategory").addEventListener("change", ()=>{
-  buildFoodSelectForCategory($("entryCategory").value);
-  buildUnitSelect($("entryFood").value);
+
+/* PATCH 5: Portion presets (prefer plate if available) */
+function applyPortionPreset(mult){
+  const food = $("entryFood").value;
+  if(!food) return;
+  const units = FOOD[food]?.unitOptions || ["g"];
+
+  if(units.includes("plate")){
+    $("entryUnit").value="plate";
+    $("entryQty").value = String(mult);
+  }else if(units.includes("cup")){
+    $("entryUnit").value="cup";
+    $("entryQty").value = String(mult);
+  }else if(units.includes("pcs")){
+    // 0.5 pcs doesn't make sense; round to nearest
+    $("entryUnit").value="pcs";
+    $("entryQty").value = String(Math.max(1, Math.round(mult)));
+  }else{
+    // fallback to grams: assume 250g as "plate" baseline
+    $("entryUnit").value=units[0];
+    $("entryQty").value = String(Math.round(250*mult));
+  }
   updateEntryPreview();
-});
-$("entryFood").addEventListener("change", ()=>{
-  buildUnitSelect($("entryFood").value);
-  updateEntryPreview();
-});
+}
+
+/* Hook UI events */
+$("entryCategory").addEventListener("change", buildFoodSelect);
+$("foodSearch").addEventListener("input", buildFoodSelect);
+$("entryFood").addEventListener("change", ()=>{ buildUnitSelect($("entryFood").value); updateEntryPreview(); });
 $("entryUnit").addEventListener("change", updateEntryPreview);
 $("entryQty").addEventListener("input", updateEntryPreview);
 
+/* ===========================
+   Food log actions
+=========================== */
 function computeTotalsFromEntries(dateKey){
   const day=getDayLog(dateKey);
   let total={P:0,C:0,F:0,K:0};
   day.entries.forEach(e=>{
     const t = computeFood(e.food, n(e.qty), e.unit);
-    total = {P:total.P+t.P, C:total.C+t.C, F:total.F+t.F, K:total.K+t.K};
+    total.P += t.P; total.C += t.C; total.F += t.F; total.K += t.K;
   });
   return total;
 }
@@ -1429,17 +1728,20 @@ function renderEntries(){
 
   day.entries.forEach(e=>{
     const t=computeFood(e.food, n(e.qty), e.unit);
+    const meta = foodMeta(e.food);
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td>${e.meal}</td>
       <td>${e.category || ""}</td>
       <td>${e.food}</td>
-      <td><input class="miniInput" type="number" min="0" step="1" value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
+      <td><input class="miniInput" type="number" min="0" step="0.1" value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
       <td>${e.unit}</td>
       <td>${round1(t.P)}</td>
       <td>${round1(t.C)}</td>
       <td>${round1(t.F)}</td>
       <td>${Math.round(t.K)}</td>
+      <td>${meta.source}</td>
+      <td>${meta.confidence}</td>
       <td><button class="actionBtn" data-id="${e.id}" data-action="del">Delete</button></td>
     `;
     tb.appendChild(tr);
@@ -1491,6 +1793,84 @@ function resetFoodLogs(){
 }
 
 /* ===========================
+   PATCH 4: Custom food panel
+=========================== */
+function openCustomFoodPanel(){
+  $("customFoodPanel").classList.remove("hide");
+  $("cf_savedNote").style.display="none";
+  rebuildCustomFoodCategorySelect();
+}
+function closeCustomFoodPanel(){
+  $("customFoodPanel").classList.add("hide");
+}
+function rebuildCustomFoodCategorySelect(){
+  const sel = $("cf_category");
+  sel.innerHTML="";
+  // show common categories + Custom
+  const cats = Object.keys(CATEGORY_ITEMS).filter(c=>c!=="All").sort((a,b)=>a.localeCompare(b));
+  if(!cats.includes("Custom")) cats.push("Custom");
+  cats.forEach(c=>{
+    const opt=document.createElement("option");
+    opt.value=c; opt.textContent=c;
+    sel.appendChild(opt);
+  });
+  sel.value = "Custom";
+}
+function saveCustomFood(){
+  const name = ($("cf_name").value||"").trim();
+  if(!name){ alert("Enter a food name."); return; }
+  const category = $("cf_category").value || "Custom";
+  const unit = $("cf_unit").value || "plate";
+
+  const P = n($("cf_p").value);
+  const C = n($("cf_c").value);
+  const F = n($("cf_f").value);
+  const K = n($("cf_k").value);
+
+  if(P<0||C<0||F<0||K<0){ alert("Macros cannot be negative."); return; }
+
+  const source = ($("cf_source").value||"").trim() || "user entry";
+  const confidence = ($("cf_conf").value||"Medium").trim();
+  const notes = ($("cf_notes").value||"").trim();
+
+  const item = {
+    unitOptions:[unit],
+    perUnit:{ [unit]: {P, C, F, K} },
+    source,
+    confidence,
+    notes,
+    category,
+    isCustom:true
+  };
+
+  const map = loadCustomFoods();
+  map[name] = item;
+  saveCustomFoods(map);
+
+  // apply into runtime + category
+  FOOD[name] = item;
+  if(!CATEGORY_ITEMS[category]) CATEGORY_ITEMS[category]=[];
+  if(!CATEGORY_ITEMS[category].includes(name)) CATEGORY_ITEMS[category].push(name);
+  applyAllFoodPatches(); // rebuild All
+
+  // refresh selects
+  buildCategorySelect();
+  buildFoodSelect();
+
+  $("cf_savedNote").style.display="block";
+}
+function resetCustomFoods(){
+  if(!confirm("Delete ALL custom foods saved on this device?")) return;
+  localStorage.removeItem(LS_CUSTOM_FOOD);
+  // reload base state by re-running patches
+  applyAllFoodPatches();
+  buildCategorySelect();
+  buildFoodSelect();
+  $("cf_savedNote").style.display="none";
+  alert("Custom foods cleared.");
+}
+
+/* ===========================
    Lifestyle (MULTI-WORKOUT)
 =========================== */
 function loadAllLifestyle(){ try{ return JSON.parse(localStorage.getItem(LS_LIFE) || "{}"); }catch(e){ return {}; } }
@@ -1514,19 +1894,12 @@ function setLifestyle(dateKey, data){
 }
 
 const BURN_PER_MIN = { walking:4.0, running:10.0, cycling:8.0, aerobic:7.0, cardio:7.5, hiit:12.0, strength:6.5 };
-
 function calcWorkoutBurn(type, mins){
   const per=BURN_PER_MIN[type] ?? 0;
   return Math.round(per * mins);
 }
 function workoutLabel(w){
-  if(w.type==="strength"){
-    const map = {
-      chest_triceps:"Chest + Triceps", back_biceps:"Back + Biceps",
-      shoulders_forearms:"Shoulders + Forearms", legs:"Legs", fullbody:"Full body"
-    };
-    return "Strength";
-  }
+  if(w.type==="strength") return "Strength";
   const opt = document.querySelector(`#workoutType option[value="${w.type}"]`);
   return opt ? opt.textContent : w.type;
 }
@@ -1536,7 +1909,6 @@ function updateBurnPreview(){
   $("strengthSplitWrap").classList.toggle("hide", type!=="strength");
   $("burnPreview").textContent = calcWorkoutBurn(type, mins);
 }
-
 $("workoutType").addEventListener("change", updateBurnPreview);
 $("workoutMins").addEventListener("input", updateBurnPreview);
 $("strengthSplit").addEventListener("change", updateBurnPreview);
@@ -1614,7 +1986,7 @@ function updateLifestyleUI(){
 
 function updateLifestyleSummaryCards(){
   const profile=getActiveProfile() || getProfileDraft();
-  const dateKey=$("lifeDate").value || getDefaultLogDate(profile);
+  const dateKey=getDefaultLogDate(profile);
   const data=getLifestyle(dateKey);
 
   const totalBurn = data.workouts.reduce((s,x)=>s+n(x.burn),0);
@@ -1628,7 +2000,7 @@ function updateLifestyleSummaryCards(){
   $("lifeSleepWaterLine").textContent = `${n(data.sleepHours)||0}h sleep • ${n(data.waterLiters)||0}L water`;
   $("lifeSleepWaterLineSub").textContent = `Goals: ${n(data.sleepGoal)||0}h • ${n(data.waterGoal)||0}L`;
 
-  // Dashboard summary (same day key used by dashboard refresh)
+  // Dashboard summary
   $("dashLifeWorkout").textContent = count ? `${count} workout(s) • ${totalMins} min` : "No workout";
   $("dashLifeWorkoutSub").textContent = `Burn: ${Math.round(totalBurn)} kcal`;
 
@@ -1691,11 +2063,10 @@ function refreshAll(){
   if(!$("lifeDate").value) $("lifeDate").value = dashDate;
 
   const foodDateKey = $("logDate").value || dashDate;
-  const lifeDateKey = $("lifeDate").value || dashDate;
 
   const total=computeTotalsFromEntries(foodDateKey);
 
-  const life = getLifestyle(lifeDateKey);
+  const life = getLifestyle(dashDate);
   const burn = life.workouts.reduce((s,x)=>s+n(x.burn),0);
   const netK = total.K - burn;
 
@@ -1776,7 +2147,6 @@ function refreshAll(){
   $("dashProfileMeta").textContent = (profile.age ? ("Age " + profile.age) : "—") + " • " + (profile.sex || "—");
   $("dashProtMult").textContent = (profile.protMult ? profile.protMult : "—");
 
-  // ✅ keep lifestyle summaries synced
   updateLifestyleSummaryCards();
 }
 
@@ -1798,12 +2168,13 @@ function resetOnlyToday(){
 }
 
 function resetEverything(){
-  if(!confirm("Reset EVERYTHING? This will delete ALL profiles, logs, and lifestyle data on this device.")) return;
+  if(!confirm("Reset EVERYTHING? This will delete ALL profiles, logs, lifestyle data, and custom foods on this device.")) return;
 
   localStorage.removeItem(LS_PROFILES);
   localStorage.removeItem(LS_ACTIVE_PROFILE);
   localStorage.removeItem(LS_LOG);
   localStorage.removeItem(LS_LIFE);
+  localStorage.removeItem(LS_CUSTOM_FOOD);
 
   location.reload();
 }
@@ -1875,6 +2246,10 @@ async function savePDF(){
   rebuildProfileSelect();
   loadProfileToUI();
 
+  // build foods + patches 1..6
+  applyAllFoodPatches();
+
+  // init dates
   const p = getActiveProfile() || getProfileDraft();
   const today = getDefaultLogDate(p);
 
@@ -1884,13 +2259,17 @@ async function savePDF(){
   $("logDate").addEventListener("change", ()=>{ renderEntries(); scheduleRefresh(); });
   $("lifeDate").addEventListener("change", ()=>{ updateLifestyleUI(); scheduleRefresh(); });
 
+  // build food UI
   buildCategorySelect();
-  const firstCat = Object.keys(CATEGORY_ITEMS)[0] || "Protein";
-  $("entryCategory").value = firstCat;
-  buildFoodSelectForCategory(firstCat);
-  buildUnitSelect($("entryFood").value);
+  buildFoodSelect();
   updateEntryPreview();
 
+  // profile UI toggles
+  toggleHeightUI(false);
+  toggleWeightUI(false);
+  updateProfilePreviewOnly();
+
+  // lifestyle init
   updateLifestyleUI();
   renderEntries();
   refreshAll();
