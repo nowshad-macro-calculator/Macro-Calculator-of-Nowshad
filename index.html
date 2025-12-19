@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+ <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=yes, maximum-scale=5" />
   <title>Nowshad's Macro Calculator</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -178,6 +178,130 @@
       background:rgba(255,255,255,.10); color:var(--text); cursor:pointer; font-weight:800; font-size:12px;
     }
     .chipBtn:hover{background:rgba(255,255,255,.14)}
+    /* ===========================
+   PATCH M (Mobile UX)
+=========================== */
+@media (max-width: 720px){
+  .wrap{ padding:12px 10px 80px; }
+
+  /* Topbar: tabs should scroll horizontally (like app tabs) */
+  .topbar{
+    gap:10px;
+    padding:12px;
+  }
+  .tabs{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    gap:8px;
+    padding-bottom:2px;
+    max-width:55vw;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tabbtn{
+    flex:0 0 auto;
+    padding:9px 11px;
+    font-size:12px;
+    border-radius:12px;
+    white-space:nowrap;
+  }
+
+  /* Inputs easier to tap */
+  input, select, textarea{ padding:12px 12px; font-size:15px; }
+
+  /* Reduce card padding a bit */
+  .card{ padding:12px; }
+
+  /* Tables: keep horizontal scroll inside wrapper, not page */
+  .tableWrap{
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+  table{ min-width:760px; } /* was 920px (too wide for phones) */
+
+  /* KPIs stack tighter */
+  .kpi{ padding:10px; }
+  .kpi .big{ font-size:17px; }
+}
+
+/* Make form grids stack nicely on small phones */
+@media (max-width: 420px){
+  .row.cols2, .row.cols3{ grid-template-columns:1fr !important; }
+}
+
+/* Food log top bar (added in Patch 3) */
+.foodBar{
+  position:sticky;
+  top:72px; /* sits below main topbar */
+  z-index:40;
+  border:1px solid var(--stroke);
+  background:rgba(10,20,60,.55);
+  backdrop-filter: blur(10px);
+  border-radius:16px;
+  padding:12px;
+  box-shadow:0 10px 28px rgba(0,0,0,.25);
+}
+
+.foodBarTop{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.foodDateWrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.foodDateWrap label{ margin:0; }
+.foodDate{
+  width:auto;
+  min-width:150px;
+  padding:10px 12px;
+  border-radius:999px;
+}
+
+/* Big, distinct search bar like your screenshot */
+.searchBig{
+  margin-top:10px;
+  position:relative;
+}
+.searchBig input{
+  padding:14px 14px 14px 44px;
+  border-radius:18px;
+  font-size:16px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(120,170,255,.55);
+  box-shadow:0 8px 20px rgba(0,0,0,.22);
+}
+.searchBig:before{
+  content:"🔎";
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  opacity:.85;
+}
+
+/* Make the “Filter” row feel secondary vs Search */
+.filterRow{
+  margin-top:10px;
+  display:grid;
+  gap:10px;
+}
+@media (min-width: 640px){
+  .filterRow{ grid-template-columns:1fr 1fr; }
+}
+
+/* Keep FoodBar spacing correct under sticky topbar on very small screens */
+@media (max-width: 720px){
+  .foodBar{ top:86px; }
+}
+
   </style>
 </head>
 
@@ -558,41 +682,49 @@
         <div class="sub">Search + Category + Food → Unit → Qty → Add Entry (repeat anytime).</div>
 
         <div class="divider"></div>
+<!-- ===== PATCH: Food Log Header (date separate + big search) ===== -->
+<div class="foodBar">
+  <div class="foodBarTop">
+    <div class="foodDateWrap">
+      <label class="sub" style="margin:0;">Log date</label>
+      <input class="foodDate" type="date" id="logDate">
+    </div>
 
-        <div class="row cols2">
-          <div>
-            <label>Log date</label>
-            <input type="date" id="logDate">
-          </div>
-          <div>
-            <label>Meal type</label>
-            <select id="mealType">
-              <option>Breakfast</option>
-              <option>Brunch</option>
-              <option selected>Lunch</option>
-              <option>Dinner</option>
-              <option>Supper</option>
-              <option>Pre-workout meal</option>
-              <option>Post-workout meal</option>
-              <option>Snacks</option>
-            </select>
-          </div>
-        </div>
+    <div style="min-width:180px; flex:1; max-width:260px;">
+      <label class="sub" style="margin:0;">Meal</label>
+      <select id="mealType">
+        <option>Breakfast</option>
+        <option>Brunch</option>
+        <option selected>Lunch</option>
+        <option>Dinner</option>
+        <option>Supper</option>
+        <option>Pre-workout meal</option>
+        <option>Post-workout meal</option>
+        <option>Snacks</option>
+      </select>
+    </div>
+  </div>
 
-        <div class="divider"></div>
+  <div class="searchBig">
+    <input id="foodSearch" placeholder="Search for a food (biryani, dates, chicken…)" />
+  </div>
 
-        <h3>Add Food Entry</h3>
+  <div class="filterRow">
+    <div>
+      <label>Filter (Category)</label>
+      <select id="entryCategory"></select>
+    </div>
+    <div class="pill" style="justify-content:center;">
+      Quick add → choose food, unit, qty, then Add Entry
+    </div>
+  </div>
+</div>
+<!-- ===== END PATCH ===== -->
 
-        <div class="row cols2">
-          <div>
-            <label>Search food</label>
-            <input id="foodSearch" placeholder="Search: biryani, dates, chicken..." />
-          </div>
-          <div>
-            <label>Filter (Category)</label>
-            <select id="entryCategory"></select>
-          </div>
-        </div>
+<div class="divider"></div>
+
+<h3>Add Food Entry</h3>
+
 
         <div class="row cols2" style="margin-top:10px">
           <div>
