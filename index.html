@@ -1798,44 +1798,7 @@ let CATEGORY_ITEMS = {
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
-
-
-function mergeCategories(){
-  // Helper: get unique items
-  const uniq = (arr) => Array.from(new Set(arr));
-
-  // Build merged categories
-  const merged = {};
-
-  // Always start All fresh later
-  merged["All"] = [];
-
-  Object.keys(CATEGORY_MERGE_MAP).forEach(newCat=>{
-    const oldCats = CATEGORY_MERGE_MAP[newCat] || [];
-    let items = [];
-    oldCats.forEach(oc=>{
-      if(Array.isArray(CATEGORY_ITEMS[oc])) items = items.concat(CATEGORY_ITEMS[oc]);
-    });
-
-    // Only keep items that exist in FOOD
-    merged[newCat] = uniq(items.filter(name => FOOD[name]));
-  });
-
-  // Also keep any category that is not mentioned anywhere (so you don’t “lose” stuff)
-  // BUT skip "All"
-  const mappedOldCats = new Set(Object.values(CATEGORY_MERGE_MAP).flat());
-  Object.keys(CATEGORY_ITEMS).forEach(oldCat=>{
-    if(oldCat === "All") return;
-    if(mappedOldCats.has(oldCat)) return; // already merged
-    // Keep unmapped categories (like "Potato") if you still want them; or skip them:
-    merged[oldCat] = uniq((CATEGORY_ITEMS[oldCat] || []).filter(name => FOOD[name]));
-  });
-
-  // Replace CATEGORY_ITEMS with merged version
-  CATEGORY_ITEMS = merged;
-
-  // rebuild "All"
-  /* ===========================
+/* ===========================
    CATEGORY VIEW (Simplify UX) — SAFE
    - DOES NOT overwrite CATEGORY_ITEMS
    - Builds CATEGORY_VIEW for dropdown only
@@ -1906,6 +1869,43 @@ function buildCategoryView(){
   if(uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
 }
 
+
+function mergeCategories(){
+  // Helper: get unique items
+  const uniq = (arr) => Array.from(new Set(arr));
+
+  // Build merged categories
+  const merged = {};
+
+  // Always start All fresh later
+  merged["All"] = [];
+
+  Object.keys(CATEGORY_MERGE_MAP).forEach(newCat=>{
+    const oldCats = CATEGORY_MERGE_MAP[newCat] || [];
+    let items = [];
+    oldCats.forEach(oc=>{
+      if(Array.isArray(CATEGORY_ITEMS[oc])) items = items.concat(CATEGORY_ITEMS[oc]);
+    });
+
+    // Only keep items that exist in FOOD
+    merged[newCat] = uniq(items.filter(name => FOOD[name]));
+  });
+
+  // Also keep any category that is not mentioned anywhere (so you don’t “lose” stuff)
+  // BUT skip "All"
+  const mappedOldCats = new Set(Object.values(CATEGORY_MERGE_MAP).flat());
+  Object.keys(CATEGORY_ITEMS).forEach(oldCat=>{
+    if(oldCat === "All") return;
+    if(mappedOldCats.has(oldCat)) return; // already merged
+    // Keep unmapped categories (like "Potato") if you still want them; or skip them:
+    merged[oldCat] = uniq((CATEGORY_ITEMS[oldCat] || []).filter(name => FOOD[name]));
+  });
+
+  // Replace CATEGORY_ITEMS with merged version
+  CATEGORY_ITEMS = merged;
+
+  // rebuild "All"
+ 
 }
 
 /* PATCH 1: Extensions (adds missing foods without overwriting existing keys) */
