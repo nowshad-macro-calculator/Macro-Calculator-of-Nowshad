@@ -301,6 +301,55 @@
 @media (max-width: 720px){
   .foodBar{ top:86px; }
 }
+/* =========================
+   PATCH 2: Mobile top menu shows all tabs (Dashboard/Profile/Food Log/Lifestyle/PDF)
+   Paste at END of <style>
+   ========================= */
+
+@media (max-width: 720px){
+
+  /* 1) Stop header/top container from clipping */
+  header, .header, .topbar, .topBar, .top-card, .topCard, .container, .wrap {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* 2) Make the menu row swipeable instead of wrapping/clipping */
+  nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
+    display: flex !important;
+    flex-wrap: nowrap !important;     /* IMPORTANT */
+    overflow-x: auto !important;      /* IMPORTANT */
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    width: 100% !important;
+    padding-bottom: 6px;
+  }
+
+  /* Hide scrollbar (optional) */
+  nav::-webkit-scrollbar,
+  .nav::-webkit-scrollbar,
+  .menu::-webkit-scrollbar,
+  .tabs::-webkit-scrollbar,
+  .topTabs::-webkit-scrollbar,
+  .nav-tabs::-webkit-scrollbar,
+  .navTabs::-webkit-scrollbar { display: none; }
+
+  /* 3) Prevent each button from shrinking or wrapping */
+  nav a, nav button,
+  .nav a, .nav button,
+  .menu a, .menu button,
+  .tabs a, .tabs button,
+  .nav-tabs a, .nav-tabs button,
+  .tabbtn, .tabBtn {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    padding: 10px 12px !important;
+    font-size: 12px !important;
+    border-radius: 999px !important;
+  }
+}
 
   </style>
 </head>
