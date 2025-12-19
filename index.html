@@ -1798,6 +1798,100 @@ let CATEGORY_ITEMS = {
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
+/* ===========================
+   CATEGORY MERGE (Simplify UX)
+   - merges multiple categories into fewer ones
+   - keeps FOOD items unchanged
+=========================== */
+
+const CATEGORY_MERGE_MAP = {
+  // Merge meals
+  "Meals": [
+    "Rice & Meals",
+    "Meals (BD)",
+    "Meals (Mixed)",
+    "BD Takeout",
+    "Carbs (BD)" // Polau is basically a meal/carb dish; you can keep it here or move to Carbs
+  ],
+
+  // Proteins
+  "Protein – Chicken": ["Chicken & Poultry", "Chicken (Parts)"],
+  "Protein – Meat": ["Meat", "Offal / Traditional", "Poultry / Game"],
+
+  // Merge all fish-related
+  "Fish & Seafood": [
+    "Fish",
+    "Seafood (Shellfish)",
+    "Sea Fish",
+    "River Fish",
+    "Small Fish"
+  ],
+
+  // Carbs
+  "Carbs – Rice & Bread": ["Roti / Bread"], // Rice dishes come from Meals bucket above
+
+  // Dairy
+  "Eggs & Dairy": ["Eggs & Dairy", "Cheese & Dairy"],
+
+  // Snacks
+  "Snacks": [
+    "Snacks",
+    "BD Snacks",
+    "BD Street Food / Snacks"
+  ],
+
+  // Drinks
+  "Drinks": ["Drinks"],
+
+  // Desserts
+  "Desserts & Sweets": ["Desserts", "Pitha / Sweets"],
+
+  // Keep clean singles (these exist already)
+  "Vegetables": ["Vegetables", "BD Sides / Bhaji", "Soups"],
+  "Fruits": ["Fruits"],
+  "Daal / Lentils": ["Daal / Lentils"],
+
+  // Optional: keep nuts separate or merge into Snacks
+  "Nuts & Dates": ["Nuts & Dates"]
+};
+
+function mergeCategories(){
+  // Helper: get unique items
+  const uniq = (arr) => Array.from(new Set(arr));
+
+  // Build merged categories
+  const merged = {};
+
+  // Always start All fresh later
+  merged["All"] = [];
+
+  Object.keys(CATEGORY_MERGE_MAP).forEach(newCat=>{
+    const oldCats = CATEGORY_MERGE_MAP[newCat] || [];
+    let items = [];
+    oldCats.forEach(oc=>{
+      if(Array.isArray(CATEGORY_ITEMS[oc])) items = items.concat(CATEGORY_ITEMS[oc]);
+    });
+
+    // Only keep items that exist in FOOD
+    merged[newCat] = uniq(items.filter(name => FOOD[name]));
+  });
+
+  // Also keep any category that is not mentioned anywhere (so you don’t “lose” stuff)
+  // BUT skip "All"
+  const mappedOldCats = new Set(Object.values(CATEGORY_MERGE_MAP).flat());
+  Object.keys(CATEGORY_ITEMS).forEach(oldCat=>{
+    if(oldCat === "All") return;
+    if(mappedOldCats.has(oldCat)) return; // already merged
+    // Keep unmapped categories (like "Potato") if you still want them; or skip them:
+    merged[oldCat] = uniq((CATEGORY_ITEMS[oldCat] || []).filter(name => FOOD[name]));
+  });
+
+  // Replace CATEGORY_ITEMS with merged version
+  CATEGORY_ITEMS = merged;
+
+  // rebuild "All"
+  CATEGORY_ITEMS["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
+}
 
 /* PATCH 1: Extensions (adds missing foods without overwriting existing keys) */
 const FOOD_PATCH_1 = {
@@ -2341,9 +2435,10 @@ Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
     if(!CATEGORY_ITEMS[c].includes(k)) CATEGORY_ITEMS[c].push(k);
   });
 
-  // rebuild "All" as union of FOOD keys
-  CATEGORY_ITEMS["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
+  // Merge/simplify categories for UX
+  mergeCategories();
 }
+
 
 /* ===== Food compute ===== */
 function computeFood(foodName, qty, unit){
@@ -2514,7 +2609,15 @@ function addEntry(){
   renderEntries();
   scheduleRefresh();
 }
+function normalizeEntryCategory(cat){
+  if(!cat) return "";
+  if(CATEGORY_ITEMS[cat]) return cat; // already exists after merge
 
+  for(const newCat in CATEGORY_MERGE_MAP){
+    if((CATEGORY_MERGE_MAP[newCat] || []).includes(cat)) return newCat;
+  }
+  return cat;
+}
 function renderEntries(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
@@ -2529,7 +2632,7 @@ function renderEntries(){
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td>${e.meal}</td>
-      <td>${e.category || ""}</td>
+      <td>${normalizeEntryCategory(e.category || "")}</td>
       <td>${e.food}</td>
       <td><input class="miniInput" type="number" min="0" step="0.1" value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
       <td>${e.unit}</td>
