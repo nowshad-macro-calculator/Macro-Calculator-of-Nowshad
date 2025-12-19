@@ -301,143 +301,6 @@
 @media (max-width: 720px){
   .foodBar{ top:86px; }
 }
-    /* ===========================
-   PATCH: Mobile Topbar Fix
-=========================== */
-@media (max-width: 720px){
-  .topbar{
-    flex-direction:column;
-    align-items:stretch;
-    gap:10px;
-    padding:12px;
-    top:8px;
-  }
-
-  .brand{ width:100%; }
-
-  .brand h1{
-    font-size:15px;
-    line-height:1.2;
-  }
-
-  .brand span{
-    font-size:11px;
-    line-height:1.25;
-  }
-
-  /* Tabs: single row + swipe horizontally */
-  .tabs{
-    width:100%;
-    justify-content:flex-start;
-    flex-wrap:nowrap;
-    overflow-x:auto;
-    overflow-y:hidden;
-    -webkit-overflow-scrolling:touch;
-    gap:8px;
-    padding-bottom:2px;
-  }
-  .tabs::-webkit-scrollbar{ display:none; }
-
-  .tabbtn{
-    flex:0 0 auto;
-    white-space:nowrap;
-    padding:10px 12px;
-    font-size:12px;
-    border-radius:999px;
-  }
-
-  .wrap{
-    padding:12px 10px 90px;
-  }
-}
-/* ===========================
-   PATCH: Mobile Food Log Search UI
-=========================== */
-@media (max-width: 720px){
-  input, select, textarea{
-    font-size:16px;          /* helps mobile usability */
-    padding:13px 12px;
-    border-radius:16px;
-  }
-
-  /* Make the search field look special */
-  #foodSearch{
-    padding:15px 14px 15px 44px !important;
-    border-radius:20px !important;
-    border:1px solid rgba(120,170,255,.60) !important;
-    background:rgba(255,255,255,.10) !important;
-    box-shadow:0 10px 28px rgba(0,0,0,.25);
-  }
-
-  /* icon container */
-  .searchWrap{ position:relative; }
-
-  /* magnifier icon */
-  .searchWrap::before{
-    content:"🔎";
-    position:absolute;
-    left:14px;
-    top:50%;
-    transform:translateY(-50%);
-    opacity:.9;
-    font-size:16px;
-    pointer-events:none;
-  }
-}
-
-/* ===========================
-   PATCH: Mobile Date/Meal pill style
-=========================== */
-@media (max-width: 720px){
-  #logDate, #mealType{
-    border-radius:999px;
-    padding:10px 12px;
-    font-size:14px;
-    background:rgba(10,20,60,.35);
-  }
-}
-/* =========================
-   PATCH 2A: Mobile Top Menu Usability
-   ========================= */
-
-@media (max-width: 720px){
-
-  /* Ensure header is above everything and not clipped */
-  .topbar{
-    position: sticky;          /* keep visible */
-    top: 8px;
-    z-index: 9999;
-    overflow: visible;         /* IMPORTANT: allow content to show */
-    height: auto;              /* IMPORTANT: prevent clipping */
-    align-items: stretch;
-  }
-
-  /* If you have any parent wrapper clipping it */
-  header, .header, .wrap, body{
-    overflow-x: hidden;        /* ok */
-  }
-
-  /* Tabs row becomes swipeable and never wraps */
-  .tabs{
-    display: flex;
-    flex-wrap: nowrap;         /* no wrap */
-    overflow-x: auto;          /* swipe */
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    gap: 8px;
-    padding-bottom: 4px;
-    width: 100%;
-  }
-  .tabs::-webkit-scrollbar{ display:none; }
-
-  .tabbtn{
-    flex: 0 0 auto;            /* keeps each tab intact */
-    white-space: nowrap;
-    padding: 10px 12px;
-    font-size: 12px;
-    border-radius: 999px;
-  }
-}
 
   </style>
 </head>
@@ -842,11 +705,9 @@
     </div>
   </div>
 
-  <label>Search food</label>
-<div class="searchWrap">
-  <input id="foodSearch" placeholder="Search: biryani, dates, chicken..." />
-</div>
-
+  <div class="searchBig">
+    <input id="foodSearch" placeholder="Search for a food (biryani, dates, chicken…)" />
+  </div>
 
   <div class="filterRow">
     <div>
