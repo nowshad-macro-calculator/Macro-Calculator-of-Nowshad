@@ -1626,6 +1626,7 @@ const CATEGORY_PATCH_1 = {
   "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
   "Drinks": ["Coffee w/ Milk + Sugar"]
 };
+
   /* PATCH 3: Mixed Meals + BD Takeout + Soft Drinks */
 const FOOD_PATCH_3 = {
 
@@ -2124,6 +2125,71 @@ Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
     }
   });
 });
+/* ===== Food Log UX upgrades ===== */
+.foodTopBar{
+  position: sticky;
+  top: 78px; /* below your topbar */
+  z-index: 20;
+  background: rgba(7,26,75,.85);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 16px;
+  padding: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.miniLabel{ font-size:11px; color:var(--muted); display:block; margin-bottom:6px; }
+
+.foodTopRow{ display:flex; gap:10px; flex-wrap:wrap; }
+.foodTopLeft{ display:flex; gap:10px; flex:1; flex-wrap:wrap; }
+.foodDateWrap, .foodMealWrap{ flex:1; min-width: 150px; }
+
+.foodSearchWrap{ margin-top:10px; }
+.bigSearch{
+  width:100%;
+  padding: 14px 14px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(10,20,60,.55);
+}
+
+.foodFilterRow{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+
+/* Mobile: switch to single-column controls */
+@media (max-width: 640px){
+  .foodFilterRow{ grid-template-columns: 1fr; }
+  .wrap{ padding: 12px 10px 70px; }
+}
+
+/* ===== Mobile Entries Cards ===== */
+.entriesMobile{ display:none; margin-top:10px; }
+.entryCard{
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.07);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.entryTitle{ font-weight: 800; font-size: 14px; }
+.entryMeta{ color: var(--muted); font-size: 12px; margin-top:4px; }
+.entryNums{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; font-size: 12px; }
+.entryNums b{ color: rgba(238,243,255,.92); }
+.entryActions{ display:flex; gap:10px; margin-top:10px; align-items:center; }
+.entryActions input{ width: 110px; }
+.entryActions button{ flex: 1; }
+
+/* Mobile behavior: hide wide table, show cards */
+@media (max-width: 760px){
+  table{ min-width: 0 !important; }
+  .tableWrap{ display:none; }
+  .entriesMobile{ display:block; }
+}
 
   applyFruitSnackSplit();
 
