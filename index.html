@@ -1738,7 +1738,16 @@ let FOOD = {
 
   // Rice & Meals
     "Polau / Pulao": { unitOptions:["plate"], perUnit:{ plate:{P:10,C:85,F:12,K:520} }, source:"BD home avg", confidence:"Low" },
-  "Rice (cooked)": { unitOptions:["g","plate"], perUnit:{ plate:{P:8,C:90,F:1,K:420} }, source:"USDA + portion est", confidence:"Medium" },
+  // Rice
+"Rice (cooked)": { 
+  unitOptions:["g","plate"], 
+  perUnit:{
+    g:{P:2.7/100,C:28/100,F:0.3/100,K:130/100},
+    plate:{P:8,C:90,F:1,K:420}
+  }, 
+  source:"USDA + portion est", 
+  confidence:"Medium" 
+},
   "Plain Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
   "Bhuna Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:16,C:75,F:18,K:520} }, source:"BD home avg", confidence:"Low" },
   "Chicken Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:25,C:85,F:18,K:650} }, source:"BD restaurant avg", confidence:"Low" },
@@ -1818,6 +1827,9 @@ let CATEGORY_ITEMS = {
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
+  // Step 3 — Build “All” automatically (critical)
+CATEGORY_ITEMS["All"] = Object.keys(FOOD);
+
   (function buildAllCategory(){
   const allFoods = Object.keys(FOOD);
   CATEGORY_ITEMS["All"] = allFoods.slice().sort();
