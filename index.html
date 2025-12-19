@@ -1827,6 +1827,34 @@ let CATEGORY_ITEMS = {
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
+  /* ===== Step 4 Debug: Prove string mismatch ===== */
+(function debugRiceMismatch(){
+  const FOOD_KEYS = Object.keys(FOOD);
+
+  const riceFoodKey = FOOD_KEYS.find(k => k.toLowerCase().includes("rice"));
+  console.log("FOOD rice-like key found:", riceFoodKey);
+
+  // If you have Carbs category:
+  const carbsList =
+    CATEGORY_ITEMS["Carbs"] ||
+    CATEGORY_ITEMS["Carb"] ||
+    CATEGORY_ITEMS["Rice & Meals"] ||   // fallback: in your current code it's here
+    [];
+
+  console.log("Carbs/Rice list contains:", carbsList);
+
+  const riceExactInCarbs = carbsList.includes("Rice (cooked)");
+  console.log('Carbs includes exact "Rice (cooked)"?', riceExactInCarbs);
+
+  if (riceFoodKey) {
+    console.log("Does carbsList include FOOD key exactly?", carbsList.includes(riceFoodKey));
+    console.log("FOOD key length:", riceFoodKey.length, "chars:", [...riceFoodKey].map(c=>c.charCodeAt(0)));
+  }
+
+  const target = "Rice (cooked)";
+  console.log("Target length:", target.length, "chars:", [...target].map(c=>c.charCodeAt(0)));
+})();
+
   // Step 3 — Build “All” automatically (critical)
 CATEGORY_ITEMS["All"] = Object.keys(FOOD);
 
