@@ -301,55 +301,102 @@
 @media (max-width: 720px){
   .foodBar{ top:86px; }
 }
-/* =========================
-   PATCH 2: Mobile top menu shows all tabs (Dashboard/Profile/Food Log/Lifestyle/PDF)
-   Paste at END of <style>
-   ========================= */
+/* =====================================================
+   FINAL MOBILE LAYOUT FIX — SAFE, ISOLATED, STABLE
+   ===================================================== */
 
-@media (max-width: 720px){
+/* 1) NEVER lock the viewport */
+html, body {
+  overflow-x: auto;
+  overflow-y: auto;
+}
 
-  /* 1) Stop header/top container from clipping */
-  header, .header, .topbar, .topBar, .top-card, .topCard, .container, .wrap {
-    max-width: 100% !important;
-    width: 100% !important;
-    overflow: visible !important;
+/* 2) App wrapper must never clip content */
+.wrap {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+/* 3) Tabs behave SAME on all pages */
+@media (max-width: 768px) {
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;              /* allows 2 rows */
+    gap: 10px;
+    width: 100%;
   }
 
-  /* 2) Make the menu row swipeable instead of wrapping/clipping */
-  nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
-    display: flex !important;
-    flex-wrap: wrap !important;       /* IMPORTANT */
-    overflow-x: auto !important;      /* IMPORTANT */
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch;
-    gap: 8px;
-    width: 100% !important;
-    padding-bottom: 6px;
-  }
-
-  /* Hide scrollbar (optional) */
-  nav::-webkit-scrollbar,
-  .nav::-webkit-scrollbar,
-  .menu::-webkit-scrollbar,
-  .tabs::-webkit-scrollbar,
-  .topTabs::-webkit-scrollbar,
-  .nav-tabs::-webkit-scrollbar,
-  .navTabs::-webkit-scrollbar { display: none; }
-
-  /* 3) Prevent each button from shrinking or wrapping */
-  nav a, nav button,
-  .nav a, .nav button,
-  .menu a, .menu button,
-  .tabs a, .tabs button,
-  .nav-tabs a, .nav-tabs button,
-  .tabbtn, .tabBtn {
-    flex: 0 0 auto !important;
-    white-space: nowrap !important;
-    padding: 10px 12px !important;
-    font-size: 12px !important;
-    border-radius: 999px !important;
+  .tabbtn {
+    flex: 1 1 calc(50% - 10px);   /* 2 buttons per row */
+    text-align: center;
+    white-space: nowrap;
+    padding: 12px 10px;
+    font-size: 13px;
   }
 }
+
+/* 4) Tables scroll INSIDE, page never breaks */
+@media (max-width: 768px) {
+
+  .tableWrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tableWrap table {
+    min-width: 720px;
+  }
+}
+
+/* 5) Inputs & buttons always fit screen */
+input, select, textarea, button {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+/* =====================================================
+   FIX: Food Log buttons cut on mobile
+   Stack buttons vertically
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+  /* Wrapper that holds Add Entry + Add Custom Food */
+  .btnRow,
+  .buttonRow,
+  .actionsRow,
+  .twoBtnRow {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  /* Buttons must be full width */
+  .btnRow .btn,
+  .buttonRow .btn,
+  .actionsRow .btn,
+  .twoBtnRow .btn {
+    width: 100% !important;
+  }
+}
+/* =====================================================
+   FIX: Food Log action buttons cut on mobile
+   Targets ONLY the Add Entry + Add Custom Food row
+   ===================================================== */
+@media (max-width: 768px) {
+
+  /* This matches your exact wrapper: <div class="row cols2"> */
+  #page-food .row.cols2 {
+    grid-template-columns: 1fr !important;  /* stack vertically */
+  }
+
+  #page-food .row.cols2 .btn {
+    width: 100% !important;
+  }
+}
+
 
   </style>
 </head>
@@ -914,9 +961,10 @@
 
         <div class="divider"></div>
 
-        <h3>Daily Entries</h3>
-        <div class="sub">Edit quantity inline or delete any row. Includes source/confidence.</div>
-        <div class="tableWrap" style="margin-top:10px">
+   <h3>Daily Entries</h3>
+<p class="sub">Edit quantity inline or delete any row. Includes source/confidence.</p>
+
+<div class="tableWrap">
           <table>
             <thead>
               <tr>
@@ -1677,6 +1725,9 @@ let FOOD = {
   "Hilsa Fish": { unitOptions:["g"], perUnit:{ g:{P:22/100,C:0,F:12/100,K:180/100} }, source:"BD fish avg", confidence:"Medium" },
 
   // Eggs & Dairy
+    "Cheddar Cheese": { unitOptions:["g"], perUnit:{ g:{P:25/100,C:1.3/100,F:33/100,K:403/100} }, source:"USDA avg", confidence:"High" },
+  "Mozzarella Cheese": { unitOptions:["g"], perUnit:{ g:{P:22/100,C:2.2/100,F:22/100,K:300/100} }, source:"USDA avg", confidence:"High" },
+  "Processed Cheese Slice": { unitOptions:["slice"], perUnit:{ slice:{P:4,C:1,F:6,K:80} }, source:"label avg", confidence:"Medium" },
   "Egg (whole)": { unitOptions:["pcs"], perUnit:{ pcs:{P:6,C:0.6,F:5,K:72} }, source:"USDA", confidence:"High" },
   "Egg White": { unitOptions:["pcs"], perUnit:{ pcs:{P:3.6,C:0.2,F:0,K:17} }, source:"USDA", confidence:"High" },
   "Yogurt / Curd": { unitOptions:["g"], perUnit:{ g:{P:3.5/100,C:4.7/100,F:3.3/100,K:61/100} }, source:"USDA avg", confidence:"High" },
@@ -1686,10 +1737,17 @@ let FOOD = {
   "Daal (fried/tadka)": { unitOptions:["cup"], perUnit:{ cup:{P:17,C:38,F:6,K:290} }, source:"lentils+oil avg", confidence:"Medium" },
 
   // Rice & Meals
-  "Rice (cooked)": { unitOptions:["g","plate"], perUnit:{
-      g:{P:2.7/100,C:28/100,F:0.3/100,K:130/100},
-      plate:{P:8,C:90,F:1,K:420}
-  }, source:"USDA + portion est", confidence:"Medium" },
+    "Polau / Pulao": { unitOptions:["plate"], perUnit:{ plate:{P:10,C:85,F:12,K:520} }, source:"BD home avg", confidence:"Low" },
+  // Rice
+"Rice (cooked)": { 
+  unitOptions:["g","plate"], 
+  perUnit:{
+    g:{P:2.7/100,C:28/100,F:0.3/100,K:130/100},
+    plate:{P:8,C:90,F:1,K:420}
+  }, 
+  source:"USDA + portion est", 
+  confidence:"Medium" 
+},
   "Plain Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:14,C:70,F:10,K:420} }, source:"BD home avg", confidence:"Low" },
   "Bhuna Khichuri": { unitOptions:["plate"], perUnit:{ plate:{P:16,C:75,F:18,K:520} }, source:"BD home avg", confidence:"Low" },
   "Chicken Biryani": { unitOptions:["plate"], perUnit:{ plate:{P:25,C:85,F:18,K:650} }, source:"BD restaurant avg", confidence:"Low" },
@@ -1701,6 +1759,8 @@ let FOOD = {
   "Paratha": { unitOptions:["pcs"], perUnit:{ pcs:{P:6,C:30,F:12,K:260} }, source:"avg", confidence:"Medium" },
 
   // Vegetables
+    "Potato (boiled)": { unitOptions:["g"], perUnit:{ g:{P:2/100,C:17/100,F:0.1/100,K:87/100} }, source:"USDA avg", confidence:"High" },
+  "Potato (fried/fries)": { unitOptions:["g"], perUnit:{ g:{P:3.4/100,C:41/100,F:15/100,K:312/100} }, source:"USDA avg", confidence:"Medium" },
   "Mixed Vegetables": { unitOptions:["cup"], perUnit:{ cup:{P:2,C:5,F:0.2,K:35} }, source:"avg", confidence:"Medium" },
   "Salad": { unitOptions:["cup"], perUnit:{ cup:{P:0.5,C:2,F:0.1,K:15} }, source:"avg", confidence:"High" },
 
@@ -1732,24 +1792,177 @@ let FOOD = {
 /* Base categories */
 let CATEGORY_ITEMS = {
   "All": [], // filled at runtime
+
   "Chicken & Poultry": [
     "Chicken Breast (skinless)","Chicken Thigh (skinless)",
     "Chicken Leg (drumstick)","Chicken Wing","Chicken (with skin)"
   ],
   "Meat": ["Beef (cooked)","Mutton (cooked)","Lamb (cooked)","Duck (cooked)"],
   "Fish": ["Fish (generic)","Hilsa Fish"],
+
+  "Eggs & Dairy": [
+    "Egg (whole)",
+    "Egg White",
+    "Yogurt / Curd",
+    "Cheddar Cheese",
+    "Mozzarella Cheese",
+    "Processed Cheese Slice"
+  ],
+
   "Daal / Lentils": ["Daal (cooked)","Daal (fried/tadka)"],
+
   "Rice & Meals": [
-    "Rice (cooked)","Plain Khichuri","Bhuna Khichuri",
+    "Plain Khichuri","Bhuna Khichuri",
     "Chicken Biryani","Kacchi Biryani","Beef Biryani"
   ],
+
+  "Carbs": [
+    "Rice (cooked)",
+    "Polau / Pulao",
+    "Roti",
+    "Paratha"
+  ],
+
   "Roti / Bread": ["Roti","Paratha"],
-  "Vegetables": ["Mixed Vegetables","Salad"],
+  "Vegetables": ["Mixed Vegetables","Salad","Potato (boiled)","Potato (fried/fries)"],
   "Fruits": ["Banana","Apple","Orange","Mango"],
   "Snacks": ["Peanuts","Almonds","Biscuits"],
   "Drinks": ["Milk Tea","Black Tea (with sugar)","Black Coffee","Coffee with milk & sugar"],
   "Desserts": ["Cake slice","Chocolate cube","Ice Cream","Firni","Jorda"]
 };
+  
+/* Step 3 — Build “All” automatically (critical) */
+(function buildAllCategory(){
+  CATEGORY_ITEMS["All"] = Object.keys(FOOD).slice().sort();
+})();
+
+/* ===========================
+   CATEGORY VIEW (Simplify UX) — SAFE
+   - DOES NOT overwrite CATEGORY_ITEMS
+   - Builds CATEGORY_VIEW for dropdown only
+   - Guarantees no missing foods via "Uncategorized"
+=========================== */
+
+let CATEGORY_VIEW = {}; // MUST exist globally
+
+
+const CATEGORY_VIEW_MAP = {
+  "All": ["All"],
+
+  /* Core buckets */
+  "Carbs": ["Carbs", "Carbs (BD)"],
+  "Rice & Meals": ["Rice & Meals", "Meals (BD)", "Meals (Mixed)", "BD Takeout"],
+  "Eggs & Dairy": ["Eggs & Dairy", "Cheese & Dairy"],
+
+  "Chicken & Poultry": ["Chicken & Poultry", "Chicken (Parts)", "Poultry / Game"],
+  "Meat": ["Meat", "Offal / Traditional"],
+  "Fish": ["Fish", "Sea Fish", "River Fish", "Small Fish", "Seafood (Shellfish)"],
+
+  "Vegetables": ["Vegetables", "Potato", "BD Sides / Bhaji", "Soups"],
+  "Fruits": ["Fruits"],
+
+  "Daal / Lentils": ["Daal / Lentils"],
+
+  "Snacks": ["Snacks", "BD Street Food / Snacks", "BD Snacks", "Nuts & Dates"],
+  "Drinks": ["Drinks"],
+  "Desserts": ["Desserts", "Pitha / Sweets"],
+
+  /* Optional: show oils as its own dropdown bucket.
+     If you don't want a separate dropdown item, map "Fats & Oils" into Snacks or Meals instead. */
+  "Fats & Oils": ["Fats & Oils"]
+};
+
+
+function buildCategoryView(){
+  const uniq = (arr)=>Array.from(new Set(arr)).filter(Boolean);
+
+  // Always rebuild "All" from FOOD keys (single source of truth)
+  const allFoods = Object.keys(FOOD).slice().sort((a,b)=>a.localeCompare(b));
+  CATEGORY_VIEW = { "All": allFoods };
+
+  // Build each view category by mapping to CATEGORY_ITEMS categories
+  Object.keys(CATEGORY_VIEW_MAP).forEach(viewCat=>{
+    if(viewCat === "All") return;
+
+    const rawCats = CATEGORY_VIEW_MAP[viewCat] || [];
+    let items = [];
+
+    rawCats.forEach(rc=>{
+      if(Array.isArray(CATEGORY_ITEMS[rc])) items = items.concat(CATEGORY_ITEMS[rc]);
+    });
+
+    // keep only items that exist in FOOD
+    CATEGORY_VIEW[viewCat] = uniq(items).filter(name => FOOD[name]);
+  });
+
+  // Create Uncategorized = food keys not used in any view category
+  const used = new Set();
+  Object.keys(CATEGORY_VIEW).forEach(vc=>{
+    if(vc === "All") return;
+    (CATEGORY_VIEW[vc] || []).forEach(x=>used.add(x));
+  });
+
+  const uncategorized = allFoods.filter(x=>!used.has(x));
+  if(uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
+}
+
+
+function mergeCategories(){
+  const uniq = (arr) => Array.from(new Set(arr)).filter(Boolean);
+
+  // Keep a snapshot of current categories before we rebuild
+  const old = CATEGORY_ITEMS || {};
+
+  const merged = {};
+  merged["All"] = [];
+
+  // 1) Build merged categories strictly from CATEGORY_MERGE_MAP
+  Object.keys(CATEGORY_MERGE_MAP).forEach(newCat=>{
+    const oldCats = CATEGORY_MERGE_MAP[newCat] || [];
+    let items = [];
+    oldCats.forEach(oc=>{
+      if(Array.isArray(old[oc])) items = items.concat(old[oc]);
+    });
+    merged[newCat] = uniq(items.filter(name => FOOD[name]));
+  });
+
+  // 2) Preserve any old categories NOT referenced by CATEGORY_MERGE_MAP
+  const mappedOldCats = new Set(Object.values(CATEGORY_MERGE_MAP).flat());
+  Object.keys(old).forEach(oldCat=>{
+    if(oldCat === "All") return;
+    if(mappedOldCats.has(oldCat)) return;
+    merged[oldCat] = uniq((old[oldCat] || []).filter(name => FOOD[name]));
+  });
+
+  // 3) FAIL-SAFE: If a critical category went empty, restore it from old (prevents “Eggs & Dairy disappeared”)
+  const criticalCats = ["Eggs & Dairy", "Vegetables", "Fruits", "Snacks", "Drinks", "Desserts & Sweets", "Desserts"];
+  criticalCats.forEach(cat=>{
+    if(!merged[cat] || merged[cat].length === 0){
+      if(Array.isArray(old[cat]) && old[cat].length){
+        merged[cat] = uniq(old[cat].filter(name => FOOD[name]));
+      }
+    }
+  });
+
+  // 4) Rebuild "All"
+  merged["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
+
+  // 5) Create "Uncategorized" ONLY for foods not present in ANY category (real uncategorized)
+  const used = new Set();
+  Object.keys(merged).forEach(cat=>{
+    if(cat === "All") return;
+    (merged[cat] || []).forEach(name=>used.add(name));
+  });
+  const uncategorized = merged["All"].filter(name => !used.has(name));
+  if(uncategorized.length){
+    merged["Uncategorized"] = uncategorized;
+  }else{
+    delete merged["Uncategorized"];
+  }
+
+  CATEGORY_ITEMS = merged;
+ 
+}
 
 /* PATCH 1: Extensions (adds missing foods without overwriting existing keys) */
 const FOOD_PATCH_1 = {
@@ -2233,10 +2446,13 @@ function saveCustomFoods(map){
   localStorage.setItem(LS_CUSTOM_FOOD, JSON.stringify(map));
 }
 
-/* Apply patches 1..6 (build categories + All) */
 function applyAllFoodPatches(){
+  // Ensure base arrays exist early
+  applyFruitSnackSplit();
+
   // 1) Merge food extensions (no overwrite)
   Object.keys(FOOD_PATCH_1).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_1[k]; });
+
   // X) Merge PATCH X foods (no overwrite)
   Object.keys(FOOD_PATCH_X).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_X[k]; });
 
@@ -2256,8 +2472,7 @@ function applyAllFoodPatches(){
     });
   });
 
-  // 2) Ensure split exists
-    // 2) Merge PATCH 2 foods (no overwrite)
+  // 2) Merge PATCH 2 foods (no overwrite)
   Object.keys(FOOD_PATCH_2).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_2[k]; });
 
   // 2) Merge PATCH 2 categories
@@ -2267,34 +2482,35 @@ function applyAllFoodPatches(){
       if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
     });
   });
-/* PATCH 3 merge */
-Object.keys(FOOD_PATCH_3).forEach(k=>{
-  if(!FOOD[k]) FOOD[k] = FOOD_PATCH_3[k];
-});
 
-Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
-  if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat] = [];
-  CATEGORY_PATCH_3[cat].forEach(item=>{
-    if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)){
-      CATEGORY_ITEMS[cat].push(item);
-    }
+  // 3) Merge PATCH 3 foods + categories
+  Object.keys(FOOD_PATCH_3).forEach(k=>{
+    if(!FOOD[k]) FOOD[k] = FOOD_PATCH_3[k];
   });
-});
 
-  applyFruitSnackSplit();
+  Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
+    if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat] = [];
+    CATEGORY_PATCH_3[cat].forEach(item=>{
+      if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)){
+        CATEGORY_ITEMS[cat].push(item);
+      }
+    });
+  });
 
-  // 4) Merge custom foods (no overwrite of base unless same key—custom wins only if same name explicitly)
+  // 4) Merge custom foods (custom overrides by design)
   const custom = loadCustomFoods();
   Object.keys(custom).forEach(k=>{
-    FOOD[k] = custom[k]; // custom override by design (user knows what they saved)
-    // ensure it appears in its category
+    FOOD[k] = custom[k];
     const c = custom[k]?.category || "Custom";
     if(!CATEGORY_ITEMS[c]) CATEGORY_ITEMS[c]=[];
     if(!CATEGORY_ITEMS[c].includes(k)) CATEGORY_ITEMS[c].push(k);
   });
 
-  // rebuild "All" as union of FOOD keys
-  CATEGORY_ITEMS["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
+  // Rebuild All AFTER all patches + custom foods
+  CATEGORY_ITEMS["All"] = Object.keys(FOOD).slice().sort((a,b)=>a.localeCompare(b));
+
+  // Rebuild dropdown view categories now that categories + FOOD are final
+  buildCategoryView();
 }
 
 /* ===== Food compute ===== */
@@ -2319,24 +2535,35 @@ function foodMeta(foodName){
 function buildCategorySelect(){
   const sel=$("entryCategory");
   sel.innerHTML="";
-  Object.keys(CATEGORY_ITEMS).forEach(cat=>{
+
+  // Ensure view exists
+  if(!CATEGORY_VIEW || !CATEGORY_VIEW["All"]) buildCategoryView();
+
+  Object.keys(CATEGORY_VIEW).forEach(cat=>{
     const opt=document.createElement("option");
     opt.value=cat; opt.textContent=cat;
     sel.appendChild(opt);
   });
+
   sel.value = "All";
 }
+
 function buildFoodSelect(){
   const category = $("entryCategory").value || "All";
   const q = ($("foodSearch").value || "").trim().toLowerCase();
 
-  let list = (CATEGORY_ITEMS[category] || []).slice();
-  if(category==="All") list = CATEGORY_ITEMS["All"].slice();
+    // Ensure view exists
+  if(!CATEGORY_VIEW || !CATEGORY_VIEW["All"]) buildCategoryView();
+
+  let list = (CATEGORY_VIEW[category] || []).slice();
+  if(category==="All") list = CATEGORY_VIEW["All"].slice();
+
 
   // If search typed, search across ALL foods regardless of category (best UX)
   let filtered = list;
   if(q){
-    filtered = CATEGORY_ITEMS["All"].filter(name => name.toLowerCase().includes(q));
+   filtered = (CATEGORY_VIEW["All"] || []).filter(name => name.toLowerCase().includes(q));
+
   }
 
   const sel=$("entryFood");
@@ -2466,6 +2693,18 @@ function addEntry(){
   renderEntries();
   scheduleRefresh();
 }
+  const CATEGORY_MERGE_MAP = {};
+function normalizeEntryCategory(cat){
+  if(!cat) return "";
+  if(CATEGORY_ITEMS && CATEGORY_ITEMS[cat]) return cat;
+
+  if(typeof CATEGORY_MERGE_MAP === "object" && CATEGORY_MERGE_MAP){
+    for(const newCat in CATEGORY_MERGE_MAP){
+      if((CATEGORY_MERGE_MAP[newCat] || []).includes(cat)) return newCat;
+    }
+  }
+  return cat;
+}
 
 function renderEntries(){
   const profile=getActiveProfile() || getProfileDraft();
@@ -2481,7 +2720,7 @@ function renderEntries(){
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td>${e.meal}</td>
-      <td>${e.category || ""}</td>
+      <td>${normalizeEntryCategory(e.category || "")}</td>
       <td>${e.food}</td>
       <td><input class="miniInput" type="number" min="0" step="0.1" value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
       <td>${e.unit}</td>
