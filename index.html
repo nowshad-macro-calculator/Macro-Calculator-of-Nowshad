@@ -1878,40 +1878,59 @@ function buildCategoryView(){
 
 
 function mergeCategories(){
-  // Helper: get unique items
-  const uniq = (arr) => Array.from(new Set(arr));
+  const uniq = (arr) => Array.from(new Set(arr)).filter(Boolean);
 
-  // Build merged categories
+  // Keep a snapshot of current categories before we rebuild
+  const old = CATEGORY_ITEMS || {};
+
   const merged = {};
-
-  // Always start All fresh later
   merged["All"] = [];
 
+  // 1) Build merged categories strictly from CATEGORY_MERGE_MAP
   Object.keys(CATEGORY_MERGE_MAP).forEach(newCat=>{
     const oldCats = CATEGORY_MERGE_MAP[newCat] || [];
     let items = [];
     oldCats.forEach(oc=>{
-      if(Array.isArray(CATEGORY_ITEMS[oc])) items = items.concat(CATEGORY_ITEMS[oc]);
+      if(Array.isArray(old[oc])) items = items.concat(old[oc]);
     });
-
-    // Only keep items that exist in FOOD
     merged[newCat] = uniq(items.filter(name => FOOD[name]));
   });
 
-  // Also keep any category that is not mentioned anywhere (so you don’t “lose” stuff)
-  // BUT skip "All"
+  // 2) Preserve any old categories NOT referenced by CATEGORY_MERGE_MAP
   const mappedOldCats = new Set(Object.values(CATEGORY_MERGE_MAP).flat());
-  Object.keys(CATEGORY_ITEMS).forEach(oldCat=>{
+  Object.keys(old).forEach(oldCat=>{
     if(oldCat === "All") return;
-    if(mappedOldCats.has(oldCat)) return; // already merged
-    // Keep unmapped categories (like "Potato") if you still want them; or skip them:
-    merged[oldCat] = uniq((CATEGORY_ITEMS[oldCat] || []).filter(name => FOOD[name]));
+    if(mappedOldCats.has(oldCat)) return;
+    merged[oldCat] = uniq((old[oldCat] || []).filter(name => FOOD[name]));
   });
 
-  // Replace CATEGORY_ITEMS with merged version
-  CATEGORY_ITEMS = merged;
+  // 3) FAIL-SAFE: If a critical category went empty, restore it from old (prevents “Eggs & Dairy disappeared”)
+  const criticalCats = ["Eggs & Dairy", "Vegetables", "Fruits", "Snacks", "Drinks", "Desserts & Sweets", "Desserts"];
+  criticalCats.forEach(cat=>{
+    if(!merged[cat] || merged[cat].length === 0){
+      if(Array.isArray(old[cat]) && old[cat].length){
+        merged[cat] = uniq(old[cat].filter(name => FOOD[name]));
+      }
+    }
+  });
 
-  // rebuild "All"
+  // 4) Rebuild "All"
+  merged["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
+
+  // 5) Create "Uncategorized" ONLY for foods not present in ANY category (real uncategorized)
+  const used = new Set();
+  Object.keys(merged).forEach(cat=>{
+    if(cat === "All") return;
+    (merged[cat] || []).forEach(name=>used.add(name));
+  });
+  const uncategorized = merged["All"].filter(name => !used.has(name));
+  if(uncategorized.length){
+    merged["Uncategorized"] = uncategorized;
+  }else{
+    delete merged["Uncategorized"];
+  }
+
+  CATEGORY_ITEMS = merged;
  
 }
 
