@@ -161,33 +161,6 @@
       color:rgba(238,243,255,.92);
       vertical-align:middle;
     }
-    /* ===========================
-   PATCH C: Mobile Food Log (cards) + prevent zoom pain
-=========================== */
-.entriesMobile{ display:none; margin-top:10px; }
-.entryCard{
-  border:1px solid rgba(255,255,255,.16);
-  background:rgba(255,255,255,.06);
-  border-radius:16px;
-  padding:12px;
-  margin-bottom:10px;
-}
-.entryCard .t1{ font-weight:800; font-size:14px; }
-.entryCard .t2{ color:rgba(238,243,255,.75); font-size:12px; margin-top:2px; }
-.entryCard .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
-.entryCard .miniRow{ display:flex; justify-content:space-between; gap:10px; font-size:12px; color:rgba(238,243,255,.92); }
-.entryCard input{ font-size:16px; } /* helps avoid iOS zoom */
-
-@media (max-width: 720px){
-  /* Hide wide table; show cards */
-  table{ min-width:unset; }
-  .tableWrap{ display:none; }
-  .entriesMobile{ display:block; }
-
-  /* Make food search easier on mobile */
-  #foodSearch{ padding:14px 14px; font-size:16px; border-radius:14px; }
-}
-
     th{color:rgba(238,243,255,.75); font-weight:800; background:rgba(255,255,255,.06)}
     .miniInput{
       width:90px; padding:8px 8px; border-radius:10px; font-size:12px;
@@ -586,48 +559,14 @@
 
         <div class="divider"></div>
 
-    <!-- Food Log Top Controls (Sticky on mobile) -->
-<div class="foodTopBar">
-  <div class="foodTopRow">
-    <div class="foodTopLeft">
-      <div class="foodDateWrap">
-        <label class="miniLabel">Date</label>
-        <input type="date" id="logDate">
-      </div>
-
-      <div class="foodMealWrap">
-        <label class="miniLabel">Meal</label>
-        <select id="mealType">
-          <option>Breakfast</option>
-          <option>Brunch</option>
-          <option selected>Lunch</option>
-          <option>Dinner</option>
-          <option>Supper</option>
-          <option>Pre-workout meal</option>
-          <option>Post-workout meal</option>
-          <option>Snacks</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Big Search Bar -->
-  <div class="foodSearchWrap">
-    <input id="foodSearch" class="bigSearch" placeholder="Search for a food (biryani, chicken, dates...)" />
-  </div>
-
-  <div class="foodFilterRow">
-    <div>
-      <label class="miniLabel">Category</label>
-      <select id="entryCategory"></select>
-    </div>
-    <div>
-      <label class="miniLabel">Food item</label>
-      <select id="entryFood"></select>
-    </div>
-  </div>
-</div>
-
+        <div class="row cols2">
+          <div>
+            <label>Log date</label>
+            <input type="date" id="logDate">
+          </div>
+          <div>
+            <label>Meal type</label>
+            <select id="mealType">
               <option>Breakfast</option>
               <option>Brunch</option>
               <option selected>Lunch</option>
@@ -643,6 +582,17 @@
         <div class="divider"></div>
 
         <h3>Add Food Entry</h3>
+
+        <div class="row cols2">
+          <div>
+            <label>Search food</label>
+            <input id="foodSearch" placeholder="Search: biryani, dates, chicken..." />
+          </div>
+          <div>
+            <label>Filter (Category)</label>
+            <select id="entryCategory"></select>
+          </div>
+        </div>
 
         <div class="row cols2" style="margin-top:10px">
           <div>
@@ -785,8 +735,6 @@
 
         <h3>Daily Entries</h3>
         <div class="sub">Edit quantity inline or delete any row. Includes source/confidence.</div>
-  <!-- Mobile-friendly cards -->
-<div id="entriesMobile" class="entriesMobile"></div>
         <div class="tableWrap" style="margin-top:10px">
           <table>
             <thead>
@@ -1653,7 +1601,6 @@ const CATEGORY_PATCH_1 = {
   "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
   "Drinks": ["Coffee w/ Milk + Sugar"]
 };
-
   /* PATCH 3: Mixed Meals + BD Takeout + Soft Drinks */
 const FOOD_PATCH_3 = {
 
@@ -2118,17 +2065,6 @@ function applyAllFoodPatches(){
     CATEGORY_PATCH_X[cat].forEach(item=>{
       if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
     });
-      // B) Merge Patch B foods (no overwrite of base)
-  Object.keys(FOOD_PATCH_B).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_B[k]; });
-
-  // B) Merge Patch B categories
-  Object.keys(CATEGORY_PATCH_B).forEach(cat=>{
-    if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat]=[];
-    CATEGORY_PATCH_B[cat].forEach(item=>{
-      if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
-    });
-  });
-
   });
 
   // 1) Merge category extensions
@@ -2163,71 +2099,6 @@ Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
     }
   });
 });
-/* ===== Food Log UX upgrades ===== */
-.foodTopBar{
-  position: sticky;
-  top: 78px; /* below your topbar */
-  z-index: 20;
-  background: rgba(7,26,75,.85);
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 16px;
-  padding: 12px;
-  backdrop-filter: blur(10px);
-}
-
-.miniLabel{ font-size:11px; color:var(--muted); display:block; margin-bottom:6px; }
-
-.foodTopRow{ display:flex; gap:10px; flex-wrap:wrap; }
-.foodTopLeft{ display:flex; gap:10px; flex:1; flex-wrap:wrap; }
-.foodDateWrap, .foodMealWrap{ flex:1; min-width: 150px; }
-
-.foodSearchWrap{ margin-top:10px; }
-.bigSearch{
-  width:100%;
-  padding: 14px 14px;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 700;
-  border:1px solid rgba(255,255,255,.25);
-  background:rgba(10,20,60,.55);
-}
-
-.foodFilterRow{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:10px;
-  margin-top:10px;
-}
-
-/* Mobile: switch to single-column controls */
-@media (max-width: 640px){
-  .foodFilterRow{ grid-template-columns: 1fr; }
-  .wrap{ padding: 12px 10px 70px; }
-}
-
-/* ===== Mobile Entries Cards ===== */
-.entriesMobile{ display:none; margin-top:10px; }
-.entryCard{
-  border:1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.07);
-  border-radius: 16px;
-  padding: 12px;
-  margin-bottom: 10px;
-}
-.entryTitle{ font-weight: 800; font-size: 14px; }
-.entryMeta{ color: var(--muted); font-size: 12px; margin-top:4px; }
-.entryNums{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; font-size: 12px; }
-.entryNums b{ color: rgba(238,243,255,.92); }
-.entryActions{ display:flex; gap:10px; margin-top:10px; align-items:center; }
-.entryActions input{ width: 110px; }
-.entryActions button{ flex: 1; }
-
-/* Mobile behavior: hide wide table, show cards */
-@media (max-width: 760px){
-  table{ min-width: 0 !important; }
-  .tableWrap{ display:none; }
-  .entriesMobile{ display:block; }
-}
 
   applyFruitSnackSplit();
 
@@ -2422,8 +2293,6 @@ function renderEntries(){
 
   const tb=$("entriesTbody");
   tb.innerHTML="";
-    const mobile = $("entriesMobile");
-  mobile.innerHTML = "";
 
   day.entries.forEach(e=>{
     const t=computeFood(e.food, n(e.qty), e.unit);
@@ -2444,31 +2313,6 @@ function renderEntries(){
       <td><button class="actionBtn" data-id="${e.id}" data-action="del">Delete</button></td>
     `;
     tb.appendChild(tr);
-        // PATCH C: mobile card
-    const card=document.createElement("div");
-    card.className="entryCard";
-    card.innerHTML=`
-      <div class="t1">${e.food}</div>
-      <div class="t2">${e.meal} • ${e.category || ""} • ${e.qty} ${e.unit}</div>
-
-      <div class="grid2">
-        <div class="miniRow"><span>P</span><b>${round1(t.P)} g</b></div>
-        <div class="miniRow"><span>C</span><b>${round1(t.C)} g</b></div>
-        <div class="miniRow"><span>F</span><b>${round1(t.F)} g</b></div>
-        <div class="miniRow"><span>Kcal</span><b>${Math.round(t.K)}</b></div>
-      </div>
-
-      <div class="t2" style="margin-top:8px;">
-        Source: <b>${meta.source}</b> • Conf: <b>${meta.confidence}</b>
-      </div>
-
-      <div style="display:flex; gap:10px; margin-top:10px;">
-        <input class="miniInput" style="flex:1; width:auto" type="number" min="0" step="0.1" value="${e.qty}" data-id="${e.id}" data-field="qtyMobile">
-        <button class="actionBtn" data-id="${e.id}" data-action="delMobile">Delete</button>
-      </div>
-    `;
-    mobile.appendChild(card);
-
   });
 
   tb.querySelectorAll('input[data-field="qty"]').forEach(inp=>{
@@ -2493,31 +2337,6 @@ function renderEntries(){
       renderEntries();
       scheduleRefresh();
     });
-      // PATCH C: mobile hooks
-  mobile.querySelectorAll('input[data-field="qtyMobile"]').forEach(inp=>{
-    inp.addEventListener("input", ()=>{
-      const id=inp.dataset.id;
-      const day2=getDayLog(dateKey);
-      const row=day2.entries.find(x=>x.id===id);
-      if(row){
-        row.qty = n(inp.value);
-        setDayLog(dateKey, day2);
-        renderEntries();
-        scheduleRefresh();
-      }
-    });
-  });
-  mobile.querySelectorAll('button[data-action="delMobile"]').forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const id=btn.dataset.id;
-      const day2=getDayLog(dateKey);
-      day2.entries = day2.entries.filter(x=>x.id!==id);
-      setDayLog(dateKey, day2);
-      renderEntries();
-      scheduleRefresh();
-    });
-  });
-
   });
 
   const total=computeTotalsFromEntries(dateKey);
