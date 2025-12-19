@@ -301,281 +301,62 @@
 @media (max-width: 720px){
   .foodBar{ top:86px; }
 }
-/* =========================
-   PATCH 2: Mobile top menu shows all tabs (Dashboard/Profile/Food Log/Lifestyle/PDF)
-   Paste at END of <style>
-   ========================= */
+/* =====================================================
+   FINAL MOBILE LAYOUT FIX — SAFE, ISOLATED, STABLE
+   ===================================================== */
 
-@media (max-width: 720px){
-
-  /* 1) Stop header/top container from clipping */
-  header, .header, .topbar, .topBar, .top-card, .topCard, .container, .wrap {
-    max-width: 100% !important;
-    width: 100% !important;
-    overflow: visible !important;
-  }
-
-  /* 2) Make the menu row swipeable instead of wrapping/clipping */
-  nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
-    display: flex !important;
-    flex-wrap: wrap !important;       /* IMPORTANT */
-    overflow-x: auto !important;      /* IMPORTANT */
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch;
-    gap: 8px;
-    width: 100% !important;
-    padding-bottom: 6px;
-  }
-
-  /* Hide scrollbar (optional) */
-  nav::-webkit-scrollbar,
-  .nav::-webkit-scrollbar,
-  .menu::-webkit-scrollbar,
-  .tabs::-webkit-scrollbar,
-  .topTabs::-webkit-scrollbar,
-  .nav-tabs::-webkit-scrollbar,
-  .navTabs::-webkit-scrollbar { display: none; }
-
-  /* 3) Prevent each button from shrinking or wrapping */
-  nav a, nav button,
-  .nav a, .nav button,
-  .menu a, .menu button,
-  .tabs a, .tabs button,
-  .nav-tabs a, .nav-tabs button,
-  .tabbtn, .tabBtn {
-    flex: 0 0 auto !important;
-    white-space: nowrap !important;
-    padding: 10px 12px !important;
-    font-size: 12px !important;
-    border-radius: 999px !important;
-  }
-}
-/* =========================
-   PATCH 2.1: Mobile header + tabs layout (compact, clean)
-   Paste AFTER Patch 2
-   ========================= */
-
-@media (max-width: 720px){
-
-  /* Header card spacing */
-  .header-card, .top-card, header, .header {
-    padding: 14px !important;
-  }
-
-  /* Title smaller so it doesn't push everything down */
-  .header-card h1, header h1, .header h1 {
-    font-size: 20px !important;
-    line-height: 1.2 !important;
-    margin: 0 0 6px 0 !important;
-  }
-
-  /* Put tabs in 2 columns (no clipping, looks intentional) */
-  nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-    overflow: visible !important;   /* stop horizontal scroll now */
-    padding-bottom: 0 !important;
-  }
-
-  /* Buttons full width in grid */
-  nav a, nav button,
-  .nav a, .nav button,
-  .menu a, .menu button,
-  .tabs a, .tabs button,
-  .nav-tabs a, .nav-tabs button,
-  .tabbtn, .tabBtn {
-    width: 100% !important;
-    justify-content: center !important;
-    font-size: 13px !important;
-    padding: 12px 10px !important;
-  }
-}
-/* =========================
-   PATCH 2.2: Daily Entries table mobile scroll (no cut-off columns)
-   Paste AFTER Patch 2.1
-   ========================= */
-
-@media (max-width: 720px){
-
-  /* Wrap the table container to allow horizontal scroll */
-  .table-wrap, .tableWrap, .entries-table-wrap, .entriesTableWrap {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 16px;
-  }
-
-  table {
-    min-width: 820px !important; /* forces scroll instead of squish */
-  }
-
-  th, td {
-    white-space: nowrap !important;
-    font-size: 12px !important;
-  }
-}
-/* =========================
-   PATCH 2.3: Force header/nav to behave same on every page
-   Put at VERY BOTTOM of <style>
-   ========================= */
-
-:root { --appMax: 980px; }
-
-/* 1) Make your top header/card always full-width + same max width */
-.header-card, .top-card, header, .header, .topHeader, .topBar {
-  width: 100% !important;
-  max-width: var(--appMax) !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  box-sizing: border-box !important;
-}
-
-/* 2) Force nav container to not clip items */
-nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
-  width: 100% !important;
-  max-width: var(--appMax) !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  box-sizing: border-box !important;
-  overflow: visible !important;
-}
-
-/* 3) Make nav buttons flexible so Food Log/Lifestyle can't “shrink” them */
-nav a, nav button,
-.nav a, .nav button,
-.menu a, .menu button,
-.tabs a, .tabs button,
-.nav-tabs a, .nav-tabs button,
-.tabbtn, .tabBtn {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  white-space: nowrap !important;
-}
-
-/* 4) Mobile: always show all tabs (same as Dashboard/Profile) */
-@media (max-width: 720px){
-  nav, .nav, .menu, .tabs, .topTabs, .nav-tabs, .navTabs {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-  }
-
-  nav a, nav button,
-  .nav a, .nav button,
-  .menu a, .menu button,
-  .tabs a, .tabs button,
-  .nav-tabs a, .nav-tabs button,
-  .tabbtn, .tabBtn {
-    width: 100% !important;
-    justify-content: center !important;
-    padding: 12px 10px !important;
-  }
-}
-/* =========================
-   PATCH 2.4: Stop Food Log/Lifestyle from breaking viewport width
-   ========================= */
-
+/* 1) NEVER lock the viewport */
 html, body {
-  max-width: 100% !important;
- 
+  overflow-x: auto;
+  overflow-y: auto;
 }
 
-/* Any “row” wrappers that may be fixed-width */
-.container, .wrap, .page, .pageWrap, .content, .contentWrap {
-  width: 100% !important;
-  max-width: var(--appMax) !important;
-  box-sizing: border-box !important;
+/* 2) App wrapper must never clip content */
+.wrap {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  overflow: visible;
 }
 
-/* Inputs/selects should never exceed screen */
+/* 3) Tabs behave SAME on all pages */
+@media (max-width: 768px) {
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;              /* allows 2 rows */
+    gap: 10px;
+    width: 100%;
+  }
+
+  .tabbtn {
+    flex: 1 1 calc(50% - 10px);   /* 2 buttons per row */
+    text-align: center;
+    white-space: nowrap;
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+}
+
+/* 4) Tables scroll INSIDE, page never breaks */
+@media (max-width: 768px) {
+
+  .tableWrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tableWrap table {
+    min-width: 720px;
+  }
+}
+
+/* 5) Inputs & buttons always fit screen */
 input, select, textarea, button {
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-/* =====================================================
-   PATCH-FIX-A: UNLOCK MOBILE VIEWPORT (CRITICAL)
-   Paste LAST inside <style>
-   ===================================================== */
-
-/* ❌ NEVER lock viewport on mobile */
-html, body {
-  overflow-x: auto !important;
-  overflow-y: auto !important;
-  touch-action: pan-x pan-y !important;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* ❌ Remove forced clipping from app wrappers */
-.wrap,
-.container,
-.page,
-.pageWrap,
-.content,
-.contentWrap {
-  overflow: visible !important;
-  max-width: 100% !important;
-  width: 100% !important;
-}
-
-/* ✅ Allow pinch-zoom and full scroll */
-@media (max-width: 768px) {
-  * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-}
-/* =====================================================
-   PATCH-FIX-B: MOBILE TOP MENU (SAFE VERSION)
-   ===================================================== */
-
-@media (max-width: 768px) {
-
-  /* Header must NEVER clip children */
-  header,
-  .header,
-  .topbar,
-  .header-card {
-    overflow: visible !important;
-    height: auto !important;
-  }
-
-  /* Menu layout = 2x2 grid (NO scroll, NO clip) */
-  .tabs,
-  nav,
-  .nav {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-  }
-
-  /* Buttons scale properly */
-  .tabbtn,
-  nav a,
-  nav button {
-    width: 100% !important;
-    white-space: nowrap !important;
-    font-size: 13px !important;
-    padding: 12px 10px !important;
-    text-align: center !important;
-  }
-}
-/* =====================================================
-   PATCH-FIX-C: FOOD LOG SAFE SCROLL
-   ===================================================== */
-
-@media (max-width: 768px) {
-
-  /* Tables must scroll, NOT break layout */
-  .tableWrap,
-  .entriesTable,
-  .dailyEntries {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  table {
-    min-width: 720px !important;
-  }
-}
 
   </style>
 </head>
