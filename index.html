@@ -1601,6 +1601,156 @@ const CATEGORY_PATCH_1 = {
   "Nuts & Dates": ["Cashews","Walnuts","Pistachios","Hazelnuts","Dates (Deglet Noor)","Dates (Medjool)"],
   "Drinks": ["Coffee w/ Milk + Sugar"]
 };
+  /* PATCH 3: Mixed Meals + BD Takeout + Soft Drinks */
+const FOOD_PATCH_3 = {
+
+  /* ===== MEALS (MIXED) ===== */
+  "Beef Steak (grilled)": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.27,C:0,F:0.12,K:2.5},         // ~250 kcal /100g
+      serving:{P:40,C:0,F:18,K:420}        // ~150g cooked portion
+    },
+    source:"USDA avg (grilled steak)",
+    confidence:"Medium"
+  },
+
+  "Grilled Chicken (mixed pieces)": {
+    unitOptions:["g","serving"],
+    perUnit:{
+      g:{P:0.27,C:0,F:0.07,K:1.65},        // ~165 kcal /100g
+      serving:{P:40,C:0,F:10,K:250}        // ~150g cooked portion
+    },
+    source:"USDA avg (grilled chicken)",
+    confidence:"Medium"
+  },
+
+  "Noodles (cooked)": {
+    unitOptions:["g","bowl","plate"],
+    perUnit:{
+      g:{P:0.05,C:0.25,F:0.01,K:1.38},     // ~138 kcal /100g
+      bowl:{P:12,C:60,F:4,K:320},          // bowl estimate
+      plate:{P:14,C:75,F:6,K:390}          // plate estimate
+    },
+    source:"Avg cooked noodles + oil estimate",
+    confidence:"Low"
+  },
+
+  "Pasta (cooked)": {
+    unitOptions:["g","bowl","plate"],
+    perUnit:{
+      g:{P:0.05,C:0.30,F:0.01,K:1.58},     // ~158 kcal /100g
+      bowl:{P:11,C:55,F:4,K:310},
+      plate:{P:14,C:75,F:6,K:420}
+    },
+    source:"Avg cooked pasta + oil estimate",
+    confidence:"Low"
+  },
+
+  "Pizza (1 slice)": {
+    unitOptions:["slice"],
+    perUnit:{ slice:{P:12,C:34,F:10,K:285} },
+    source:"Label/restaurant avg",
+    confidence:"Low"
+  },
+
+  "Burger (single, generic)": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:25,C:33,F:18,K:430} },
+    source:"Fast food avg",
+    confidence:"Low"
+  },
+
+  "Burger King Whopper": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:28,C:49,F:18,K:660} },
+    source:"Restaurant nutrition avg",
+    confidence:"Medium"
+  },
+
+  "Burger King Double Whopper": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:48,C:49,F:32,K:900} },
+    source:"Restaurant nutrition avg",
+    confidence:"Medium"
+  },
+
+  "KFC Chicken Bucket (8 pcs estimate)": {
+    unitOptions:["bucket","pcs"],
+    perUnit:{
+      bucket:{P:160,C:60,F:140,K:2200},    // very rough bucket estimate
+      pcs:{P:20,C:7.5,F:17.5,K:275}        // per piece rough avg
+    },
+    source:"Takeout estimate (varies a lot by pieces/breading)",
+    confidence:"Low"
+  },
+
+  /* ===== CARBS (BD) ===== */
+  "Polau / Pulao": {
+    unitOptions:["plate","g"],
+    perUnit:{
+      g:{P:0.03,C:0.25,F:0.04,K:1.65},     // ~165 kcal /100g (oil + rice)
+      plate:{P:9,C:80,F:12,K:520}          // typical plate estimate
+    },
+    source:"BD home/restaurant avg",
+    confidence:"Low"
+  },
+
+  /* ===== BD TAKEOUT (BRAND ITEMS - ESTIMATES) ===== */
+  "Chilox Burger (avg)": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:28,C:40,F:22,K:560} },
+    source:"BD takeout estimate",
+    confidence:"Low"
+  },
+
+  "Madchef Burger (avg)": {
+    unitOptions:["pcs"],
+    perUnit:{ pcs:{P:30,C:42,F:24,K:600} },
+    source:"BD takeout estimate",
+    confidence:"Low"
+  },
+
+  /* ===== DRINKS (SOFT DRINKS) ===== */
+  "Coke (330ml can)": {
+    unitOptions:["can"],
+    perUnit:{ can:{P:0,C:35,F:0,K:140} },
+    source:"Label avg",
+    confidence:"High"
+  },
+
+  "Sprite (330ml can)": {
+    unitOptions:["can"],
+    perUnit:{ can:{P:0,C:38,F:0,K:150} },
+    source:"Label avg",
+    confidence:"High"
+  },
+
+  "Diet Coke (330ml can)": {
+    unitOptions:["can"],
+    perUnit:{ can:{P:0,C:0,F:0,K:1} },
+    source:"Label avg",
+    confidence:"High"
+  }
+};
+
+const CATEGORY_PATCH_3 = {
+  "Meals (Mixed)": [
+    "Beef Steak (grilled)",
+    "Grilled Chicken (mixed pieces)",
+    "Noodles (cooked)",
+    "Pasta (cooked)",
+    "Pizza (1 slice)",
+    "Burger (single, generic)",
+    "Burger King Whopper",
+    "Burger King Double Whopper",
+    "KFC Chicken Bucket (8 pcs estimate)"
+  ],
+  "Carbs (BD)": ["Polau / Pulao"],
+  "BD Takeout": ["Chilox Burger (avg)", "Madchef Burger (avg)"],
+  "Drinks": ["Coke (330ml can)", "Sprite (330ml can)", "Diet Coke (330ml can)"]
+};
+
   /* ===========================
    PATCH 2: BD Street Foods + Seafood + Poultry/Game + Soups + Sweets
    (Adds new foods without overwriting existing keys)
@@ -1936,6 +2086,19 @@ function applyAllFoodPatches(){
       if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)) CATEGORY_ITEMS[cat].push(item);
     });
   });
+/* PATCH 3 merge */
+Object.keys(FOOD_PATCH_3).forEach(k=>{
+  if(!FOOD[k]) FOOD[k] = FOOD_PATCH_3[k];
+});
+
+Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
+  if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat] = [];
+  CATEGORY_PATCH_3[cat].forEach(item=>{
+    if(FOOD[item] && !CATEGORY_ITEMS[cat].includes(item)){
+      CATEGORY_ITEMS[cat].push(item);
+    }
+  });
+});
 
   applyFruitSnackSplit();
 
