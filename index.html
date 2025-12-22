@@ -2930,59 +2930,57 @@ function normalizeEntryCategory(cat){
 }
 
 function renderEntries(){
-  const profile=getActiveProfile() || getProfileDraft();
-  const dateKey=$("logDate").value || getDefaultLogDate(profile);
-  const day=getDayLog(dateKey);
+  const profile = getActiveProfile() || getProfileDraft();
+  const dateKey = $("logDate").value || getDefaultLogDate(profile);
+  const day = getDayLog(dateKey);
 
-  const tb=$("entriesTbody");
-  tb.innerHTML="";
+  const tb = $("entriesTbody");
+  tb.innerHTML = "";
 
   day.entries.forEach(e=>{
-day.entries.forEach(e=>{
-  const base = computeFood(e.food, n(e.qty), e.unit);
-  const meta = foodMeta(e.food);
+    const base = computeFood(e.food, n(e.qty), e.unit);
+    const meta = foodMeta(e.food);
 
-  // Oil for this row (matches totals logic)
-  const absorbed = calcAbsorbedOilGrams(e.oilUsedG || 0, e.oilAbsorbPct || 0);
-  const oilT = oilMacrosFromAbsorbed(absorbed);
+    // Oil (absorbed) for this row — MUST match totals logic
+    const absorbed = calcAbsorbedOilGrams(e.oilUsedG || 0, e.oilAbsorbPct || 0);
+    const oilT = oilMacrosFromAbsorbed(absorbed);
 
-  // Fold oil into the row numbers so row sum == totals
-  const row = {
-    P: n(base.P) + n(oilT.P),
-    C: n(base.C) + n(oilT.C),
-    F: n(base.F) + n(oilT.F),
-    K: n(base.K) + n(oilT.K)
-  };
+    // Row macros (food + absorbed oil)
+    const row = {
+      P: n(base.P) + n(oilT.P),
+      C: n(base.C) + n(oilT.C),
+      F: n(base.F) + n(oilT.F),
+      K: n(base.K) + n(oilT.K)
+    };
 
-  const tr=document.createElement("tr");
-  tr.innerHTML=`
-    <td>${e.meal}</td>
-    <td>${normalizeEntryCategory(e.category || "")}</td>
-    <td>${e.food}</td>
-    <td><input class="miniInput" type="number" min="0" step="0.1" value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
-    <td>${e.unit}</td>
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${e.meal || ""}</td>
+      <td>${normalizeEntryCategory(e.category || "")}</td>
+      <td>${e.food || ""}</td>
+      <td><input class="miniInput" type="number" min="0" step="0.1"
+          value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
+      <td>${e.unit || ""}</td>
 
-    <td>${round1(row.P)}</td>
-    <td>${round1(row.C)}</td>
-    <td>${round1(row.F)}</td>
-    <td>${Math.round(row.K)}</td>
+      <td>${round1(row.P)}</td>
+      <td>${round1(row.C)}</td>
+      <td>${round1(row.F)}</td>
+      <td>${Math.round(row.K)}</td>
 
-    <td>${round1(absorbed)} g</td>
-    <td>${Math.round(oilT.K)} kcal</td>
+      <td>${meta.source || "—"}</td>
+      <td>${meta.confidence || "—"}</td>
 
-    <td>${meta.source}</td>
-    <td>${meta.confidence}</td>
-    <td><button class="actionBtn" data-id="${e.id}" data-action="del">Delete</button></td>
-  `;
-  tb.appendChild(tr);
-});
+      <td><button class="actionBtn" data-id="${e.id}" data-action="del">Delete</button></td>
+    `;
+    tb.appendChild(tr);
+  });
 
-
+  // Qty edit
   tb.querySelectorAll('input[data-field="qty"]').forEach(inp=>{
     inp.addEventListener("input", ()=>{
-      const id=inp.dataset.id;
-      const day2=getDayLog(dateKey);
-      const row=day2.entries.find(x=>x.id===id);
+      const id = inp.dataset.id;
+      const day2 = getDayLog(dateKey);
+      const row = day2.entries.find(x=>x.id===id);
       if(row){
         row.qty = n(inp.value);
         setDayLog(dateKey, day2);
@@ -2991,10 +2989,12 @@ day.entries.forEach(e=>{
       }
     });
   });
+
+  // Delete row
   tb.querySelectorAll('button[data-action="del"]').forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      const id=btn.dataset.id;
-      const day2=getDayLog(dateKey);
+      const id = btn.dataset.id;
+      const day2 = getDayLog(dateKey);
       day2.entries = day2.entries.filter(x=>x.id!==id);
       setDayLog(dateKey, day2);
       renderEntries();
@@ -3002,12 +3002,14 @@ day.entries.forEach(e=>{
     });
   });
 
-  const total=computeTotalsFromEntries(dateKey);
+  // Live totals
+  const total = computeTotalsFromEntries(dateKey);
   $("liveP").textContent = round1(total.P) + " g";
   $("liveC").textContent = round1(total.C) + " g";
   $("liveF").textContent = round1(total.F) + " g";
   $("liveK").textContent = Math.round(total.K) + " kcal";
 }
+
 
 function saveDay(){
   const profile=getActiveProfile() || getProfileDraft();
