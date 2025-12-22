@@ -3210,8 +3210,8 @@ function resetFoodLogs(){
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
   if(!confirm("Reset all food entries for "+dateKey+"?")) return;
   setDayLog(dateKey, { entries: [] });
-  renderEntries();
-  scheduleRefresh();
+renderEntries();
+scheduleRefresh();
 }
 
 /* ===========================
