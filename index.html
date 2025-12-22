@@ -1200,7 +1200,7 @@ function sumTotalsSafe(entriesTotals){
     if(!out.perUnit[unit]) out.perUnit[unit] = patchPU[unit];
     else {
       // if both exist, merge macro keys (patch fills missing)
-      out.perUnit[unit] = { ...patchPU[unit], ...out.perUnit[unit] };
+      out.perUnit[unit] = { ...out.perUnit[unit], ...patchPU[unit] };
       // ^ if you want patch to override existing numbers, swap order:
       // out.perUnit[unit] = { ...out.perUnit[unit], ...patchPU[unit] };
     }
@@ -1223,17 +1223,6 @@ function mergeFoodPatch(patchObj){
     FOOD[k] = mergeFoodItem(FOOD[k], patchObj[k]);
   });
 }
-
-function rowMacrosWithOil(entry, baseMacros){
-  const o = oilForEntry(entry);
-  return {
-    P: n(baseMacros.P),
-    C: n(baseMacros.C),
-    F: n(baseMacros.F) + o.oilF,
-    K: n(baseMacros.K) + o.oilK
-  };
-}
-
 function uid(){
   return (crypto?.randomUUID
     ? crypto.randomUUID()
@@ -2034,7 +2023,7 @@ let CATEGORY_ITEMS = {
 =========================== */
 
 let CATEGORY_VIEW = {}; // MUST exist globally
-
+const CATEGORY_MERGE_MAP = {};
 
 const CATEGORY_VIEW_MAP = {
   "All": ["All"],
@@ -2713,15 +2702,6 @@ function computeFood(foodName, qty, unit){
   if(!map) return {P:0,C:0,F:0,K:0};
   return { P: map.P*qty, C: map.C*qty, F: map.F*qty, K: map.K*qty };
 }
-  function oilForEntry(entry){
-  // Supports both possible field names (use whichever you have)
-  const oilAbsorbG = n(entry.oilAbsorbG ?? entry.oilAbsorb ?? entry.oil_g ?? 0);
-  const oilKcalPerG = n(entry.oilKcalPerG ?? entry.oilKcalG ?? 9); // default 9 kcal/g
-  const oilF = oilAbsorbG;
-  const oilK = oilAbsorbG * oilKcalPerG;
-  return { oilAbsorbG, oilKcalPerG, oilF, oilK };
-}
-
 function rowMacrosWithOil(entry, baseMacros){
   const o = oilForEntry(entry);
   return {
@@ -2808,15 +2788,29 @@ function updateEntryPreview(){
   const food=$("entryFood").value;
   const unit=$("entryUnit").value;
   const qty=n($("entryQty").value);
+
   const t=computeFood(food, qty, unit);
-  $("entryPrevP").textContent=round1(t.P);
-  $("entryPrevC").textContent=round1(t.C);
-  $("entryPrevF").textContent=round1(t.F);
-  $("entryPrevK").textContent=Math.round(t.K);
+
+  const oilUsedG = n($("oilUsedG")?.value);
+  const oilAbsorbPct = n($("oilAbsorbPct")?.value);
+  const absorbed = calcAbsorbedOilGrams(oilUsedG, oilAbsorbPct);
+  const oilT = oilMacrosFromAbsorbed(absorbed);
+
+  const P = t.P + oilT.P;
+  const C = t.C + oilT.C;
+  const F = t.F + oilT.F;
+  const K = t.K + oilT.K;
+
+  $("entryPrevP").textContent=round1(P);
+  $("entryPrevC").textContent=round1(C);
+  $("entryPrevF").textContent=round1(F);
+  $("entryPrevK").textContent=Math.round(K);
+
   const m = foodMeta(food);
   $("entryPrevSrc").textContent = m.source;
   $("entryPrevConf").textContent = m.confidence;
 }
+
 
 /* PATCH 5: Portion presets (prefer plate if available) */
 function applyPortionPreset(mult){
@@ -2848,6 +2842,9 @@ $("foodSearch").addEventListener("input", buildFoodSelect);
 $("entryFood").addEventListener("change", ()=>{ buildUnitSelect($("entryFood").value); updateEntryPreview(); });
 $("entryUnit").addEventListener("change", updateEntryPreview);
 $("entryQty").addEventListener("input", updateEntryPreview);
+  $("oilUsedG")?.addEventListener("input", updateEntryPreview);
+$("oilAbsorbPct")?.addEventListener("input", updateEntryPreview);
+
 
 /* ===========================
    Food log actions
@@ -2872,13 +2869,24 @@ function computeTotalsFromEntries(dateKey){
   return sumTotalsSafe(list);
 }
 
+function inferCategoryFromFood(food){
+  for(const cat in CATEGORY_ITEMS){
+    if(cat==="All") continue;
+    if((CATEGORY_ITEMS[cat]||[]).includes(food)) return cat;
+  }
+  return "Uncategorized";
+}
 
 function addEntry(){
   const profile=getActiveProfile() || getProfileDraft();
   const dateKey=$("logDate").value || getDefaultLogDate(profile);
   const day=getDayLog(dateKey);
 
-  const category=$("entryCategory").value;
+  let category = $("entryCategory").value;
+if(category === "All"){
+  category = inferCategoryFromFood(food);
+}
+
   const food=$("entryFood").value;
   const unit=$("entryUnit").value;
   const qty=n($("entryQty").value);
@@ -2907,7 +2915,6 @@ function addEntry(){
   renderEntries();
   scheduleRefresh();
 }
-  const CATEGORY_MERGE_MAP = {};
 function normalizeEntryCategory(cat){
   if(!cat) return "";
   if(CATEGORY_ITEMS && CATEGORY_ITEMS[cat]) return cat;
