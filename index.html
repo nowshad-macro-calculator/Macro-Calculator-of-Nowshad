@@ -2192,27 +2192,12 @@ function buildCategoryView(){
   const uncategorized = allFoods.filter(x=>!used.has(x));
   if(uncategorized.length) CATEGORY_VIEW["Uncategorized"] = uncategorized;
 }
-
-
 function mergeCategories(){
-  const uniq = (arr) => Array.from(new Set(arr)).filter(Boolean);
+  // Disabled: CATEGORY_VIEW is the active system now.
+  // Keeping this as a safe no-op to prevent crashes.
+  return;
+}
 
-  // Keep a snapshot of current categories before we rebuild
-  const old = CATEGORY_ITEMS || {};
-
-  const merged = {};
-  merged["All"] = [];
-
-  // 1) Build merged categories strictly from CATEGORY_MERGE_MAP
-  const CATEGORY_MERGE_MAP = window.CATEGORY_MERGE_MAP ||
-{
-    const oldCats = CATEGORY_MERGE_MAP[newCat] || [];
-    let items = [];
-    oldCats.forEach(oc=>{
-      if(Array.isArray(old[oc])) items = items.concat(old[oc]);
-    });
-    merged[newCat] = uniq(items.filter(name => FOOD[name]));
-  });
 
   // 2) Preserve any old categories NOT referenced by CATEGORY_MERGE_MAP
   const mappedOldCats = new Set(Object.values(CATEGORY_MERGE_MAP).flat());
@@ -2929,39 +2914,50 @@ function buildFoodSelect(){
   const category = $("entryCategory").value || "All";
   const q = ($("foodSearch").value || "").trim().toLowerCase();
 
-    // Ensure view exists
   if(!CATEGORY_VIEW || !CATEGORY_VIEW["All"]) buildCategoryView();
 
+  // Base list by category
   let list = (CATEGORY_VIEW[category] || []).slice();
-  if(category==="All") list = CATEGORY_VIEW["All"].slice();
+  if(category === "All") list = CATEGORY_VIEW["All"].slice();
 
-
-  // If search typed, search across ALL foods regardless of category (best UX)
+  // If search typed, search across ALL foods (best UX)
   let filtered = list;
   if(q){
-   filtered = (CATEGORY_VIEW["All"] || []).filter(name => name.toLowerCase().includes(q));
-
+    filtered = (CATEGORY_VIEW["All"] || []).filter(name =>
+      name.toLowerCase().includes(q)
+    );
   }
 
-  const sel=$("entryFood");
-  sel.innerHTML="";
+  const sel = $("entryFood");
+  sel.innerHTML = "";
+
+  if(filtered.length === 0){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No matches (try another search)";
+    sel.appendChild(opt);
+    buildUnitSelect("");     // safe
+    updateEntryPreview();    // safe
+    return;
+  }
+
   filtered.forEach(name=>{
-    const opt=document.createElement("option");
-    opt.value=name; opt.textContent=name;
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
     sel.appendChild(opt);
   });
 
-  if(filtered.length===0){
-    const opt=document.createElement("option");
-    opt.value=""; opt.textContent="No matches (try another search)";
-    sel.appendChild(opt);
-  }
-
-  const first = sel.value || filtered[0] || "";
-  buildUnitSelect(first);
+  // Select first item
+  sel.value = filtered[0];
+  buildUnitSelect(sel.value);
   updateEntryPreview();
-  
-  }else{
+
+  // If you have grams-equivalent UI, call it only if the function exists
+  if(typeof updateEquivalentGramsUI === "function") updateEquivalentGramsUI();
+}
+
+  else{
     wrap.style.display = "none";
     eqEl.textContent = "0";
     gInp.value = "";
