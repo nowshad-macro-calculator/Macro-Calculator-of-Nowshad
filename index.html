@@ -1953,16 +1953,10 @@ let FOOD = {
   "Paratha": { unitOptions:["pcs"], perUnit:{ pcs:{P:6,C:30,F:12,K:260} }, source:"avg", confidence:"Medium" },
 
   // Vegetables
-    "Potato (boiled)": { unitOptions:["g"], perUnit:{ g:{P:2/100,C:17/100,F:0.1/100,K:87/100} }, source:"USDA avg", confidence:"High" },
+  "Potato (boiled)": { unitOptions:["g"], perUnit:{ g:{P:2/100,C:17/100,F:0.1/100,K:87/100} }, source:"USDA avg", confidence:"High" },
   "Potato (fried/fries)": { unitOptions:["g"], perUnit:{ g:{P:3.4/100,C:41/100,F:15/100,K:312/100} }, source:"USDA avg", confidence:"Medium" },
   "Mixed Vegetables": { unitOptions:["cup"], perUnit:{ cup:{P:2,C:5,F:0.2,K:35} }, source:"avg", confidence:"Medium" },
-  "Salad": { unitOptions:["cup"], perUnit:{ cup:{P:0.5,C:2,F:0.1,K:15} }, source:"avg", confidence:"High" },
-
-  // Fruits
-  "Banana": { unitOptions:["pcs"], perUnit:{ pcs:{P:1.3,C:27,F:0.4,K:105} }, source:"USDA", confidence:"High" },
-  "Apple": { unitOptions:["pcs"], perUnit:{ pcs:{P:0.5,C:25,F:0.3,K:95} }, source:"USDA", confidence:"High" },
-  "Orange": { unitOptions:["pcs"], perUnit:{ pcs:{P:1.2,C:15.4,F:0.2,K:62} }, source:"USDA", confidence:"High" },
-  "Mango": { unitOptions:["cup"], perUnit:{ cup:{P:1.4,C:25,F:0.6,K:99} }, source:"USDA", confidence:"High" },
+  
 
   // Snacks (base)
   "Peanuts": { unitOptions:["g"], perUnit:{ g:{P:25.8/100,C:16.1/100,F:49.2/100,K:567/100} }, source:"USDA", confidence:"High" },
@@ -1980,7 +1974,8 @@ let FOOD = {
   "Chocolate cube": { unitOptions:["pcs"], perUnit:{ pcs:{P:1,C:8,F:6,K:90} }, source:"label avg", confidence:"Medium" },
   "Ice Cream": { unitOptions:["cup"], perUnit:{ cup:{P:5,C:30,F:14,K:270} }, source:"label avg", confidence:"Medium" },
   "Firni": { unitOptions:["cup"], perUnit:{ cup:{P:6,C:45,F:8,K:280} }, source:"BD dessert avg", confidence:"Low" },
-  "Jorda": { unitOptions:["plate"], perUnit:{ plate:{P:6,C:65,F:12,K:380} }, source:"BD dessert avg", confidence:"Low" }
+  "Jorda": { unitOptions:["plate"], perUnit:{ plate:{P:6,C:65,F:12,K:380} }, source:"BD dessert avg", confidence:"Low" },
+
    /* =========================
    Fruits (Bangladesh + common)
    ========================= */
@@ -2209,7 +2204,8 @@ function mergeCategories(){
   merged["All"] = [];
 
   // 1) Build merged categories strictly from CATEGORY_MERGE_MAP
-  Object.keys(CATEGORY_MERGE_MAP).forEach(newCat=>{
+  const CATEGORY_MERGE_MAP = window.CATEGORY_MERGE_MAP ||
+{
     const oldCats = CATEGORY_MERGE_MAP[newCat] || [];
     let items = [];
     oldCats.forEach(oc=>{
@@ -2964,35 +2960,7 @@ function buildFoodSelect(){
   const first = sel.value || filtered[0] || "";
   buildUnitSelect(first);
   updateEntryPreview();
-  function getGramsPerSelectedUnit(food, unit){
-  const item = FOOD[food];
-  if(!item || !unit || unit === "g") return 0;
-  const g = n(item.gramsPerUnit?.[unit]);
-  return g > 0 ? g : 0;
-}
-
-function updateEquivalentGramsUI(){
-  const food = $("entryFood").value;
-  const unit = $("entryUnit").value;
-  const qty  = n($("entryQty").value);
-
-  const wrap = $("eqGramWrap");
-  const eqEl = $("eqGrams");
-  const gInp = $("entryQtyG");
-
-  if(!wrap || !eqEl || !gInp) return;
-
-  const gPer = getGramsPerSelectedUnit(food, unit);
-
-  if(unit !== "g" && gPer > 0){
-    const eq = Math.round(qty * gPer);
-    eqEl.textContent = isFinite(eq) ? eq : 0;
-    wrap.style.display = "block";
-
-    // keep grams input in sync unless user is actively typing it
-    if(document.activeElement !== gInp){
-      gInp.value = eq ? String(eq) : "";
-    }
+  
   }else{
     wrap.style.display = "none";
     eqEl.textContent = "0";
@@ -3075,7 +3043,7 @@ if(qtyG){
     const gPer = getGramsPerSelectedUnit(food, unit);
     if(unit !== "g" && gPer > 0){
       const grams = n(qtyG.value);
-      $("entryQty").value = grams > 0 ? round2(grams / gPer) : "";
+      $("entryQty").value = (grams > 0 && gPer > 0) ? String(round2(grams / gPer)) : "";
       updateEntryPreview();
       updateEquivalentGramsUI();
     }
@@ -3313,6 +3281,39 @@ function saveCustomFood(){
 
   // refresh selects
   buildCategorySelect();
+  function getGramsPerSelectedUnit(food, unit){
+  const item = FOOD[food];
+  if(!item || !unit || unit === "g") return 0;
+  const g = n(item.gramsPerUnit?.[unit]);
+  return g > 0 ? g : 0;
+}
+
+function updateEquivalentGramsUI(){
+  const food = $("entryFood").value;
+  const unit = $("entryUnit").value;
+  const qty  = n($("entryQty").value);
+
+  const wrap = $("eqGramWrap");
+  const eqEl = $("eqGrams");
+  const gInp = $("entryQtyG");
+  if(!wrap || !eqEl || !gInp) return;
+
+  const gPer = getGramsPerSelectedUnit(food, unit);
+
+  if(unit !== "g" && gPer > 0){
+    const eq = Math.round(qty * gPer);
+    eqEl.textContent = isFinite(eq) ? eq : 0;
+    wrap.style.display = "block";
+    if(document.activeElement !== gInp){
+      gInp.value = eq ? String(eq) : "";
+    }
+  }else{
+    wrap.style.display = "none";
+    eqEl.textContent = "0";
+    gInp.value = "";
+  }
+}
+
   buildFoodSelect();
 
   $("cf_savedNote").style.display="block";
