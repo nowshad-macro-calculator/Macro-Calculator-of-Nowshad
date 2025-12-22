@@ -835,9 +835,21 @@ input, select, textarea, button {
 
         <div class="row cols2" style="margin-top:10px">
           <div>
-            <label>Quantity</label>
-            <input type="number" min="0" step="0.1" id="entryQty" placeholder="Enter qty">
-          </div>
+  <label>Quantity</label>
+  <input type="number" min="0" step="0.1" id="entryQty" placeholder="Enter qty">
+
+  <div id="eqGramWrap" style="margin-top:8px; display:none;">
+    <div class="pill" style="width:100%; justify-content:space-between;">
+      <span>Equivalent</span>
+      <b><span id="eqGrams">0</span> g</b>
+    </div>
+
+    <!-- Optional: user can type grams and auto-adjust qty -->
+    <label style="margin-top:8px;">Or enter grams (auto adjusts qty)</label>
+    <input type="number" min="0" step="1" id="entryQtyG" placeholder="e.g., 350">
+  </div>
+</div>
+
           <div>
             <!-- >>> START PATCH: Oil absorption inputs -->
 <div class="row cols2" style="margin-top:10px">
@@ -2692,6 +2704,75 @@ function applyAllFoodPatches(){
 
   // Rebuild dropdown view categories now that categories + FOOD are final
   buildCategoryView();
+  ensureGramsForAllFoods();
+
+  /* ===========================
+   PATCH G-UNIT: Always allow grams + show gram equivalent for non-gram units
+=========================== */
+
+// Default gram estimates if you don't specify gramsPerUnit on a food.
+// (Use conservative defaults; user can still choose "g" directly.)
+const DEFAULT_GRAMS_PER_UNIT = {
+  plate: 350,
+  cup: 240,
+  bowl: 350,
+  serving: 150,
+  pcs: 50,
+  slice: 30,
+  can: 330,      // ml ~= g for soda (close enough for display)
+  tbsp: 13.5,
+  tsp: 5,
+  bucket: 1200
+};
+
+function ensureGramsForAllFoods(){
+  Object.keys(FOOD).forEach(name=>{
+    const item = FOOD[name];
+    if(!item) return;
+
+    // 1) Ensure unitOptions exists
+    if(!Array.isArray(item.unitOptions)) item.unitOptions = [];
+
+    // 2) Force "g" into unitOptions (for EVERY food)
+    if(!item.unitOptions.includes("g")) item.unitOptions.push("g");
+
+    // 3) Ensure perUnit.g exists (if missing, try to derive from another unit using gramsPerUnit)
+    // If we can't derive, keep g as selectable but macros will be 0 unless user adds g macros.
+    if(!item.perUnit) item.perUnit = {};
+
+    // Create gramsPerUnit bag if missing
+    if(!item.gramsPerUnit) item.gramsPerUnit = {};
+
+    // Seed gramsPerUnit with defaults ONLY for units that exist in this food
+    item.unitOptions.forEach(u=>{
+      if(u === "g") return;
+      if(item.gramsPerUnit[u] == null && DEFAULT_GRAMS_PER_UNIT[u] != null){
+        item.gramsPerUnit[u] = DEFAULT_GRAMS_PER_UNIT[u];
+      }
+    });
+
+    // If g macros are missing but we have any non-g unit macros + gramsPerUnit, derive g macros.
+    if(!item.perUnit.g){
+      const nonG = item.unitOptions.find(u => u !== "g" && item.perUnit[u] && item.gramsPerUnit[u]);
+      if(nonG){
+        const gPer = n(item.gramsPerUnit[nonG]);
+        const pu = item.perUnit[nonG];
+        if(gPer > 0 && pu){
+          item.perUnit.g = {
+            P: n(pu.P) / gPer,
+            C: n(pu.C) / gPer,
+            F: n(pu.F) / gPer,
+            K: n(pu.K) / gPer
+          };
+        }
+      }
+    }
+
+    // Keep FOOD updated
+    FOOD[name] = item;
+  });
+}
+
 }
 
 /* ===== Food compute ===== */
@@ -2834,14 +2915,78 @@ function applyPortionPreset(mult){
     $("entryQty").value = String(Math.round(250*mult));
   }
   updateEntryPreview();
+  function getGramsPerSelectedUnit(food, unit){
+  const item = FOOD[food];
+  if(!item || !unit || unit === "g") return 0;
+  const g = n(item.gramsPerUnit?.[unit]);
+  return g > 0 ? g : 0;
+}
+
+function updateEquivalentGramsUI(){
+  const food = $("entryFood").value;
+  const unit = $("entryUnit").value;
+  const qty  = n($("entryQty").value);
+
+  const wrap = $("eqGramWrap");
+  const eqEl = $("eqGrams");
+  const gInp = $("entryQtyG");
+
+  if(!wrap || !eqEl || !gInp) return;
+
+  const gPer = getGramsPerSelectedUnit(food, unit);
+
+  if(unit !== "g" && gPer > 0){
+    const eq = Math.round(qty * gPer);
+    eqEl.textContent = isFinite(eq) ? eq : 0;
+    wrap.style.display = "block";
+
+    // keep grams input in sync unless user is actively typing it
+    if(document.activeElement !== gInp){
+      gInp.value = eq ? String(eq) : "";
+    }
+  }else{
+    wrap.style.display = "none";
+    eqEl.textContent = "0";
+    gInp.value = "";
+  }
+}
+
 }
 
 /* Hook UI events */
 $("entryCategory").addEventListener("change", buildFoodSelect);
 $("foodSearch").addEventListener("input", buildFoodSelect);
-$("entryFood").addEventListener("change", ()=>{ buildUnitSelect($("entryFood").value); updateEntryPreview(); });
-$("entryUnit").addEventListener("change", updateEntryPreview);
-$("entryQty").addEventListener("input", updateEntryPreview);
+$("entryFood").addEventListener("change", ()=>{
+  buildUnitSelect($("entryFood").value);
+  updateEntryPreview();
+  updateEquivalentGramsUI();
+});
+
+$("entryUnit").addEventListener("change", ()=>{
+  updateEntryPreview();
+  updateEquivalentGramsUI();
+});
+
+$("entryQty").addEventListener("input", ()=>{
+  updateEntryPreview();
+  updateEquivalentGramsUI();
+});
+
+const qtyG = $("entryQtyG");
+if(qtyG){
+  qtyG.addEventListener("input", ()=>{
+    const food = $("entryFood").value;
+    const unit = $("entryUnit").value;
+    const gPer = getGramsPerSelectedUnit(food, unit);
+    if(unit !== "g" && gPer > 0){
+      const grams = n(qtyG.value);
+      $("entryQty").value = grams > 0 ? round2(grams / gPer) : "";
+      updateEntryPreview();
+      updateEquivalentGramsUI();
+    }
+  });
+}
+
   $("oilUsedG")?.addEventListener("input", updateEntryPreview);
 $("oilAbsorbPct")?.addEventListener("input", updateEntryPreview);
 
