@@ -1165,7 +1165,148 @@ const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 const n = (v)=>isFinite(parseFloat(v)) ? parseFloat(v) : 0;
 const round1 = (x)=>Math.round(x*10)/10;
 const round2 = (x)=>Math.round(x*100)/100;
-function uid(){ return (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random()); }
+
+// --- Precision-safe helpers (prevents 100 showing as 98 due to float drift) ---
+const SCALE = 100;                     // 2-decimal precision as integer
+const toInt = (x)=>Math.round(n(x)*SCALE);
+const fromInt = (i)=>i/SCALE;
+
+function sumTotalsSafe(entriesTotals){
+  // entriesTotals = array of {P,C,F,K} (can be decimals)
+  const acc = {P:0, C:0, F:0, K:0};
+  entriesTotals.forEach(t=>{
+    acc.P += toInt(t.P);
+    acc.C += toInt(t.C);
+    acc.F += toInt(t.F);
+    acc.K += toInt(t.K);
+  });
+  return { P: fromInt(acc.P), C: fromInt(acc.C), F: fromInt(acc.F), K: fromInt(acc.K) };
+}
+  function mergeFoodItem(base, patch){
+  // If no base exists, patch becomes the base
+  if(!base) return patch;
+
+  const out = { ...base };
+
+  // Merge unit options (union)
+  const a = Array.isArray(base.unitOptions) ? base.unitOptions : [];
+  const b = Array.isArray(patch.unitOptions) ? patch.unitOptions : [];
+  out.unitOptions = Array.from(new Set([...a, ...b]));
+
+  // Merge perUnit nested keys (don’t delete existing; add missing units)
+  out.perUnit = { ...(base.perUnit || {}) };
+  const patchPU = patch.perUnit || {};
+  Object.keys(patchPU).forEach(unit=>{
+    if(!out.perUnit[unit]) out.perUnit[unit] = patchPU[unit];
+    else {
+      // if both exist, merge macro keys (patch fills missing)
+      out.perUnit[unit] = { ...patchPU[unit], ...out.perUnit[unit] };
+      // ^ if you want patch to override existing numbers, swap order:
+      // out.perUnit[unit] = { ...out.perUnit[unit], ...patchPU[unit] };
+    }
+  });
+
+  // Prefer patch metadata if base missing
+  out.source = base.source || patch.source || "";
+  out.confidence = base.confidence || patch.confidence || "";
+
+  // Keep any other fields base had; allow patch to add new fields
+  Object.keys(patch).forEach(k=>{
+    if(out[k] === undefined) out[k] = patch[k];
+  });
+
+  return out;
+}
+
+function mergeFoodPatch(patchObj){
+  Object.keys(patchObj).forEach(k=>{
+    FOOD[k] = mergeFoodItem(FOOD[k], patchObj[k]);
+  });
+}
+
+function rowMacrosWithOil(entry, baseMacros){
+  const o = oilForEntry(entry);
+  return {
+    P: n(baseMacros.P),
+    C: n(baseMacros.C),
+    F: n(baseMacros.F) + o.oilF,
+    K: n(baseMacros.K) + o.oilK
+  };
+}
+
+function uid(){
+  return (crypto?.randomUUID
+    ? crypto.randomUUID()
+    : String(Date.now()) + Math.random());
+}
+
+/* ===== START: Oil absorption helpers ===== */
+function oilForEntry(entry){
+  // Supports multiple possible field names
+  const oilAbsorbG = n(
+    entry.oilAbsorbG ??
+    entry.oilAbsorb ??
+    entry.oil_g ??
+    0
+  );
+
+  const oilKcalPerG = n(
+    entry.oilKcalPerG ??
+    entry.oilKcalG ??
+    9            // default: fat kcal/g
+  );
+
+  return {
+    oilAbsorbG,
+    oilF: oilAbsorbG,
+    oilK: oilAbsorbG * oilKcalPerG
+  };
+}
+
+function rowMacrosWithOil(entry, baseMacros){
+  const o = oilForEntry(entry);
+  return {
+    P: n(baseMacros.P),
+    C: n(baseMacros.C),
+    F: n(baseMacros.F) + o.oilF,
+    K: n(baseMacros.K) + o.oilK
+  };
+}
+/* ===== END: Oil absorption helpers ===== */
+function mergeFoodDef(baseDef, patchDef){
+  if(!baseDef) return structuredClone ? structuredClone(patchDef) : JSON.parse(JSON.stringify(patchDef));
+
+  // Merge unitOptions
+  const baseUnits = Array.isArray(baseDef.unitOptions) ? baseDef.unitOptions : [];
+  const patchUnits = Array.isArray(patchDef.unitOptions) ? patchDef.unitOptions : [];
+  const units = Array.from(new Set([...baseUnits, ...patchUnits]));
+
+  // Merge perUnit (add missing units + missing macro keys)
+  const perUnit = {...(baseDef.perUnit || {})};
+  const patchPerUnit = patchDef.perUnit || {};
+  for(const unit of Object.keys(patchPerUnit)){
+    perUnit[unit] = perUnit[unit] || {};
+    perUnit[unit] = { ...patchPerUnit[unit], ...perUnit[unit] };
+    // NOTE: above keeps existing values if already present. If you want patch to override numbers, flip order:
+    // perUnit[unit] = { ...perUnit[unit], ...patchPerUnit[unit] };
+  }
+
+  // Merge metadata (prefer patch if provided)
+  return {
+    ...baseDef,
+    ...patchDef,
+    unitOptions: units,
+    perUnit,
+    source: patchDef.source ?? baseDef.source,
+    confidence: patchDef.confidence ?? baseDef.confidence
+  };
+}
+
+function applyFoodPatch(PATCH){
+  for(const k in PATCH){
+    FOOD[k] = mergeFoodDef(FOOD[k], PATCH[k]);
+  }
+}
 
 /* ===========================
    Tabs
@@ -2502,11 +2643,11 @@ function applyAllFoodPatches(){
   // Ensure base arrays exist early
   applyFruitSnackSplit();
 
-  // 1) Merge food extensions (no overwrite)
-  Object.keys(FOOD_PATCH_1).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_1[k]; });
+  // 1) Merge food extensions (MERGE, not no-overwrite)
+  mergeFoodPatch(FOOD_PATCH_1);
 
-  // X) Merge PATCH X foods (no overwrite)
-  Object.keys(FOOD_PATCH_X).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_X[k]; });
+  // X) Merge PATCH X foods
+  mergeFoodPatch(FOOD_PATCH_X);
 
   // X) Merge PATCH X categories
   Object.keys(CATEGORY_PATCH_X).forEach(cat=>{
@@ -2524,8 +2665,8 @@ function applyAllFoodPatches(){
     });
   });
 
-  // 2) Merge PATCH 2 foods (no overwrite)
-  Object.keys(FOOD_PATCH_2).forEach(k=>{ if(!FOOD[k]) FOOD[k]=FOOD_PATCH_2[k]; });
+  // 2) Merge PATCH 2 foods
+  mergeFoodPatch(FOOD_PATCH_2);
 
   // 2) Merge PATCH 2 categories
   Object.keys(CATEGORY_PATCH_2).forEach(cat=>{
@@ -2535,11 +2676,10 @@ function applyAllFoodPatches(){
     });
   });
 
-  // 3) Merge PATCH 3 foods + categories
-  Object.keys(FOOD_PATCH_3).forEach(k=>{
-    if(!FOOD[k]) FOOD[k] = FOOD_PATCH_3[k];
-  });
+  // 3) Merge PATCH 3 foods
+  mergeFoodPatch(FOOD_PATCH_3);
 
+  // 3) Merge PATCH 3 categories
   Object.keys(CATEGORY_PATCH_3).forEach(cat=>{
     if(!CATEGORY_ITEMS[cat]) CATEGORY_ITEMS[cat] = [];
     CATEGORY_PATCH_3[cat].forEach(item=>{
@@ -2573,6 +2713,25 @@ function computeFood(foodName, qty, unit){
   if(!map) return {P:0,C:0,F:0,K:0};
   return { P: map.P*qty, C: map.C*qty, F: map.F*qty, K: map.K*qty };
 }
+  function oilForEntry(entry){
+  // Supports both possible field names (use whichever you have)
+  const oilAbsorbG = n(entry.oilAbsorbG ?? entry.oilAbsorb ?? entry.oil_g ?? 0);
+  const oilKcalPerG = n(entry.oilKcalPerG ?? entry.oilKcalG ?? 9); // default 9 kcal/g
+  const oilF = oilAbsorbG;
+  const oilK = oilAbsorbG * oilKcalPerG;
+  return { oilAbsorbG, oilKcalPerG, oilF, oilK };
+}
+
+function rowMacrosWithOil(entry, baseMacros){
+  const o = oilForEntry(entry);
+  return {
+    P: n(baseMacros.P),
+    C: n(baseMacros.C),
+    F: n(baseMacros.F) + o.oilF,
+    K: n(baseMacros.K) + o.oilK
+  };
+}
+
 function foodMeta(foodName){
   const item = FOOD[foodName] || {};
   return {
@@ -2695,21 +2854,24 @@ $("entryQty").addEventListener("input", updateEntryPreview);
 =========================== */
 function computeTotalsFromEntries(dateKey){
   const day=getDayLog(dateKey);
-  let total={P:0,C:0,F:0,K:0};
-  day.entries.forEach(e=>{
-        const t = computeFood(e.food, n(e.qty), e.unit);
+
+  const list = day.entries.map(e=>{
+    const t = computeFood(e.food, n(e.qty), e.unit);
 
     const absorbed = calcAbsorbedOilGrams(e.oilUsedG || 0, e.oilAbsorbPct || 0);
     const oilT = oilMacrosFromAbsorbed(absorbed);
 
-    total.P += (t.P + oilT.P);
-    total.C += (t.C + oilT.C);
-    total.F += (t.F + oilT.F);
-    total.K += (t.K + oilT.K);
-
+    return {
+      P: (t.P + oilT.P),
+      C: (t.C + oilT.C),
+      F: (t.F + oilT.F),
+      K: (t.K + oilT.K)
+    };
   });
-  return total;
+
+  return sumTotalsSafe(list);
 }
+
 
 function addEntry(){
   const profile=getActiveProfile() || getProfileDraft();
@@ -2759,39 +2921,57 @@ function normalizeEntryCategory(cat){
 }
 
 function renderEntries(){
-  const profile=getActiveProfile() || getProfileDraft();
-  const dateKey=$("logDate").value || getDefaultLogDate(profile);
-  const day=getDayLog(dateKey);
+  const profile = getActiveProfile() || getProfileDraft();
+  const dateKey = $("logDate").value || getDefaultLogDate(profile);
+  const day = getDayLog(dateKey);
 
-  const tb=$("entriesTbody");
-  tb.innerHTML="";
+  const tb = $("entriesTbody");
+  tb.innerHTML = "";
 
   day.entries.forEach(e=>{
-    const t=computeFood(e.food, n(e.qty), e.unit);
+    const base = computeFood(e.food, n(e.qty), e.unit);
     const meta = foodMeta(e.food);
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${e.meal}</td>
+
+    // Oil (absorbed) for this row — MUST match totals logic
+    const absorbed = calcAbsorbedOilGrams(e.oilUsedG || 0, e.oilAbsorbPct || 0);
+    const oilT = oilMacrosFromAbsorbed(absorbed);
+
+    // Row macros (food + absorbed oil)
+    const row = {
+      P: n(base.P) + n(oilT.P),
+      C: n(base.C) + n(oilT.C),
+      F: n(base.F) + n(oilT.F),
+      K: n(base.K) + n(oilT.K)
+    };
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${e.meal || ""}</td>
       <td>${normalizeEntryCategory(e.category || "")}</td>
-      <td>${e.food}</td>
-      <td><input class="miniInput" type="number" min="0" step="0.1" value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
-      <td>${e.unit}</td>
-      <td>${round1(t.P)}</td>
-      <td>${round1(t.C)}</td>
-      <td>${round1(t.F)}</td>
-      <td>${Math.round(t.K)}</td>
-      <td>${meta.source}</td>
-      <td>${meta.confidence}</td>
+      <td>${e.food || ""}</td>
+      <td><input class="miniInput" type="number" min="0" step="0.1"
+          value="${e.qty}" data-id="${e.id}" data-field="qty"></td>
+      <td>${e.unit || ""}</td>
+
+      <td>${round1(row.P)}</td>
+      <td>${round1(row.C)}</td>
+      <td>${round1(row.F)}</td>
+      <td>${Math.round(row.K)}</td>
+
+      <td>${meta.source || "—"}</td>
+      <td>${meta.confidence || "—"}</td>
+
       <td><button class="actionBtn" data-id="${e.id}" data-action="del">Delete</button></td>
     `;
     tb.appendChild(tr);
   });
 
+  // Qty edit
   tb.querySelectorAll('input[data-field="qty"]').forEach(inp=>{
     inp.addEventListener("input", ()=>{
-      const id=inp.dataset.id;
-      const day2=getDayLog(dateKey);
-      const row=day2.entries.find(x=>x.id===id);
+      const id = inp.dataset.id;
+      const day2 = getDayLog(dateKey);
+      const row = day2.entries.find(x=>x.id===id);
       if(row){
         row.qty = n(inp.value);
         setDayLog(dateKey, day2);
@@ -2800,10 +2980,12 @@ function renderEntries(){
       }
     });
   });
+
+  // Delete row
   tb.querySelectorAll('button[data-action="del"]').forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      const id=btn.dataset.id;
-      const day2=getDayLog(dateKey);
+      const id = btn.dataset.id;
+      const day2 = getDayLog(dateKey);
       day2.entries = day2.entries.filter(x=>x.id!==id);
       setDayLog(dateKey, day2);
       renderEntries();
@@ -2811,12 +2993,14 @@ function renderEntries(){
     });
   });
 
-  const total=computeTotalsFromEntries(dateKey);
+  // Live totals
+  const total = computeTotalsFromEntries(dateKey);
   $("liveP").textContent = round1(total.P) + " g";
   $("liveC").textContent = round1(total.C) + " g";
   $("liveF").textContent = round1(total.F) + " g";
   $("liveK").textContent = Math.round(total.K) + " kcal";
 }
+
 
 function saveDay(){
   const profile=getActiveProfile() || getProfileDraft();
@@ -3108,7 +3292,15 @@ function refreshAll(){
 
   const life = getLifestyle(dashDate);
   const burn = life.workouts.reduce((s,x)=>s+n(x.burn),0);
-  const netK = total.K - burn;
+
+// "Assumed" burn already included via Activity Level (TDEE includes it)
+const assumedBurn = (profile.tdee && profile.bmr) ? Math.max(0, profile.tdee - profile.bmr) : 0;
+
+// Only subtract the EXTRA burn beyond what activity level already assumes
+const extraBurn = Math.max(0, burn - assumedBurn);
+
+const netK = total.K - extraBurn;
+
 
   $("dashCalories").textContent = Math.round(total.K) + " kcal";
   $("dashBurn").textContent = Math.round(burn) + " kcal";
