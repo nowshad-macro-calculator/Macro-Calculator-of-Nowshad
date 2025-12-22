@@ -1224,15 +1224,6 @@ function mergeFoodPatch(patchObj){
   });
 }
 
-function oilForEntry(entry){
-  // Supports both possible field names (use whichever you have)
-  const oilAbsorbG = n(entry.oilAbsorbG ?? entry.oilAbsorb ?? entry.oil_g ?? 0);
-  const oilKcalPerG = n(entry.oilKcalPerG ?? entry.oilKcalG ?? 9); // default 9 kcal/g
-  const oilF = oilAbsorbG;
-  const oilK = oilAbsorbG * oilKcalPerG;
-  return { oilAbsorbG, oilKcalPerG, oilF, oilK };
-}
-
 function rowMacrosWithOil(entry, baseMacros){
   const o = oilForEntry(entry);
   return {
