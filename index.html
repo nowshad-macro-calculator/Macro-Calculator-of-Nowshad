@@ -2199,44 +2199,6 @@ function mergeCategories(){
 }
 
 
-  // 2) Preserve any old categories NOT referenced by CATEGORY_MERGE_MAP
-  const mappedOldCats = new Set(Object.values(CATEGORY_MERGE_MAP).flat());
-  Object.keys(old).forEach(oldCat=>{
-    if(oldCat === "All") return;
-    if(mappedOldCats.has(oldCat)) return;
-    merged[oldCat] = uniq((old[oldCat] || []).filter(name => FOOD[name]));
-  });
-
-  // 3) FAIL-SAFE: If a critical category went empty, restore it from old (prevents “Eggs & Dairy disappeared”)
-  const criticalCats = ["Eggs & Dairy", "Vegetables", "Fruits", "Snacks", "Drinks", "Desserts & Sweets", "Desserts"];
-  criticalCats.forEach(cat=>{
-    if(!merged[cat] || merged[cat].length === 0){
-      if(Array.isArray(old[cat]) && old[cat].length){
-        merged[cat] = uniq(old[cat].filter(name => FOOD[name]));
-      }
-    }
-  });
-
-  // 4) Rebuild "All"
-  merged["All"] = Object.keys(FOOD).sort((a,b)=>a.localeCompare(b));
-
-  // 5) Create "Uncategorized" ONLY for foods not present in ANY category (real uncategorized)
-  const used = new Set();
-  Object.keys(merged).forEach(cat=>{
-    if(cat === "All") return;
-    (merged[cat] || []).forEach(name=>used.add(name));
-  });
-  const uncategorized = merged["All"].filter(name => !used.has(name));
-  if(uncategorized.length){
-    merged["Uncategorized"] = uncategorized;
-  }else{
-    delete merged["Uncategorized"];
-  }
-
-  CATEGORY_ITEMS = merged;
- 
-}
-
 /* PATCH 1: Extensions (adds missing foods without overwriting existing keys) */
 const FOOD_PATCH_1 = {
   // more chicken parts (cooked)
