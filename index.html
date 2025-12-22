@@ -2787,6 +2787,49 @@ function applyAllFoodPatches(){
   // Rebuild dropdown view categories now that categories + FOOD are final
   buildCategoryView();
   ensureGramsForAllFoods();
+function getGramsPerSelectedUnit(foodName, unit){
+  if(unit === "g") return 1;
+
+  const item = FOOD?.[foodName];
+  if(!item) return 0;
+
+  // Prefer explicit gramsPerUnit set per food
+  const gPer = n(item.gramsPerUnit?.[unit]);
+  if(gPer > 0) return gPer;
+
+  // Fallback defaults (your DEFAULT_GRAMS_PER_UNIT)
+  return n(DEFAULT_GRAMS_PER_UNIT?.[unit]) || 0;
+}
+
+function updateEquivalentGramsUI(){
+  const wrap = $("eqGramWrap");
+  const eqEl = $("eqGrams");
+  const gInp = $("entryQtyG");
+  if(!wrap || !eqEl || !gInp) return;
+
+  const food = $("entryFood")?.value || "";
+  const unit = $("entryUnit")?.value || "g";
+  const qty  = n($("entryQty")?.value);
+
+  if(unit !== "g"){
+    const gPer = getGramsPerSelectedUnit(food, unit);
+
+    if(gPer > 0 && qty > 0){
+      const eq = qty * gPer;
+      wrap.style.display = "block";
+      eqEl.textContent = String(Math.round(eq));
+      gInp.value = String(Math.round(eq));
+    }else{
+      wrap.style.display = "block";
+      eqEl.textContent = "0";
+      gInp.value = "";
+    }
+  }else{
+    wrap.style.display = "none";
+    eqEl.textContent = "0";
+    gInp.value = "";
+  }
+}
 
 }
 /* ===========================
@@ -2957,11 +3000,6 @@ function buildFoodSelect(){
   if(typeof updateEquivalentGramsUI === "function") updateEquivalentGramsUI();
 }
 
-  else{
-    wrap.style.display = "none";
-    eqEl.textContent = "0";
-    gInp.value = "";
-  }
 }
 
 }
@@ -3018,17 +3056,18 @@ $("foodSearch").addEventListener("input", buildFoodSelect);
 $("entryFood").addEventListener("change", ()=>{
   buildUnitSelect($("entryFood").value);
   updateEntryPreview();
-  updateEquivalentGramsUI();
+  if(typeof updateEquivalentGramsUI === "function") updateEquivalentGramsUI();
 });
 
 $("entryUnit").addEventListener("change", ()=>{
   updateEntryPreview();
-  updateEquivalentGramsUI();
+  if(typeof updateEquivalentGramsUI === "function") updateEquivalentGramsUI();
 });
 
 $("entryQty").addEventListener("input", ()=>{
   updateEntryPreview();
-  updateEquivalentGramsUI();
+  if(typeof updateEquivalentGramsUI === "function") updateEquivalentGramsUI();
+
 });
 
 const qtyG = $("entryQtyG");
